@@ -819,7 +819,6 @@
 
     <script>
         // ==================== Firebase 配置 ====================
-        // 🔥 请替换为您自己 Firebase 项目中的真实配置！
         const firebaseConfig = {
             apiKey: "AIzaSyAgUU04dt1igPFNTC-zJ3WhGfWp8-wKmfo",
             authDomain: "my-lottery-board.firebaseapp.com",
@@ -829,232 +828,446 @@
             appId: "1:714450363816:web:8335befb5ed25c98f3a99d"
         };
 
-        // 初始化变量
-        let app;
-        let isFirebaseInitialized = false;
-        
-        // 确保每个设备有固定ID（存储在localStorage）
-        window.currentDeviceId = localStorage.getItem('lottery_device_id') || 
-                                'device_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('lottery_device_id', window.currentDeviceId);
-        console.log('设备ID:', window.currentDeviceId.substring(0, 15) + '...');
+        // ==================== 全局变量 ====================
+        window.firebaseApp = null;
+        window.firebaseDb = null;
+        window.firebaseUnsubscribe = null;
+        window.firebaseInitialized = false;
+        window.currentDeviceId = null;
+        window.retryCount = 0;
+        window.maxRetryCount = 5;
+        window.syncQueue = [];
+        window.isSyncing = false;
 
         // ==================== 云状态管理 ====================
         function updateCloudStatus(text, status = 'connecting') {
-            const statusEl = document.getElementById('cloudStatus');
-            const iconEl = document.getElementById('cloudIcon');
-            const textEl = document.getElementById('cloudText');
-            
-            if (!statusEl || !iconEl || !textEl) return;
-            
-            statusEl.className = `cloud-status ${status}`;
-            textEl.textContent = text;
-            
-            switch(status) {
-                case 'online': 
-                    iconEl.textContent = '✅';
-                    document.getElementById('statusBar').textContent = '✅ 系统就绪 | 实时同步中';
-                    break;
-                case 'offline': 
-                    iconEl.textContent = '⚠️';
-                    document.getElementById('statusBar').textContent = '⚠️ 系统就绪 | 离线模式';
-                    break;
-                case 'connecting': 
-                    iconEl.textContent = '🔄';
-                    document.getElementById('statusBar').textContent = '🔄 系统就绪 | 连接云端...';
-                    break;
+            try {
+                const statusEl = document.getElementById('cloudStatus');
+                if (!statusEl) return;
+                
+                statusEl.className = `cloud-status ${status}`;
+                document.getElementById('cloudText').textContent = text;
+                
+                const icons = {
+                    'online': '✅',
+                    'offline': '⚠️',
+                    'connecting': '🔄'
+                };
+                document.getElementById('cloudIcon').textContent = icons[status] || '🔄';
+                
+                // 更新状态栏
+                const statusBar = document.getElementById('statusBar');
+                if (statusBar) {
+                    const messages = {
+                        'online': '✅ 系统就绪 | 实时同步中',
+                        'offline': '⚠️ 系统就绪 | 离线模式',
+                        'connecting': '🔄 系统就绪 | 连接云端...'
+                    };
+                    statusBar.textContent = messages[status] || '🔄 系统就绪 | 连接中...';
+                }
+            } catch (e) {
+                console.log('更新云状态失败:', e);
             }
         }
 
-        // ==================== Firebase 初始化 ====================
-        function initializeFirebase() {
+        // ==================== Firebase 初始化（修复版） ====================
+        async function initializeFirebase() {
+            console.log('🚀 开始初始化 Firebase...');
+            updateCloudStatus('初始化中...', 'connecting');
+            
             try {
-                console.log('正在初始化 Firebase...');
-                updateCloudStatus('初始化中...', 'connecting');
+                // 生成设备ID
+                window.currentDeviceId = localStorage.getItem('lottery_device_id') || 
+                                        'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+                localStorage.setItem('lottery_device_id', window.currentDeviceId);
+                console.log('📱 设备ID:', window.currentDeviceId.substring(0, 15) + '...');
                 
-                // 检查配置是否有效
-                if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes('AIzaSyCsdVYF')) {
-                    console.warn('⚠️ 使用默认配置，请替换为真实Firebase配置');
-                    updateCloudStatus('使用测试配置', 'offline');
-                    isFirebaseInitialized = false;
-                    return;
+                // 检查Firebase配置
+                if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+                    throw new Error('Firebase配置不完整');
                 }
                 
-                // 初始化 Firebase
-                app = firebase.initializeApp(firebaseConfig);
-                window.firebaseDb = firebase.firestore();
+                // 检查是否已存在Firebase应用
+                if (!firebase.apps.length) {
+                    // 初始化新应用
+                    window.firebaseApp = firebase.initializeApp(firebaseConfig);
+                    console.log('✅ 新Firebase应用初始化成功');
+                } else {
+                    // 使用现有应用
+                    window.firebaseApp = firebase.apps[0];
+                    console.log('✅ 使用现有Firebase应用');
+                }
                 
-                console.log('✅ Firebase 初始化成功');
-                isFirebaseInitialized = true;
+                // 初始化Firestore
+                window.firebaseDb = firebase.firestore(window.firebaseApp);
                 
-                // 测试连接
-                testFirebaseConnection();
-                window.isFirebaseInitialized = true;
-console.log('✅ 已设置全局初始化状态: true');
+                // 设置Firestore配置
+                window.firebaseDb.settings({
+                    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
+                    experimentalForceLongPolling: true, // 修复连接问题
+                    merge: true
+                });
+                
+                console.log('✅ Firestore初始化成功');
+                window.firebaseInitialized = true;
+                window.retryCount = 0;
+                
+                // 测试连接并初始化
+                await initializeFirestore();
+                
             } catch (error) {
-                console.error('❌ Firebase 初始化失败:', error);
-                updateCloudStatus('初始化失败', 'offline');
-                isFirebaseInitialized = false;
+                console.error('❌ Firebase初始化失败:', error);
+                handleFirebaseError(error);
             }
         }
 
-        // 测试 Firebase 连接
-        async function testFirebaseConnection() {
-            if (!isFirebaseInitialized) return;
-            
+        // 初始化Firestore连接
+        async function initializeFirestore() {
             try {
-                updateCloudStatus('测试连接...', 'connecting');
-                console.log('正在测试 Firebase 连接...');
+                updateCloudStatus('连接数据库...', 'connecting');
                 
-                // 尝试读取数据来测试连接
-                const testRef = window.firebaseDb.collection('_test_connection');
-                const snapshot = await testRef.limit(1).get();
+                // 测试连接 - 创建测试文档
+                const testRef = window.firebaseDb.collection('connection_tests').doc('ping_' + Date.now());
+                await testRef.set({
+                    deviceId: window.currentDeviceId,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    test: true
+                });
                 
-                console.log('✅ Firebase 连接测试成功');
-                updateCloudStatus('连接成功', 'online');
+                console.log('✅ 数据库连接测试成功');
                 
-                // 开始实时监听
+                // 删除测试文档
+                setTimeout(() => testRef.delete(), 3000);
+                
+                // 检查是否存在数据
+                await checkExistingData();
+                
+                // 启动实时监听
                 startRealTimeListener();
                 
-            } catch (error) {
-                console.error('Firebase 连接测试失败:', error);
+                updateCloudStatus('连接成功', 'online');
+                showNotification('✅ 云端连接成功，开始实时同步');
                 
-                // 可能是集合不存在，尝试创建测试文档
-                try {
-                    const testRef = window.firebaseDb.collection('_test_connection');
-                    await testRef.add({
-                        test: true,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    
-                    console.log('✅ Firebase 连接测试成功 (通过写入测试)');
-                    updateCloudStatus('连接成功', 'online');
-                    
-                    // 开始实时监听
-                    startRealTimeListener();
-                    
-                } catch (writeError) {
-                    console.error('Firebase 写入测试也失败:', writeError);
-                    updateCloudStatus('连接失败', 'offline');
-                    isFirebaseInitialized = false;
-                }
-            }
-        }
-
-        // ==================== 实时数据同步（修复版） ====================
-        function startRealTimeListener() {
-            if (!window.isFirebaseInitialized || !window.firebaseDb) {
-                console.log('Firebase未初始化，3秒后重试...');
-                setTimeout(startRealTimeListener, 3000);
-                return;
-            }
-
-            try {
-                console.log('🔄 启动/重启实时数据监听...');
-                updateCloudStatus('监听数据...', 'connecting');
-
-                // 先取消旧的监听（如果存在）
-                if (window.firebaseUnsubscribe) {
-                    window.firebaseUnsubscribe();
-                    console.log('已取消旧监听');
-                }
-
-                // 监听 lottery_data 集合的最新文档
-                window.firebaseUnsubscribe = window.firebaseDb.collection('lottery_data')
-                    .orderBy('timestamp', 'desc')
-                    .limit(1)
-                    .onSnapshot({
-                        next: (snapshot) => {
-                            console.log('📢 实时监听触发! 变更数:', snapshot.docChanges().length);
-
-                            if (!snapshot.empty) {
-                                const doc = snapshot.docs[0];
-                                const data = doc.data();
-
-                                console.log('📥 收到数据更新:', {
-                                    文档ID: doc.id.substring(0, 10) + '...',
-                                    更新时间: data.updatedAt ? new Date(data.updatedAt).toLocaleTimeString() : '无',
-                                    来源设备: data.deviceId ? data.deviceId.substring(0, 10) + '...' : '未知',
-                                    当前设备: window.currentDeviceId.substring(0, 10) + '...',
-                                    是否同设备: data.deviceId === window.currentDeviceId
-                                });
-
-                                // 总是更新数据（移除设备ID判断）
-                                applyCloudData(data);
-                                updateCloudStatus('实时同步', 'online');
-
-                                // 如果是其他设备的数据，显示通知
-                                if (data.deviceId !== window.currentDeviceId) {
-                                    showNotification('🔄 数据已从云端同步更新');
-                                }
-                            } else {
-                                console.log('ℹ️ 云端暂无数据');
-                            }
-                        },
-                        error: (error) => {
-                            console.error('❌ 实时监听错误:', error.message, error.code);
-                            updateCloudStatus('同步错误', 'offline');
-
-                            // 10秒后自动重试
-                            setTimeout(startRealTimeListener, 10000);
-                        }
-                    });
-
-                console.log('✅ 实时监听已启动');
-
-                // 加载现有数据
-                loadExistingData();
-
-                // 添加心跳检测（每30秒检查一次监听状态）
-                if (!window.heartbeatInterval) {
-                    window.heartbeatInterval = setInterval(() => {
-                        if (window.firebaseUnsubscribe) {
-                            console.log('❤️ 监听心跳: 正常');
-                        } else {
-                            console.log('💔 监听丢失，重新启动...');
-                            startRealTimeListener();
-                        }
-                    }, 30000);
-                }
-
             } catch (error) {
-                console.error('启动实时监听失败:', error);
-                updateCloudStatus('监听失败', 'offline');
-                setTimeout(startRealTimeListener, 5000);
+                console.error('❌ 数据库连接失败:', error);
+                throw error;
             }
         }
 
-        // 加载现有数据
-        async function loadExistingData() {
-            if (!isFirebaseInitialized) return;
-            
+        // 检查现有数据
+        async function checkExistingData() {
             try {
-                console.log('📥 加载现有数据...');
                 const snapshot = await window.firebaseDb.collection('lottery_data')
                     .orderBy('timestamp', 'desc')
                     .limit(1)
                     .get();
                 
-                if (!snapshot.empty) {
+                if (snapshot.empty) {
+                    console.log('ℹ️ 云端暂无数据，创建初始数据...');
+                    await createInitialData();
+                } else {
+                    console.log('📥 发现云端数据，加载中...');
                     const data = snapshot.docs[0].data();
                     applyCloudData(data);
-                    console.log('✅ 现有数据加载完成');
-                } else {
-                    console.log('ℹ️ 云端暂无数据');
                 }
-                
-                updateCloudStatus('实时同步', 'online');
-                
             } catch (error) {
-                console.error('加载现有数据失败:', error);
-                updateCloudStatus('加载失败', 'offline');
+                console.warn('检查现有数据失败:', error);
             }
         }
 
-        // 应用云端数据
-        function applyCloudData(data) {
-            console.log('应用云端数据:', data);
+        // 创建初始数据
+        async function createInitialData() {
+            try {
+                const initialData = {
+                    moneyMap: {},
+                    historyRecords: [],
+                    timestamp: Date.now(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    deviceId: window.currentDeviceId,
+                    version: '2.0'
+                };
+                
+                await window.firebaseDb.collection('lottery_data').add(initialData);
+                console.log('✅ 初始数据创建成功');
+            } catch (error) {
+                console.error('创建初始数据失败:', error);
+            }
+        }
+
+        // 处理Firebase错误
+        function handleFirebaseError(error) {
+            console.error('Firebase错误处理:', error.code, error.message);
             
+            let status = 'offline';
+            let message = '连接失败';
+            
+            switch(error.code) {
+                case 'failed-precondition':
+                    message = '数据库未启用';
+                    break;
+                case 'permission-denied':
+                    message = '权限被拒绝';
+                    break;
+                case 'unavailable':
+                    message = '网络不可用';
+                    break;
+                case 'not-found':
+                    message = '项目不存在';
+                    break;
+                default:
+                    message = `连接错误: ${error.code}`;
+            }
+            
+            updateCloudStatus(message, status);
+            
+            // 指数退避重试
+            window.retryCount++;
+            if (window.retryCount <= window.maxRetryCount) {
+                const delay = Math.min(1000 * Math.pow(2, window.retryCount), 30000);
+                console.log(`⏳ ${delay/1000}秒后重试 (${window.retryCount}/${window.maxRetryCount})...`);
+                setTimeout(initializeFirebase, delay);
+            } else {
+                console.error('❌ 达到最大重试次数，停止重试');
+                updateCloudStatus('连接失败，请刷新页面', 'offline');
+            }
+        }
+
+        // ==================== 实时数据监听（修复版） ====================
+        function startRealTimeListener() {
+            if (!window.firebaseDb || !window.firebaseInitialized) {
+                console.error('Firebase未初始化，无法启动监听');
+                setTimeout(startRealTimeListener, 3000);
+                return;
+            }
+            
+            console.log('🎯 启动实时数据监听...');
+            updateCloudStatus('监听数据...', 'connecting');
+            
+            try {
+                // 取消旧监听
+                if (window.firebaseUnsubscribe) {
+                    window.firebaseUnsubscribe();
+                    console.log('已取消旧监听器');
+                }
+                
+                // 设置新的实时监听
+                const dataQuery = window.firebaseDb.collection('lottery_data')
+                    .orderBy('timestamp', 'desc')
+                    .limit(1);
+                
+                window.firebaseUnsubscribe = dataQuery.onSnapshot({
+                    next: (snapshot) => {
+                        console.log('📡 收到实时更新');
+                        
+                        if (!snapshot.empty) {
+                            const doc = snapshot.docs[0];
+                            const data = doc.data();
+                            
+                            // 记录最后更新时间
+                            window.lastCloudUpdate = Date.now();
+                            
+                            // 应用数据（排除自己设备的数据）
+                            if (data.deviceId !== window.currentDeviceId) {
+                                console.log('📥 接收到其他设备的数据，应用更新');
+                                applyCloudData(data);
+                                updateCloudStatus('实时同步中', 'online');
+                                showNotification('🔄 云端数据已同步更新');
+                            } else {
+                                console.log('ℹ️ 接收到自己设备的数据，跳过更新');
+                                updateCloudStatus('已同步', 'online');
+                            }
+                        }
+                    },
+                    error: (error) => {
+                        console.error('❌ 实时监听错误:', error.code, error.message);
+                        
+                        if (error.code === 'permission-denied') {
+                            updateCloudStatus('权限不足', 'offline');
+                        } else if (error.code === 'unavailable') {
+                            updateCloudStatus('网络断开', 'offline');
+                        } else {
+                            updateCloudStatus('监听错误', 'offline');
+                        }
+                        
+                        // 10秒后重试
+                        setTimeout(startRealTimeListener, 10000);
+                    }
+                }, { includeMetadataChanges: true });
+                
+                console.log('✅ 实时监听已启动');
+                updateCloudStatus('实时同步中', 'online');
+                
+            } catch (error) {
+                console.error('启动监听失败:', error);
+                updateCloudStatus('监听失败', 'offline');
+                setTimeout(startRealTimeListener, 5000);
+            }
+        }
+
+        // ==================== 数据同步功能 ====================
+        async function saveToCloud() {
+            // 检查Firebase状态
+            if (!window.firebaseInitialized || !window.firebaseDb) {
+                console.warn('⚠️ Firebase未就绪，将数据加入同步队列');
+                queueForSync();
+                return false;
+            }
+            
+            // 检查网络状态
+            if (!navigator.onLine) {
+                console.warn('⚠️ 网络离线，将数据加入同步队列');
+                queueForSync();
+                return false;
+            }
+            
+            // 防止重复同步
+            if (window.isSyncing) {
+                console.log('🔄 正在同步中，跳过本次保存');
+                return false;
+            }
+            
+            console.log('💾 开始保存到云端...');
+            updateCloudStatus('保存中...', 'connecting');
+            window.isSyncing = true;
+            
+            try {
+                const saveData = {
+                    moneyMap: window.moneyMap || {},
+                    historyRecords: window.historyRecords || [],
+                    timestamp: Date.now(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    deviceId: window.currentDeviceId,
+                    version: '2.0'
+                };
+                
+                // 查询最新文档
+                const snapshot = await window.firebaseDb.collection('lottery_data')
+                    .orderBy('timestamp', 'desc')
+                    .limit(1)
+                    .get();
+                
+                let savePromise;
+                
+                if (!snapshot.empty) {
+                    // 更新现有文档
+                    const latestDoc = snapshot.docs[0];
+                    savePromise = latestDoc.ref.update(saveData);
+                    console.log('📝 更新现有文档:', latestDoc.id.substring(0, 8) + '...');
+                } else {
+                    // 创建新文档
+                    savePromise = window.firebaseDb.collection('lottery_data').add(saveData);
+                    console.log('📝 创建新文档');
+                }
+                
+                // 执行保存
+                await savePromise;
+                
+                console.log('✅ 数据已保存到云端');
+                updateCloudStatus('已同步', 'online');
+                window.isSyncing = false;
+                
+                // 同步成功后，处理队列中的待同步数据
+                processSyncQueue();
+                
+                return true;
+                
+            } catch (error) {
+                console.error('❌ 保存到云端失败:', error.code, error.message);
+                window.isSyncing = false;
+                
+                // 根据错误类型处理
+                if (error.code === 'permission-denied') {
+                    updateCloudStatus('权限不足', 'offline');
+                    showNotification('❌ 保存失败：权限不足');
+                } else if (error.code === 'unavailable') {
+                    updateCloudStatus('网络不可用', 'offline');
+                    queueForSync();
+                } else {
+                    updateCloudStatus('保存失败', 'offline');
+                    queueForSync();
+                }
+                
+                return false;
+            }
+        }
+
+        // 数据加入同步队列
+        function queueForSync() {
+            if (!window.syncQueue) window.syncQueue = [];
+            
+            const syncData = {
+                moneyMap: {...window.moneyMap},
+                historyRecords: JSON.parse(JSON.stringify(window.historyRecords || [])),
+                timestamp: Date.now(),
+                deviceId: window.currentDeviceId
+            };
+            
+            window.syncQueue.push(syncData);
+            
+            // 保持队列长度合理
+            if (window.syncQueue.length > 10) {
+                window.syncQueue = window.syncQueue.slice(-10);
+            }
+            
+            console.log('📦 数据已加入同步队列，当前队列长度:', window.syncQueue.length);
+            
+            // 保存到localStorage作为备份
+            try {
+                localStorage.setItem('lottery_sync_queue', JSON.stringify(window.syncQueue));
+                localStorage.setItem('lottery_data_backup', JSON.stringify(syncData));
+            } catch (e) {
+                console.warn('保存备份数据失败:', e);
+            }
+            
+            // 10秒后尝试同步
+            setTimeout(processSyncQueue, 10000);
+        }
+
+        // 处理同步队列
+        async function processSyncQueue() {
+            if (!window.syncQueue || window.syncQueue.length === 0) return;
+            if (!window.firebaseInitialized || window.isSyncing) return;
+            
+            console.log('🔄 处理同步队列，待同步:', window.syncQueue.length);
+            
+            const item = window.syncQueue.shift();
+            
+            try {
+                // 尝试同步
+                await saveToCloud();
+                
+                // 同步成功，从localStorage移除
+                const savedQueue = JSON.parse(localStorage.getItem('lottery_sync_queue') || '[]');
+                if (savedQueue.length > 0) {
+                    savedQueue.shift();
+                    localStorage.setItem('lottery_sync_queue', JSON.stringify(savedQueue));
+                }
+                
+                console.log('✅ 队列项同步成功，剩余:', window.syncQueue.length);
+                
+                // 如果还有数据，继续处理
+                if (window.syncQueue.length > 0) {
+                    setTimeout(processSyncQueue, 2000);
+                }
+                
+            } catch (error) {
+                console.error('队列项同步失败，放回队列:', error);
+                window.syncQueue.unshift(item); // 放回队列
+                
+                // 30秒后重试
+                setTimeout(processSyncQueue, 30000);
+            }
+        }
+
+        // 应用云端数据到界面
+        function applyCloudData(data) {
+            console.log('应用云端数据:', {
+                设备: data.deviceId ? data.deviceId.substring(0, 10) + '...' : '未知',
+                时间: data.updatedAt || data.timestamp,
+                记录数: data.historyRecords ? data.historyRecords.length : 0
+            });
+            
+            // 更新数据
             if (data.moneyMap) {
                 window.moneyMap = data.moneyMap;
             }
@@ -1070,7 +1283,7 @@ console.log('✅ 已设置全局初始化状态: true');
                 });
             }
             
-            // 更新所有界面
+            // 更新界面
             if (typeof renderDataTable === 'function') renderDataTable();
             if (typeof renderHistory === 'function') renderHistory();
             if (typeof updateTotalAmount === 'function') updateTotalAmount();
@@ -1079,60 +1292,6 @@ console.log('✅ 已设置全局初始化状态: true');
             
             // 保存到本地存储
             saveData();
-            
-            // 显示通知
-            if (data.deviceId !== window.currentDeviceId) {
-                showNotification('🔄 数据已从云端同步更新');
-            }
-        }
-
-        // 保存数据到云端
-        async function saveToCloud() {
-            if (!isFirebaseInitialized) {
-                console.warn('Firebase 未初始化，跳过云端保存');
-                return;
-            }
-            
-            try {
-                console.log('💾 保存数据到云端...');
-                updateCloudStatus('保存中...', 'connecting');
-                
-                const saveData = {
-                    moneyMap: window.moneyMap || {},
-                    historyRecords: window.historyRecords || [],
-                    timestamp: Date.now(),
-                    updatedAt: new Date().toISOString(),
-                    deviceId: window.currentDeviceId
-                };
-                
-                // 检查是否有现有文档
-                const snapshot = await window.firebaseDb.collection('lottery_data')
-                    .orderBy('timestamp', 'desc')
-                    .limit(1)
-                    .get();
-                
-                if (!snapshot.empty) {
-                    // 更新最新文档
-                    await snapshot.docs[0].ref.update(saveData);
-                } else {
-                    // 创建新文档
-                    await window.firebaseDb.collection('lottery_data').add(saveData);
-                }
-                
-                console.log('✅ 数据已保存到云端');
-                updateCloudStatus('实时同步', 'online');
-                
-            } catch (error) {
-                console.error('保存到云端失败:', error);
-                updateCloudStatus('保存失败', 'offline');
-                
-                // 尝试重新初始化
-                setTimeout(() => {
-                    if (!isFirebaseInitialized) {
-                        initializeFirebase();
-                    }
-                }, 5000);
-            }
         }
 
         // ==================== 密码验证模块 ====================
@@ -1283,12 +1442,11 @@ console.log('✅ 已设置全局初始化状态: true');
             console.log('🎯 系统启动...');
             initData();
             
-            // 设置全局变量
-            window.isFirebaseInitialized = false;
-            
-            // 初始化 Firebase
-            initializeFirebase();
-            
+            // 启动Firebase（重要！）
+            setTimeout(() => {
+                initializeFirebase();
+            }, 500);
+
             // 从本地加载数据
             setTimeout(() => loadSavedData(), 1000);
 
@@ -1816,6 +1974,13 @@ console.log('✅ 已设置全局初始化状态: true');
                         loadFromData(data);
                         console.log('✅ 本地数据加载完成');
                     }
+                    
+                    // 检查同步队列
+                    const queue = localStorage.getItem('lottery_sync_queue');
+                    if (queue) {
+                        window.syncQueue = JSON.parse(queue);
+                        console.log('📦 加载同步队列:', window.syncQueue.length);
+                    }
                 } catch (e) {
                     console.error('加载失败:', e);
                 }
@@ -1906,4 +2071,3 @@ console.log('✅ 已设置全局初始化状态: true');
     </script>
 </body>
 </html>
-
