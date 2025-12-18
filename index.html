@@ -6,224 +6,6 @@
     <title>📊 彩票实时看板 - 多人实时同步</title>
     <!-- 添加favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
-    <!-- Firebase SDK (使用CDN回退) -->
-    <script>
-        <script>
-// ==================== 强制修复（放在最前面） ====================
-(function() {
-    console.log('🔧 执行强制修复...');
-    
-    // 1. 强制定义密码函数
-    if (typeof window.checkPassword === 'undefined') {
-        window.checkPassword = function() {
-            console.log('🔑 checkPassword被调用（强制版）');
-            var input = document.getElementById('passwordInput');
-            var errorEl = document.getElementById('passwordError');
-            
-            if (!input || !input.value) {
-                if (errorEl) errorEl.textContent = '请输入密码';
-                return false;
-            }
-            
-            if (input.value.trim() === 'Master123456') {
-                if (errorEl) errorEl.textContent = '';
-                
-                // 保存登录状态（两种方式都存，确保兼容）
-                localStorage.setItem('lottery_admin_auth', JSON.stringify({
-                    loggedIn: true,
-                    loginTime: Date.now(),
-                    token: 'force_fix_' + Date.now()
-                }));
-                localStorage.setItem('lottery_simple_auth', '1'); // 简单备份
-                
-                // 显示主应用
-                document.getElementById('passwordOverlay').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'block';
-                
-                console.log('✅ 登录成功（强制版）');
-                return true;
-            } else {
-                if (errorEl) errorEl.textContent = '密码错误，请重试';
-                input.value = '';
-                input.focus();
-                return false;
-            }
-        };
-        console.log('✅ window.checkPassword已强制定义');
-    }
-    
-    // 2. 强制自动登录检查
-    setTimeout(function() {
-        console.log('🔄 检查自动登录...');
-        
-        // 检查多种认证方式
-        const authSources = [
-            localStorage.getItem('lottery_admin_auth'),
-            localStorage.getItem('lottery_simple_auth'),
-            localStorage.getItem('lottery_auth')
-        ];
-        
-        let shouldAutoLogin = false;
-        
-        for (const authStr of authSources) {
-            if (!authStr) continue;
-            
-            try {
-                if (authStr === '1') { // 简单认证
-                    shouldAutoLogin = true;
-                    break;
-                }
-                
-                const authData = JSON.parse(authStr);
-                if (authData && authData.loggedIn) {
-                    shouldAutoLogin = true;
-                    break;
-                }
-            } catch(e) {
-                // 忽略错误
-            }
-        }
-        
-        if (shouldAutoLogin) {
-            document.getElementById('passwordOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            console.log('✅ 强制自动登录成功');
-        } else {
-            console.log('📭 无有效认证，等待手动登录');
-        }
-    }, 150);
-    
-    console.log('✅ 强制修复完成');
-})();
-
-// 动态加载Firebase SDK，支持CDN回退
-(function() {
-    const firebaseVersion = '9.22.0';
-    // ... 你的原有代码继续 ...
-        
-// ==================== 最前面定义的函数 ====================
-window.checkPassword = function() {
-    console.log('checkPassword被调用');
-    var input = document.getElementById('passwordInput');
-    var errorEl = document.getElementById('passwordError');
-    
-    if (!input || !input.value) {
-        if (errorEl) errorEl.textContent = '请输入密码';
-        return;
-    }
-    
-    if (input.value.trim() === 'Master123456') {
-        if (errorEl) errorEl.textContent = '';
-        
-        localStorage.setItem('lottery_admin_auth', JSON.stringify({
-            loggedIn: true,
-            loginTime: Date.now()
-        }));
-        
-        document.getElementById('passwordOverlay').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        
-        console.log('密码验证成功');
-    } else {
-        if (errorEl) errorEl.textContent = '密码错误，请重试';
-        input.value = '';
-        input.focus();
-    }
-};
-
-console.log('checkPassword函数已定义');
-    
-    if (input === 'Master123456') {
-        errorEl.textContent = '';
-        // 保存登录状态
-        const authData = {
-            loggedIn: true,
-            loginTime: Date.now(),
-            token: 'auth_' + Date.now()
-        };
-        localStorage.setItem('lottery_admin_auth', JSON.stringify(authData));
-        
-        // 显示主应用
-        document.getElementById('passwordOverlay').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        
-        console.log('✅ 密码验证成功，进入主应用');
-    } else {
-        errorEl.textContent = '❌ 密码错误，请重试';
-        document.getElementById('passwordInput').value = '';
-        document.getElementById('passwordInput').focus();
-    }
-};
-
-console.log('✅ checkPassword函数已定义到window对象');
-
-// 动态加载Firebase SDK，支持CDN回退
-(function() {
-    const firebaseVersion = '9.22.0';
-    const scripts = [
-        {
-            id: 'firebase-app',
-            urls: [
-                `https://www.gstatic.com/firebasejs/${firebaseVersion}/firebase-app-compat.js`,
-                `https://cdn.bootcdn.net/ajax/libs/firebase/${firebaseVersion}/firebase-app-compat.min.js`,
-                `https://cdnjs.cloudflare.com/ajax/libs/firebase/${firebaseVersion}/firebase-app-compat.min.js`
-            ]
-        },
-        // ... 原有代码继续 ...
-
-            function loadScript(scriptInfo, callback) {
-                let currentIndex = 0;
-                
-                function tryLoad() {
-                    if (currentIndex >= scriptInfo.urls.length) {
-                        console.error(`❌ 所有CDN都加载失败: ${scriptInfo.id}`);
-                        callback(false);
-                        return;
-                    }
-                    
-                    const script = document.createElement('script');
-                    script.src = scriptInfo.urls[currentIndex];
-                    
-                    script.onload = function() {
-                        console.log(`✅ 加载成功: ${script.src}`);
-                        callback(true);
-                    };
-                    
-                    script.onerror = function() {
-                        console.log(`⚠️ CDN加载失败: ${scriptInfo.urls[currentIndex]}`);
-                        currentIndex++;
-                        setTimeout(tryLoad, 500);
-                    };
-                    
-                    document.head.appendChild(script);
-                }
-                
-                tryLoad();
-            }
-            
-            // 依次加载脚本
-            let scriptsLoaded = 0;
-            
-            function onScriptLoaded(success) {
-                if (success) {
-                    scriptsLoaded++;
-                    if (scriptsLoaded === scripts.length) {
-                        console.log('🎉 所有Firebase SDK加载完成');
-                        // 所有SDK加载完成后，初始化应用
-                        if (typeof window.initApp === 'function') {
-                            setTimeout(window.initApp, 100);
-                        }
-                    }
-                }
-            }
-            
-            // 开始加载
-            console.log('开始加载Firebase SDK...');
-            scripts.forEach(script => {
-                loadScript(script, onScriptLoaded);
-            });
-        })();
-    </script>
     <style>
         /* 云状态显示 */
         .cloud-status {
@@ -924,11 +706,11 @@ console.log('✅ checkPassword函数已定义到window对象');
                 <label for="passwordInput">请输入管理员密码</label>
                 <input type="password" id="passwordInput" placeholder="输入密码后按回车或点击进入">
             </div>
-            <button class="login-btn" onclick="window.checkPassword && window.checkPassword()">🚪 进入实时看板</button>
-<div id="passwordError" class="password-error"></div>
-<div class="password-hint">提示：验证通过后，3天内无需重复输入密码。</div>
-</div>
-</div>
+            <button class="login-btn" onclick="checkPassword()">🚪 进入实时看板</button>
+            <div id="passwordError" class="password-error"></div>
+            <div class="password-hint">提示：验证通过后，3天内无需重复输入密码。</div>
+        </div>
+    </div>
 
     <!-- 主看板页面 (默认隐藏) -->
     <div id="mainApp" style="display: none;">
@@ -1052,90 +834,8 @@ console.log('✅ checkPassword函数已定义到window对象');
     </div>
 
     <script>
-        // ==================== 全局变量 ====================
-        window.initApp = function() {
-            console.log('🎯 Firebase SDK已加载，开始初始化应用...');
-            
-            // 检查Firebase SDK是否成功加载
-            if (typeof firebase === 'undefined') {
-                console.error('❌ Firebase SDK未加载');
-                document.getElementById('statusBar').textContent = '❌ 加载失败，请刷新页面';
-                return;
-            }
-            
-            // 开始应用初始化
-            initializeApplication();
-        };
-// ==================== 本地数据加载函数 ====================
-function loadSavedData() {
-    console.log('📂 加载本地数据');
-}
-
-// ==================== 数据保存函数 ==================== （添加在这里！）
-function saveData() {
-    try {
-        const dataToSave = {
-            moneyMap: window.moneyMap || {},
-            historyRecords: window.historyRecords || [],
-            undoStack: window.undoStack || [],
-            timestamp: Date.now(),
-            source: 'local_save'
-        };
-        localStorage.setItem('lottery_data_v2', JSON.stringify(dataToSave));
-        console.log('💾 数据已保存到本地');
-    } catch (e) {
-        console.error('保存数据失败:', e);
-    }
-} // ← saveData函数结束
-
-// ==================== 通知显示函数 ==================== （立即添加在这里！）
-function showNotification(message, type = 'success') {
-    // 防止重复通知
-    const existing = document.querySelector('.notification');
-    if (existing) existing.remove();
-    
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.style.background = type === 'warning' ? '#ff9f43' : '#2ecc71';
-    notification.innerHTML = message.replace(/\n/g, '<br>');
-    document.body.appendChild(notification);
-    
-    // 3秒后自动消失
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateX(100%)';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
-
-// ==================== 主应用初始化 ====================
-function initializeApplication() {
-    console.log('🚀 初始化应用...');
-            
-            // 更新状态
-            document.getElementById('statusBar').textContent = '🔄 初始化系统中...';
-            updateCloudStatus('初始化中', 'connecting');
-            
-            // 设置网络监听
-            setupNetworkListeners();
-            
-            // 检查本地认证
-            if (checkAuth()) {
-                showMainApp();
-            } else {
-                // 显示密码输入界面
-                document.getElementById('passwordInput').focus();
-                document.getElementById('passwordInput').addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        checkPassword();
-                    }
-                });
-            }
-        }
-
-        // ==================== Firebase 配置 ====================
-        // 🔥 这是您的 my-lottery-board 项目配置
-        const firebaseConfig = {
+        // ==================== 全局变量和配置 ====================
+        const FIREBASE_CONFIG = {
             apiKey: "AIzaSyAgUU04dt1igPFNTC-zJ3WhGfWp8-wKmfo",
             authDomain: "my-lottery-board.firebaseapp.com",
             projectId: "my-lottery-board",
@@ -1144,38 +844,75 @@ function initializeApplication() {
             appId: "1:714450363816:web:8335befb5ed25c98f3a99d"
         };
 
-        // ==================== 网络状态管理 ====================
-        function setupNetworkListeners() {
-            // 监听网络状态变化
-            window.addEventListener('online', () => {
-                console.log('🌐 网络恢复');
-                document.getElementById('networkIndicator').className = 'network-indicator network-online';
-                showNotification('✅ 网络已恢复');
+        // ==================== 密码验证相关函数 ====================
+        function checkAuth() {
+            const authStr = localStorage.getItem('lottery_admin_auth');
+            if (!authStr) return false;
+            
+            try {
+                const authData = JSON.parse(authStr);
+                const now = Date.now();
+                const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
                 
-                // 尝试重新连接Firebase
-                if (!window.isFirebaseConnected) {
-                    initializeFirebase();
-                }
-            });
-
-            window.addEventListener('offline', () => {
-                console.log('🌐 网络断开');
-                document.getElementById('networkIndicator').className = 'network-indicator network-offline';
-                showNotification('⚠️ 网络已断开，切换到离线模式');
-                updateCloudStatus('离线模式', 'offline');
-            });
-
-            // 初始网络状态
-            const networkIndicator = document.getElementById('networkIndicator');
-            if (navigator.onLine) {
-                networkIndicator.className = 'network-indicator network-online';
-            } else {
-                networkIndicator.className = 'network-indicator network-offline';
-                updateCloudStatus('离线模式', 'offline');
+                return authData.loggedIn === true && 
+                       authData.loginTime && 
+                       (now - authData.loginTime) < THREE_DAYS_MS;
+            } catch (e) {
+                return false;
             }
         }
 
-        // ==================== 云状态管理 ====================
+        function checkPassword() {
+            console.log('🔑 密码验证函数被调用');
+            const input = document.getElementById('passwordInput');
+            const errorEl = document.getElementById('passwordError');
+            
+            if (!input || !input.value) {
+                if (errorEl) errorEl.textContent = '请输入密码';
+                return;
+            }
+            
+            if (input.value.trim() === 'Master123456') {
+                if (errorEl) errorEl.textContent = '';
+                
+                // 保存登录状态
+                localStorage.setItem('lottery_admin_auth', JSON.stringify({
+                    loggedIn: true,
+                    loginTime: Date.now(),
+                    token: 'auth_' + Date.now()
+                }));
+                
+                // 显示主应用
+                document.getElementById('passwordOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                
+                console.log('✅ 密码验证成功，进入主应用');
+                initializeLotteryApp();
+            } else {
+                if (errorEl) errorEl.textContent = '❌ 密码错误，请重试';
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        // ==================== 辅助函数 ====================
+        function showNotification(message, type = 'success') {
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+            
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.background = type === 'warning' ? '#ff9f43' : '#2ecc71';
+            notification.innerHTML = message.replace(/\n/g, '<br>');
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
         function updateCloudStatus(text, status = 'connecting') {
             const statusEl = document.getElementById('cloudStatus');
             const iconEl = document.getElementById('cloudIcon');
@@ -1206,221 +943,144 @@ function initializeApplication() {
         }
 
         // ==================== Firebase 初始化 ====================
-async function initializeFirebase() {
-    console.log('🎯 正在初始化 Firebase...');
-    updateCloudStatus('连接中...', 'connecting');
-    
-    // 🔥 关键修复1：清理所有可能的旧实例
-    try {
-        // 列出所有已初始化的Firebase应用并删除
-        const apps = firebase.apps;
-        const deletionPromises = [];
-        for (const app of apps) {
-            if (app.name && app.name !== '[DEFAULT]') {
-                deletionPromises.push(app.delete());
-            }
-        }
-        if (deletionPromises.length > 0) {
-            await Promise.all(deletionPromises);
-            console.log('🗑️ 已清理旧的Firebase实例');
-        }
-    } catch (cleanupError) {
-        console.log('清理旧实例时的小问题（可忽略）:', cleanupError.message);
-    }
-    
-    try {
-        // 🔥 关键修复2：使用唯一的应用名称避免冲突
-        const appName = 'LotteryBoard_' + Date.now();
-        const app = firebase.initializeApp(firebaseConfig, appName);
-        const db = app.firestore();
-        
-        // 🔥 关键修复3：缩短超时时间，设置更宽松的配置
-        db.settings({
-            ignoreUndefinedProperties: true,
-            merge: true
-        });
-        
-        // 🔥 关键修复4：更简单的连接测试（直接检查集合）
-        console.log('⏳ 尝试连接Firestore...');
-        const testQuery = db.collection('lottery_data').limit(1);
-        
-        // 使用更短的5秒超时
-        const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('连接超时 (5秒)')), 5000);
-        });
-        
-        await Promise.race([testQuery.get(), timeoutPromise]);
-        
-        console.log('✅ Firebase 连接成功！');
-        window.firebaseApp = app;
-        window.firebaseDb = db;
-        window.isFirebaseInitialized = true;
-        
-        // 立即开始监听数据
-        startRealTimeListener();
-        updateCloudStatus('实时同步', 'online');
-        
-    } catch (error) {
-        console.error('❌ Firebase 连接失败:', error.message);
-        
-        let errorMsg = '连接失败';
-        if (error.message.includes('timeout')) {
-            errorMsg = '连接超时，请检查网络';
-            // 如果是超时，可能是网络问题，建议用户检查
-            showNotification('⚠️ 网络连接较慢，正在重试...');
-        }
-        
-        updateCloudStatus(errorMsg, 'offline');
-        
-        // 加载本地数据（使用之前添加的函数）
-        if (typeof loadSavedData === 'function') {
-            setTimeout(loadSavedData, 100);
-        }
-        
-        // 15秒后重试（不要太频繁）
-        setTimeout(() => {
-            if (navigator.onLine) {
-                console.log('🔄 重新尝试连接Firebase...');
-                initializeFirebase();
-            }
-        }, 15000);
-    }
-}
-
-        // ==================== 实时数据同步 ====================
-function startRealTimeListener() {
-    if (!window.isFirebaseInitialized || !window.firebaseDb) {
-        console.log('Firebase未初始化，跳过实时监听');
-        return;
-    }
-    
-    console.log('🔄 启动实时数据监听...');
-    
-    window.firebaseUnsubscribe = window.firebaseDb.collection('lottery_data')
-        .orderBy('timestamp', 'desc')
-        .limit(1)
-        .onSnapshot(snapshot => {
-            console.log('📥 收到更新');
-            if (!snapshot.empty) {
-                const data = snapshot.docs[0].data();
-                // 强制每次都更新
-                window.moneyMap = data.moneyMap || {};
-                window.historyRecords = data.historyRecords || [];
-                
-                // 更新界面
-                if (window.lotteryData) {
-                    window.lotteryData.forEach(item => {
-                        item.amount = window.moneyMap[item.number] || 0;
-                    });
-                    renderDataTable();
-                    updateTotalAmount();
+        async function initializeFirebase() {
+            console.log('🎯 正在初始化 Firebase...');
+            updateCloudStatus('连接中...', 'connecting');
+            
+            try {
+                // 检查是否已初始化
+                if (window.firebaseApp) {
+                    console.log('ℹ️ Firebase 已初始化');
+                    return window.firebaseApp;
                 }
-            }
-        });
-    
-    console.log('✅ 实时监听已启动');
-}
-                            
-                            if (!snapshot.empty) {
-                                const doc = snapshot.docs[0];
-                                const data = doc.data();
-                                
-                                console.log('云端数据设备:', data.deviceId?.substring(0, 10) || '未知');
-                                
-                                // 更新本地数据
-                                applyCloudData(data);
-                                updateCloudStatus('实时同步', 'online');
-                                
-                            } else {
-                                console.log('ℹ️ 云端暂无数据');
-                                // 可以在这里初始化数据库
-                            }
-                        },
-                        error: (error) => {
-                            console.error('❌ 实时监听错误:', error.message);
-                            updateCloudStatus('同步错误', 'offline');
-                            
-                            // 30秒后重试
-                            setTimeout(startRealTimeListener, 30000);
-                        }
-                    });
                 
-                console.log('✅ 实时监听已启动');
+                // 动态加载Firebase SDK
+                await loadFirebaseSDK();
                 
-                // 加载现有数据
-                loadExistingData();
+                // 初始化Firebase
+                const app = firebase.initializeApp(FIREBASE_CONFIG);
+                const db = app.firestore();
+                
+                // 配置设置
+                db.settings({
+                    ignoreUndefinedProperties: true,
+                    merge: true
+                });
+                
+                // 测试连接
+                const testQuery = db.collection('lottery_data').limit(1);
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('连接超时 (5秒)')), 5000);
+                });
+                
+                await Promise.race([testQuery.get(), timeoutPromise]);
+                
+                console.log('✅ Firebase 连接成功！');
+                window.firebaseApp = app;
+                window.firebaseDb = db;
+                window.isFirebaseInitialized = true;
+                
+                // 启动实时监听
+                startRealTimeListener();
+                updateCloudStatus('实时同步', 'online');
+                
+                return app;
                 
             } catch (error) {
-                console.error('启动实时监听失败:', error);
+                console.error('❌ Firebase 连接失败:', error.message);
+                updateCloudStatus('连接失败', 'offline');
+                
+                // 15秒后重试
+                setTimeout(() => {
+                    if (navigator.onLine) {
+                        console.log('🔄 重新尝试连接Firebase...');
+                        initializeFirebase();
+                    }
+                }, 15000);
+                
+                return null;
             }
         }
 
-        // 加载现有数据
-        async function loadExistingData() {
-            if (!window.isFirebaseInitialized) {
-                loadSavedData();
+        async function loadFirebaseSDK() {
+            if (typeof firebase !== 'undefined') {
+                return; // 已加载
+            }
+            
+            const firebaseVersion = '9.22.0';
+            const scripts = [
+                {
+                    id: 'firebase-app',
+                    urls: [
+                        `https://www.gstatic.com/firebasejs/${firebaseVersion}/firebase-app-compat.js`,
+                        `https://cdn.bootcdn.net/ajax/libs/firebase/${firebaseVersion}/firebase-app-compat.min.js`
+                    ]
+                },
+                {
+                    id: 'firebase-firestore',
+                    urls: [
+                        `https://www.gstatic.com/firebasejs/${firebaseVersion}/firebase-firestore-compat.js`,
+                        `https://cdn.bootcdn.net/ajax/libs/firebase/${firebaseVersion}/firebase-firestore-compat.min.js`
+                    ]
+                }
+            ];
+            
+            for (const script of scripts) {
+                let loaded = false;
+                for (const url of script.urls) {
+                    try {
+                        await new Promise((resolve, reject) => {
+                            const scriptEl = document.createElement('script');
+                            scriptEl.src = url;
+                            scriptEl.onload = () => {
+                                console.log(`✅ 加载成功: ${script.id}`);
+                                resolve();
+                            };
+                            scriptEl.onerror = reject;
+                            document.head.appendChild(scriptEl);
+                        });
+                        loaded = true;
+                        break;
+                    } catch (e) {
+                        console.log(`⚠️ 加载失败: ${url}`);
+                    }
+                }
+                
+                if (!loaded) {
+                    throw new Error(`无法加载 ${script.id}`);
+                }
+            }
+        }
+
+        // ==================== 实时数据同步 ====================
+        function startRealTimeListener() {
+            if (!window.isFirebaseInitialized || !window.firebaseDb) {
+                console.log('Firebase未初始化，跳过实时监听');
                 return;
             }
             
-            try {
-                console.log('📥 从云端加载数据...');
-                const snapshot = await window.firebaseDb.collection('lottery_data')
-                    .orderBy('timestamp', 'desc')
-                    .limit(1)
-                    .get();
-                
-                if (!snapshot.empty) {
-                    const data = snapshot.docs[0].data();
-                    applyCloudData(data);
-                    console.log('✅ 云端数据加载完成');
-                    showNotification('✅ 数据已从云端加载');
-                } else {
-                    console.log('ℹ️ 云端暂无数据，使用本地数据');
-                    loadSavedData();
-                }
-                
-            } catch (error) {
-                console.error('加载云端数据失败:', error);
-                loadSavedData();
-            }
-        }
-
-        // 应用云端数据
-function applyCloudData(data) {
-    console.log('应用数据');
-    // 直接替换，不合并
-    window.moneyMap = data.moneyMap || {};
-    window.historyRecords = data.historyRecords || [];
-    
-    // 更新界面
-    renderDataTable();
-    renderHistory();
-    updateTotalAmount();
-    updateWaveTotals();
-    if (typeof saveData === 'function') saveData();
-}
+            console.log('🔄 启动实时数据监听...');
             
-            // 更新彩票数据
-            if (window.lotteryData) {
-                window.lotteryData.forEach(item => {
-                    item.amount = window.moneyMap[item.number] || 0;
+            // 监听最新的一条数据
+            window.firebaseUnsubscribe = window.firebaseDb.collection('lottery_data')
+                .orderBy('timestamp', 'desc')
+                .limit(1)
+                .onSnapshot({
+                    next: (snapshot) => {
+                        if (!snapshot.empty) {
+                            const data = snapshot.docs[0].data();
+                            applyCloudData(data);
+                            updateCloudStatus('实时同步', 'online');
+                        }
+                    },
+                    error: (error) => {
+                        console.error('❌ 实时监听错误:', error);
+                        updateCloudStatus('同步错误', 'offline');
+                        setTimeout(startRealTimeListener, 30000);
+                    }
                 });
-            }
-            
-            // 更新界面
-            if (typeof renderDataTable === 'function') renderDataTable();
-            if (typeof renderHistory === 'function') renderHistory();
-            if (typeof updateTotalAmount === 'function') updateTotalAmount();
-            if (typeof updateWaveTotals === 'function') updateWaveTotals();
-            if (typeof updateUndoButton === 'function') updateUndoButton();
-            
-            // 保存到本地存储
-            saveData();
-            
-            console.log('✅ 云端数据应用完成');
         }
 
-        // 保存数据到云端
         async function saveToCloud() {
             if (!window.isFirebaseInitialized || !window.firebaseDb) {
                 console.log('Firebase未连接，仅保存到本地');
@@ -1428,9 +1088,6 @@ function applyCloudData(data) {
             }
             
             try {
-                console.log('💾 保存数据到云端...');
-                updateCloudStatus('同步中...', 'connecting');
-                
                 const saveData = {
                     moneyMap: window.moneyMap || {},
                     historyRecords: window.historyRecords || [],
@@ -1460,207 +1117,13 @@ function applyCloudData(data) {
             } catch (error) {
                 console.error('保存到云端失败:', error);
                 updateCloudStatus('同步失败', 'offline');
-                
-                // 保存到本地
-                saveData();
             }
-        }
-
-        // ==================== 密码验证模块 ====================
-        const CORRECT_PASSWORD_HASH = 'TWFzdGVyMTIzNDU2';
-        
-        async function pasteFromClipboard() {
-            const input = document.getElementById('inputData');
-            try {
-                const text = await navigator.clipboard.readText();
-                input.value = text;
-                showNotification('✅ 已粘贴剪贴板内容');
-            } catch (err) {
-                input.focus();
-                showNotification('📱 请长按输入框选择"粘贴"', 'warning');
-            }
-        }
-
-        function clearInput() {
-            document.getElementById('inputData').value = '';
-            document.getElementById('inputData').focus();
-            showNotification('🗑️ 输入框已清空');
-        }
-        
-       // ==================== 最前面定义的函数 ====================
-window.checkPassword = function() {
-    console.log('checkPassword被调用');
-    var input = document.getElementById('passwordInput');
-    var errorEl = document.getElementById('passwordError');
-    
-    if (!input || !input.value) {
-        if (errorEl) errorEl.textContent = '请输入密码';
-        return;
-    }
-    
-    if (input.value.trim() === 'Master123456') {
-        if (errorEl) errorEl.textContent = '';
-        
-        localStorage.setItem('lottery_admin_auth', JSON.stringify({
-            loggedIn: true,
-            loginTime: Date.now()
-        }));
-        
-        document.getElementById('passwordOverlay').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        
-        console.log('密码验证成功');
-    } else {
-        if (errorEl) errorEl.textContent = '密码错误，请重试';
-        input.value = '';
-        input.focus();
-    }
-};
-
-console.log('checkPassword函数已定义');
-        // ==================== 自动登录检查 ====================
-setTimeout(function() {
-    try {
-        const authStr = localStorage.getItem('lottery_admin_auth');
-        if (authStr) {
-            const authData = JSON.parse(authStr);
-            const now = Date.now();
-            const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
-            
-            if (authData.loggedIn && authData.loginTime && (now - authData.loginTime) < THREE_DAYS_MS) {
-                document.getElementById('passwordOverlay').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'block';
-                console.log('✅ 自动登录成功');
-            }
-        }
-    } catch(e) {
-        console.log('自动登录检查出错:', e);
-    }
-}, 100);
-        
-       function checkAuth() {
-    const authStr = localStorage.getItem('lottery_admin_auth');
-    if (!authStr) return false;
-    
-    try {
-        const authData = JSON.parse(authStr);
-        const now = new Date().getTime();
-        const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
-        const isValid = authData.loggedIn === true && 
-                       authData.loginTime && 
-                       (now - authData.loginTime) < THREE_DAYS_MS;
-        
-        if (isValid) {
-            return true;
-        } else {
-            localStorage.removeItem('lottery_admin_auth');
-            return false;
-        }
-    } catch (e) {
-        return false;
-    }
-} // ← checkAuth函数结束
-
-// ==================== 登录按钮事件绑定 ==================== （添加在这里）
-function setupLoginButton() {
-    const loginBtn = document.querySelector('.login-btn');
-    if (!loginBtn) return;
-    
-    // 移除旧的onclick属性（避免冲突）
-    loginBtn.removeAttribute('onclick');
-    
-    // 添加新的事件监听
-    loginBtn.addEventListener('click', function() {
-        console.log('登录按钮点击');
-        
-        const input = document.getElementById('passwordInput');
-        const errorEl = document.getElementById('passwordError');
-        
-        if (!input || !input.value) {
-            if (errorEl) errorEl.textContent = '请输入密码';
-            return;
-        }
-        
-        if (input.value.trim() === 'Master123456') {
-            if (errorEl) errorEl.textContent = '';
-            
-            // 保存登录状态
-            localStorage.setItem('lottery_admin_auth', JSON.stringify({
-                loggedIn: true,
-                loginTime: Date.now()
-            }));
-            
-            // 显示主应用
-            document.getElementById('passwordOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            
-            console.log('✅ 登录成功');
-        } else {
-            if (errorEl) errorEl.textContent = '密码错误，请重试';
-            input.value = '';
-            input.focus();
-        }
-    });
-    
-    console.log('✅ 登录按钮事件已绑定');
-}
-
-// 在页面加载后执行
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupLoginButton);
-} else {
-    setupLoginButton(); // 立即执行
-}
-
-// ==================== 主应用初始化 ==================== 
-function initializeApplication() {
-    console.log('🚀 初始化应用...');
-    // ... 原有代码继续 ...
-
-// ==================== 密码验证函数 ====================
-window.checkPassword = function() {
-    console.log('checkPassword被调用');
-    var input = document.getElementById('passwordInput');
-    var errorEl = document.getElementById('passwordError');
-    
-    if (!input || !input.value) {
-        if (errorEl) errorEl.textContent = '请输入密码';
-        return;
-    }
-    
-    if (input.value.trim() === 'Master123456') {
-        if (errorEl) errorEl.textContent = '';
-        
-        localStorage.setItem('lottery_admin_auth', JSON.stringify({
-            loggedIn: true,
-            loginTime: Date.now()
-        }));
-        
-        document.getElementById('passwordOverlay').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        
-        console.log('密码验证成功');
-    } else {
-        if (errorEl) errorEl.textContent = '密码错误，请重试';
-        input.value = '';
-        input.focus();
-    }
-};
-
-console.log('checkPassword函数已定义');
-
-// ==================== 主应用初始化 ==================== 
-function initializeApplication() {
-    console.log('🚀 初始化应用...');
-        
-        function showMainApp() {
-            document.getElementById('passwordOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            initializeLotteryApp();
         }
 
         // ==================== 彩票看板主程序 ====================
         function initializeLotteryApp() {
+            console.log('🎯 彩票看板系统启动...');
+            
             // ==================== 数据配置 ====================
             const zodiacMap = {
                 "鼠": [6, 18, 30, 42],
@@ -1718,15 +1181,14 @@ function initializeApplication() {
                 return "";
             }
 
-            // ==================== 页面初始化 ====================
-            console.log('🎯 彩票看板系统启动...');
+            // 初始化数据
             initData();
             
             // 初始化Firebase
             initializeFirebase();
             
             // 从本地加载数据
-            setTimeout(() => loadSavedData(), 500);
+            loadSavedData();
 
             // ==================== 历史记录折叠/展开功能 ====================
             let historyExpanded = false;
@@ -2240,7 +1702,7 @@ function initializeApplication() {
                     if (urlData) {
                         const decoded = JSON.parse(decodeURIComponent(atob(urlData)));
                         if (decoded && decoded.moneyMap) {
-                            loadFromData(decoded);
+                            applyCloudData(decoded);
                             return;
                         }
                     }
@@ -2249,7 +1711,7 @@ function initializeApplication() {
                     const saved = localStorage.getItem('lottery_data_v2');
                     if (saved) {
                         const data = JSON.parse(saved);
-                        loadFromData(data);
+                        applyCloudData(data);
                         console.log('✅ 本地数据加载完成');
                     }
                 } catch (e) {
@@ -2257,7 +1719,7 @@ function initializeApplication() {
                 }
             }
 
-            function loadFromData(data) {
+            function applyCloudData(data) {
                 if (data.moneyMap) window.moneyMap = data.moneyMap;
                 if (data.historyRecords) window.historyRecords = data.historyRecords;
                 if (data.undoStack) window.undoStack = data.undoStack;
@@ -2324,34 +1786,81 @@ function initializeApplication() {
                 historyExpanded = false;
             }
 
-            function showNotification(message, type = 'success') {
-                const existing = document.querySelector('.notification');
-                if (existing) existing.remove();
-                const notification = document.createElement('div');
-                notification.className = 'notification';
-                notification.style.background = type === 'warning' ? '#ff9f43' : '#2ecc71';
-                notification.innerHTML = message.replace(/\n/g, '<br>');
-                document.body.appendChild(notification);
-                setTimeout(() => {
-                    notification.style.opacity = '0';
-                    notification.style.transform = 'translateX(100%)';
-                    setTimeout(() => notification.remove(), 300);
-                }, 3000);
+            // ==================== 辅助函数 ====================
+            window.pasteFromClipboard = async function() {
+                const input = document.getElementById('inputData');
+                try {
+                    const text = await navigator.clipboard.readText();
+                    input.value = text;
+                    showNotification('✅ 已粘贴剪贴板内容');
+                } catch (err) {
+                    input.focus();
+                    showNotification('📱 请长按输入框选择"粘贴"', 'warning');
+                }
+            }
+
+            window.clearInput = function() {
+                document.getElementById('inputData').value = '';
+                document.getElementById('inputData').focus();
+                showNotification('🗑️ 输入框已清空');
+            }
+        }
+
+        // ==================== 页面初始化 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 页面加载完成');
+            
+            // 设置网络监听
+            setupNetworkListeners();
+            
+            // 检查自动登录
+            setTimeout(function() {
+                if (checkAuth()) {
+                    document.getElementById('passwordOverlay').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'block';
+                    initializeLotteryApp();
+                    console.log('✅ 自动登录成功');
+                } else {
+                    // 绑定密码输入框回车事件
+                    document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            checkPassword();
+                        }
+                    });
+                    document.getElementById('passwordInput').focus();
+                }
+            }, 100);
+        });
+
+        function setupNetworkListeners() {
+            // 监听网络状态变化
+            window.addEventListener('online', () => {
+                console.log('🌐 网络恢复');
+                document.getElementById('networkIndicator').className = 'network-indicator network-online';
+                showNotification('✅ 网络已恢复');
+                
+                // 尝试重新连接Firebase
+                if (!window.isFirebaseConnected && window.firebaseApp) {
+                    initializeFirebase();
+                }
+            });
+
+            window.addEventListener('offline', () => {
+                console.log('🌐 网络断开');
+                document.getElementById('networkIndicator').className = 'network-indicator network-offline';
+                showNotification('⚠️ 网络已断开，切换到离线模式');
+                updateCloudStatus('离线模式', 'offline');
+            });
+
+            // 初始网络状态
+            const networkIndicator = document.getElementById('networkIndicator');
+            if (navigator.onLine) {
+                networkIndicator.className = 'network-indicator network-online';
+            } else {
+                networkIndicator.className = 'network-indicator network-offline';
+                updateCloudStatus('离线模式', 'offline');
             }
         }
     </script>
 </body>
-
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
