@@ -1147,22 +1147,38 @@ async function initializeFirebase() {
 }
 
         // ==================== 实时数据同步 ====================
-        function startRealTimeListener() {
-            if (!window.isFirebaseInitialized || !window.firebaseDb) {
-                console.log('Firebase未初始化，跳过实时监听');
-                return;
-            }
-            
-            try {
-                console.log('🔄 启动实时数据监听...');
+function startRealTimeListener() {
+    if (!window.isFirebaseInitialized || !window.firebaseDb) {
+        console.log('Firebase未初始化，跳过实时监听');
+        return;
+    }
+    
+    console.log('🔄 启动实时数据监听...');
+    
+    window.firebaseUnsubscribe = window.firebaseDb.collection('lottery_data')
+        .orderBy('timestamp', 'desc')
+        .limit(1)
+        .onSnapshot(snapshot => {
+            console.log('📥 收到更新');
+            if (!snapshot.empty) {
+                const data = snapshot.docs[0].data();
+                // 强制每次都更新
+                window.moneyMap = data.moneyMap || {};
+                window.historyRecords = data.historyRecords || [];
                 
-                // 监听 lottery_data 集合的最新文档
-                window.firebaseUnsubscribe = window.firebaseDb.collection('lottery_data')
-                    .orderBy('timestamp', 'desc')
-                    .limit(1)
-                    .onSnapshot({
-                        next: (snapshot) => {
-                            console.log('📥 收到云端数据更新');
+                // 更新界面
+                if (window.lotteryData) {
+                    window.lotteryData.forEach(item => {
+                        item.amount = window.moneyMap[item.number] || 0;
+                    });
+                    renderDataTable();
+                    updateTotalAmount();
+                }
+            }
+        });
+    
+    console.log('✅ 实时监听已启动');
+}
                             
                             if (!snapshot.empty) {
                                 const doc = snapshot.docs[0];
@@ -1229,17 +1245,19 @@ async function initializeFirebase() {
         }
 
         // 应用云端数据
-        function applyCloudData(data) {
-            console.log('应用云端数据...');
-            
-            // 更新全局数据
-            if (data.moneyMap) {
-                window.moneyMap = data.moneyMap;
-            }
-            
-            if (data.historyRecords) {
-                window.historyRecords = data.historyRecords;
-            }
+function applyCloudData(data) {
+    console.log('应用数据');
+    // 直接替换，不合并
+    window.moneyMap = data.moneyMap || {};
+    window.historyRecords = data.historyRecords || [];
+    
+    // 更新界面
+    renderDataTable();
+    renderHistory();
+    updateTotalAmount();
+    updateWaveTotals();
+    if (typeof saveData === 'function') saveData();
+}
             
             // 更新彩票数据
             if (window.lotteryData) {
@@ -2063,6 +2081,7 @@ async function initializeFirebase() {
 </body>
 
 </html>
+
 
 
 
