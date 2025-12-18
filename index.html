@@ -4,17 +4,845 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📊 彩票实时看板 - 多人实时同步</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+    <!-- 添加favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
     <style>
-        /* ... 保持CSS样式不变 ... */
+        /* 云状态显示 */
+        .cloud-status {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            background: #2c3e50;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .cloud-status.online {
+            background: #27ae60;
+        }
+        
+        .cloud-status.offline {
+            background: #e74c3c;
+        }
+        
+        .cloud-status.connecting {
+            background: #f39c12;
+        }
+        
+        /* 密码验证页面样式 */
+        #passwordOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+        .login-box h1 { color: #2c3e50; margin-bottom: 30px; }
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #34495e;
+            font-weight: bold;
+        }
+        #passwordInput {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border 0.3s;
+        }
+        #passwordInput:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+        .password-error {
+            color: #e74c3c;
+            margin-top: 10px;
+            min-height: 20px;
+            font-size: 14px;
+        }
+        .password-hint {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        /* 主看板样式 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Microsoft YaHei', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+        
+        .container { 
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header { 
+            background: linear-gradient(to right, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+        
+        .status-bar {
+            background: #2ecc71;
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            border-bottom: 3px solid #27ae60;
+        }
+        
+        .history-section {
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0;
+            cursor: pointer;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            transition: all 0.3s ease;
+        }
+        
+        .history-header:hover {
+            background: #f5f5f5;
+        }
+        
+        .history-header.active {
+            background: #e8f4fc;
+            border-color: #3498db;
+        }
+        
+        .history-title {
+            color: #2c3e50;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .history-toggle-icon {
+            font-size: 18px;
+            transition: transform 0.3s ease;
+        }
+        
+        .history-header.active .history-toggle-icon {
+            transform: rotate(180deg);
+        }
+        
+        .history-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .history-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        
+        .history-btn:hover {
+            background: #f5f5f5;
+        }
+        
+        .history-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            margin-top: 0;
+        }
+        
+        .history-content.expanded {
+            max-height: 300px;
+            margin-top: 10px;
+        }
+        
+        .history-list {
+            max-height: 280px;
+            overflow-y: auto;
+        }
+        
+        .history-item {
+            background: white;
+            padding: 12px 40px 12px 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            font-size: 13px;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .delete-btn {
+            position: absolute;
+            right: 10px;
+            top: 12px;
+            background: #ffebee;
+            color: #e74c3c;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .delete-btn:hover {
+            background: #ffcdd2;
+            transform: scale(1.1);
+        }
+        
+        .history-time {
+            color: #3498db;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        .history-text {
+            font-size: 14px;
+            margin: 5px 0;
+            color: #333;
+            line-height: 1.5;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+        
+        .history-stats {
+            display: flex;
+            gap: 10px;
+            margin: 5px 0;
+            font-size: 11px;
+            color: #7f8c8d;
+        }
+        
+        .history-stat-item {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        
+        .history-amount {
+            color: #e74c3c;
+            font-weight: bold;
+            text-align: right;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+        
+        .input-section {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .total-box {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.2);
+        }
+        
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            resize: none;
+            background: white;
+            font-family: 'Microsoft YaHei', monospace;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #e74c3c;
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+        }
+        
+        .input-examples {
+            background: #e8f4fc;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .input-examples strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-size: 13px;
+        }
+        
+        .input-examples code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+        }
+        
+        .data-section {
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        
+        .section-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            font-size: 16px;
+        }
+        
+        .data-table th {
+            background: #34495e;
+            color: white;
+            padding: 16px 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .data-table td {
+            padding: 14px 10px;
+            border-bottom: 2px solid #eee;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .data-table tr:hover {
+            background: #f0f7ff;
+        }
+        
+        .number-cell {
+            font-weight: bold;
+            color: #2c3e50;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+        }
+        
+        .zodiac-cell {
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .wave-cell {
+            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 6px;
+            display: inline-block;
+            font-size: 16px;
+        }
+        
+        .wave-red {
+            background: #ffebee;
+            color: #e74c3c;
+        }
+        
+        .wave-blue {
+            background: #e3f2fd;
+            color: #3498db;
+        }
+        
+        .wave-green {
+            background: #e8f5e9;
+            color: #27ae60;
+        }
+        
+        .amount-cell {
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 18px;
+        }
+        
+        .amount-cell-zero {
+            font-weight: normal;
+            color: #95a5a6;
+            font-size: 16px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #95a5a6;
+            background: white;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .empty-state-icon {
+            font-size: 50px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+        
+        .highlight {
+            background: #fff9e6 !important;
+            font-weight: bold;
+        }
+        
+        .highlight-red { border-left: 4px solid #e74c3c; }
+        .highlight-blue { border-left: 4px solid #3498db; }
+        .highlight-green { border-left: 4px solid #27ae60; }
+        
+        .no-amount-row {
+            opacity: 0.7;
+        }
+        
+        .no-amount-row:hover {
+            opacity: 1;
+        }
+        
+        .wave-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .wave-total {
+            font-weight: bold;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        .wave-total.red { 
+            background: #ffebee;
+            color: #e74c3c;
+        }
+        .wave-total.blue { 
+            background: #e3f2fd;
+            color: #3498db;
+        }
+        .wave-total.green { 
+            background: #e8f5e9;
+            color: #27ae60;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            margin-top: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2ecc71;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+            animation: slideInRight 0.3s ease-out;
+            max-width: 300px;
+            border-left: 5px solid #27ae60;
+        }
+        
+        /* 网络状态指示器 */
+        .network-indicator {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            z-index: 1001;
+        }
+        .network-online { background: #2ecc71; }
+        .network-offline { background: #e74c3c; }
+        .network-slow { background: #f39c12; }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+            
+            .history-section,
+            .input-section,
+            .data-section {
+                padding: 12px;
+            }
+            
+            .data-table {
+                font-size: 14px;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 12px 6px;
+            }
+            
+            .number-cell,
+            .zodiac-cell,
+            .amount-cell {
+                font-size: 16px;
+            }
+            
+            .amount-cell-zero {
+                font-size: 14px;
+            }
+            
+            .wave-cell {
+                font-size: 14px;
+                padding: 4px 8px;
+            }
+            
+            .btn {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .total-box {
+                font-size: 18px;
+                padding: 12px;
+            }
+            
+            .history-list {
+                max-height: 250px;
+            }
+            
+            textarea {
+                font-size: 14px;
+                padding: 12px;
+            }
+            
+            .wave-info-row {
+                font-size: 14px;
+                padding: 12px;
+            }
+            
+            .wave-total {
+                font-size: 14px;
+                padding: 6px 10px;
+            }
+            
+            .cloud-status {
+                font-size: 11px;
+                padding: 6px 12px;
+                bottom: 10px;
+                right: 10px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- ... 保持HTML结构不变 ... -->
+    <!-- 网络状态指示器 -->
+    <div class="network-indicator network-online" id="networkIndicator"></div>
+    
+    <!-- 云同步状态显示 -->
+    <div class="cloud-status connecting" id="cloudStatus">
+        <span id="cloudIcon">🔄</span>
+        <span id="cloudText">初始化中...</span>
+    </div>
+
+    <!-- 密码验证覆盖层 -->
+    <div id="passwordOverlay">
+        <div class="login-box">
+            <h1>🔐 管理员验证</h1>
+            <div class="input-group">
+                <label for="passwordInput">请输入管理员密码</label>
+                <input type="password" id="passwordInput" placeholder="输入密码后按回车或点击进入">
+            </div>
+            <button class="login-btn" onclick="checkPassword()">🚪 进入实时看板</button>
+            <div id="passwordError" class="password-error"></div>
+            <div class="password-hint">提示：验证通过后，3天内无需重复输入密码。</div>
+        </div>
+    </div>
+
+    <!-- 主看板页面 (默认隐藏) -->
+    <div id="mainApp" style="display: none;">
+        <div class="container">
+            <div class="header">
+                <h1>📊 彩票实时看板 - 多人实时同步</h1>
+                <p style="opacity: 0.9; font-size: 14px;">支持任意格式 • 实时多人同步 • 国内优化</p>
+            </div>
+            
+            <div class="status-bar" id="statusBar">
+                🚀 系统启动中...
+            </div>
+            
+            <div class="history-section" id="historySection">
+                <div class="history-header" id="historyHeader" onclick="toggleHistory()">
+                    <div class="history-title">
+                        <span class="history-toggle-icon">▼</span>
+                        <span>📝 录入记录</span>
+                    </div>
+                    <div class="history-actions">
+                        <button class="history-btn" onclick="undoLast(event)" id="undoBtn" disabled>
+                            ↩️ 撤销
+                        </button>
+                        <span style="font-size: 12px; color: #7f8c8d;" id="historyCount">0条</span>
+                    </div>
+                </div>
+                <div class="history-content" id="historyContent">
+                    <div class="history-list" id="historyList">
+                        <div style="text-align: center; color: #95a5a6; padding: 20px;">
+                            暂无录入记录
+                        </div>
+                    </div>
+                    <div style="text-align: right; margin-top: 10px;">
+                        <button class="history-btn" onclick="clearHistory()" style="background: #ffebee; color: #e74c3c;">
+                            🗑️ 清空记录
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <div class="total-box">
+                    总计: <span id="totalMoney">0</span> 元
+                </div>
+                
+                <div class="input-examples">
+                    <strong>💡 支持任意格式：</strong>
+                    <code>羊鸡马牛各号10</code>
+                    <code>猪.狗.鸡.猴.虎.兔.各号52元</code>
+                    <code>23.35.07.19.12.24.08.40各号10元</code>
+                    <br>支持：. / 分隔符 | 元/米/斤/块单位或无单位
+                </div>
+                
+                <textarea 
+                    id="inputData" 
+                    placeholder="输入示例（支持任意格式）：
+猪.狗.鸡.猴.虎.兔.各号52元.羊.鸡.马.牛各号10元羊.牛.狗.虎各号10元羊.蛇.狗.牛各号10元羊.狗.鸡.虎各号10元羊.牛.狗.鸡各号10元蛇.马.鸡.羊各号10元.23.35.07.19.12.24.08.40各号10元10.11.47.31.43.03.15.27.39.36.48.20.32.44.04.16.28各号5斤07.08.13.18.23.30.34.45.05.11.21.27.28.33.39.44各号10斤03.09.14.20.25.26.31.47各号5斤"
+                    style="
+                        -webkit-user-select: text !important;
+                        user-select: text !important;
+                        -webkit-touch-callout: default !important;
+                    "
+                ></textarea>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button type="button" onclick="pasteFromClipboard()" style="flex:1; padding:10px; background:#3498db; color:white; border:none; border-radius:8px; font-size:14px;">
+                        📋 粘贴剪贴板
+                    </button>
+                    <button type="button" onclick="clearInput()" style="flex:1; padding:10px; background:#95a5a6; color:white; border:none; border-radius:8px; font-size:14px;">
+                        🗑️ 清空输入
+                    </button>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="processData()">
+                        📤 发布数据
+                    </button>
+                    <button class="btn btn-danger" onclick="clearAll()">
+                        🗑️ 清空数据
+                    </button>
+                    <button class="btn btn-success" onclick="copyLink()">
+                        🔗 分享链接
+                    </button>
+                </div>
+            </div>
+            
+            <div class="data-section">
+                <div class="section-title">
+                    <span>📈 号码数据（按金额排序）</span>
+                    <span style="font-size: 12px; color: #7f8c8d; margin-left: auto;" id="dataCount">0/49个号码</span>
+                </div>
+                
+                <div class="wave-info-row">
+                    <span class="wave-total red">红波: <span id="redTotal">0</span>元</span>
+                    <span class="wave-total blue">蓝波: <span id="blueTotal">0</span>元</span>
+                    <span class="wave-total green">绿波: <span id="greenTotal">0</span>元</span>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table" id="dataTable">
+                        <thead>
+                            <tr>
+                                <th width="15%">排名</th>
+                                <th width="20%">号码</th>
+                                <th width="20%">生肖</th>
+                                <th width="25%">波色</th>
+                                <th width="20%">金额</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- 表格数据会在JS中动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div style="text-align: center; padding: 15px; color: #7f8c8d; font-size: 12px; border-top: 1px solid #eee; background: #f8f9fa;">
+                📱 支持手机访问 • 🔄 实时同步 • 💾 离线保存
+            </div>
+        </div>
+    </div>
 
     <script>
-        // ==================== 全局变量 ====================
-        let lotterySystem = null; // 存储彩票系统引用
+        // ==================== 全局变量和配置 ====================
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyAgUU04dt1igPFNTC-zJ3WhGfWp8-wKmfo",
+            authDomain: "my-lottery-board.firebaseapp.com",
+            projectId: "my-lottery-board",
+            storageBucket: "my-lottery-board.firebasestorage.app",
+            messagingSenderId: "714450363816",
+            appId: "1:714450363816:web:8335befb5ed25c98f3a99d"
+        };
 
         // ==================== 页面初始化 ====================
         document.addEventListener('DOMContentLoaded', function() {
@@ -25,29 +853,26 @@
                 if (checkAuth()) {
                     document.getElementById('passwordOverlay').style.display = 'none';
                     document.getElementById('mainApp').style.display = 'block';
-                    initializeApp();
+                    initializeLotteryApp();
                     console.log('✅ 自动登录成功');
                 } else {
                     // 绑定密码输入框回车事件
-                    const passwordInput = document.getElementById('passwordInput');
-                    if (passwordInput) {
-                        passwordInput.addEventListener('keypress', function(e) {
-                            if (e.key === 'Enter') {
-                                checkPassword();
-                            }
-                        });
-                        passwordInput.focus();
-                    }
+                    document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            checkPassword();
+                        }
+                    });
+                    document.getElementById('passwordInput').focus();
                 }
             }, 100);
         });
 
-        // ==================== 密码验证 ====================
+        // ==================== 密码验证相关函数 ====================
         function checkAuth() {
+            const authStr = localStorage.getItem('lottery_admin_auth');
+            if (!authStr) return false;
+            
             try {
-                const authStr = localStorage.getItem('lottery_admin_auth');
-                if (!authStr) return false;
-                
                 const authData = JSON.parse(authStr);
                 const now = Date.now();
                 const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
@@ -61,6 +886,7 @@
         }
 
         function checkPassword() {
+            console.log('🔑 密码验证函数被调用');
             const input = document.getElementById('passwordInput');
             const errorEl = document.getElementById('passwordError');
             
@@ -83,8 +909,8 @@
                 document.getElementById('passwordOverlay').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
                 
-                console.log('✅ 密码验证成功');
-                initializeApp();
+                console.log('✅ 密码验证成功，进入主应用');
+                initializeLotteryApp();
             } else {
                 if (errorEl) errorEl.textContent = '❌ 密码错误，请重试';
                 input.value = '';
@@ -92,55 +918,7 @@
             }
         }
 
-        // ==================== 应用主程序 ====================
-        function initializeApp() {
-            console.log('🚀 初始化应用...');
-            
-            // 更新状态
-            document.getElementById('statusBar').textContent = '🔄 初始化系统中...';
-            updateCloudStatus('初始化中', 'connecting');
-            
-            // 设置网络监听
-            setupNetworkListeners();
-            
-            // 初始化彩票系统
-            lotterySystem = createLotterySystem();
-            
-            // 初始化Firebase
-            setTimeout(() => initializeFirebase(), 500);
-        }
-
-        // ==================== 网络状态管理 ====================
-        function setupNetworkListeners() {
-            window.addEventListener('online', () => {
-                console.log('🌐 网络恢复');
-                document.getElementById('networkIndicator').className = 'network-indicator network-online';
-                showNotification('✅ 网络已恢复');
-                
-                // 尝试重新连接Firebase
-                if (!window.isFirebaseConnected) {
-                    initializeFirebase();
-                }
-            });
-
-            window.addEventListener('offline', () => {
-                console.log('🌐 网络断开');
-                document.getElementById('networkIndicator').className = 'network-indicator network-offline';
-                showNotification('⚠️ 网络已断开，切换到离线模式');
-                updateCloudStatus('离线模式', 'offline');
-            });
-
-            // 初始网络状态
-            const networkIndicator = document.getElementById('networkIndicator');
-            if (navigator.onLine) {
-                networkIndicator.className = 'network-indicator network-online';
-            } else {
-                networkIndicator.className = 'network-indicator network-offline';
-                updateCloudStatus('离线模式', 'offline');
-            }
-        }
-
-        // ==================== 通知函数 ====================
+        // ==================== 辅助函数 ====================
         function showNotification(message, type = 'success') {
             const existing = document.querySelector('.notification');
             if (existing) existing.remove();
@@ -187,857 +965,877 @@
             }
         }
 
-        // ==================== 彩票系统工厂函数 ====================
-        function createLotterySystem() {
-            console.log('🎯 创建彩票系统...');
+        // ==================== 彩票看板主程序 ====================
+        function initializeLotteryApp() {
+            console.log('🎯 彩票看板系统启动...');
             
-            const system = {
-                // 数据
-                lotteryData: [],
-                moneyMap: {},
-                historyRecords: [],
-                undoStack: [],
-                historyExpanded: false,
+            // ==================== 数据配置 ====================
+            const zodiacMap = {
+                "鼠": [6, 18, 30, 42],
+                "牛": [5, 17, 29, 41],
+                "虎": [4, 16, 28, 40],
+                "兔": [3, 15, 27, 39],
+                "龙": [2, 14, 26, 38],
+                "蛇": [1, 13, 25, 37, 49],
+                "马": [12, 24, 36, 48],
+                "羊": [11, 23, 35, 47],
+                "猴": [10, 22, 34, 46],
+                "鸡": [9, 21, 33, 45],
+                "狗": [8, 20, 32, 44],
+                "猪": [7, 19, 31, 43]
+            };
+
+            const numberToZodiac = {};
+            for (const [zodiac, numbers] of Object.entries(zodiacMap)) {
+                numbers.forEach(num => {
+                    numberToZodiac[num] = zodiac;
+                });
+            }
+
+            const waveColorMap = {
+                "红波": [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
+                "蓝波": [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
+                "绿波": [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
+            };
+
+            // ==================== 数据初始化 ====================
+            window.lotteryData = [];
+            window.moneyMap = {};
+            window.historyRecords = [];
+            window.undoStack = [];
+
+            function initData() {
+                window.lotteryData = [];
+                window.moneyMap = {};
+                for (let i = 1; i <= 49; i++) {
+                    window.lotteryData.push({
+                        number: i,
+                        zodiac: numberToZodiac[i] || "未知",
+                        waveColor: getWaveColorByNumber(i),
+                        amount: 0,
+                        rank: 0
+                    });
+                    window.moneyMap[i] = 0;
+                }
+            }
+
+            function getWaveColorByNumber(num) {
+                for (const [wave, numbers] of Object.entries(waveColorMap)) {
+                    if (numbers.includes(num)) return wave;
+                }
+                return "";
+            }
+
+            // 初始化数据
+            initData();
+            
+            // 从本地加载数据
+            loadSavedData();
+
+            // 初始化Firebase（但不等待它）
+            setTimeout(() => {
+                initializeFirebase();
+            }, 500);
+
+            // ==================== 历史记录折叠/展开功能 ====================
+            let historyExpanded = false;
+
+            window.toggleHistory = function() {
+                const header = document.getElementById('historyHeader');
+                const content = document.getElementById('historyContent');
                 
-                // 配置
-                zodiacMap: {
-                    "鼠": [6, 18, 30, 42],
-                    "牛": [5, 17, 29, 41],
-                    "虎": [4, 16, 28, 40],
-                    "兔": [3, 15, 27, 39],
-                    "龙": [2, 14, 26, 38],
-                    "蛇": [1, 13, 25, 37, 49],
-                    "马": [12, 24, 36, 48],
-                    "羊": [11, 23, 35, 47],
-                    "猴": [10, 22, 34, 46],
-                    "鸡": [9, 21, 33, 45],
-                    "狗": [8, 20, 32, 44],
-                    "猪": [7, 19, 31, 43]
-                },
-                numberToZodiac: {},
-                waveColorMap: {
-                    "红波": [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
-                    "蓝波": [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
-                    "绿波": [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
-                },
+                if (historyExpanded) {
+                    collapseHistory();
+                } else {
+                    expandHistory();
+                }
                 
-                // 初始化
-                init: function() {
-                    console.log('初始化彩票数据...');
+                historyExpanded = !historyExpanded;
+            }
+
+            function expandHistory() {
+                const header = document.getElementById('historyHeader');
+                const content = document.getElementById('historyContent');
+                
+                header.classList.add('active');
+                content.classList.add('expanded');
+                header.querySelector('.history-toggle-icon').textContent = '▲';
+            }
+
+            function collapseHistory() {
+                const header = document.getElementById('historyHeader');
+                const content = document.getElementById('historyContent');
+                
+                header.classList.remove('active');
+                content.classList.remove('expanded');
+                header.querySelector('.history-toggle-icon').textContent = '▼';
+            }
+
+            // ==================== 核心解析器 ====================
+            function parseInput(input) {
+                const results = [];
+                const lines = input.split('\n');
+                
+                lines.forEach(line => {
+                    const trimmed = line.trim();
+                    if (!trimmed) return;
                     
-                    // 构建数字到生肖的映射
-                    for (const [zodiac, numbers] of Object.entries(this.zodiacMap)) {
-                        numbers.forEach(num => {
-                            this.numberToZodiac[num] = zodiac;
+                    const commands = splitCommands(trimmed);
+                    
+                    commands.forEach(command => {
+                        const parsed = parseCommandSimple(command);
+                        if (parsed && parsed.length > 0) {
+                            results.push(...parsed);
+                        }
+                    });
+                });
+                
+                return results;
+            }
+
+            function splitCommands(text) {
+                const commands = [];
+                
+                let pattern = /([^各]+?各(?:号)?\d+(?:\.\d+)?(?:元|米|斤|块)?)/g;
+                let match;
+                
+                while ((match = pattern.exec(text)) !== null) {
+                    commands.push(match[1].trim());
+                }
+                
+                if (commands.length === 0) {
+                    const parts = text.split(/各(?:号)?/);
+                    for (let i = 0; i < parts.length - 1; i++) {
+                        const content = parts[i];
+                        const amountPart = parts[i + 1];
+                        
+                        const amountMatch = amountPart.match(/^(\d+(?:\.\d+)?)(?:元|米|斤|块)?/);
+                        if (amountMatch) {
+                            const amount = amountMatch[1];
+                            const unit = amountMatch[0].replace(amount, '');
+                            commands.push(content + '各' + amount + unit);
+                        }
+                    }
+                }
+                
+                return commands;
+            }
+
+            function parseCommandSimple(command) {
+                const results = [];
+                
+                const amountMatch = command.match(/各(?:号)?(\d+(?:\.\d+)?)(?:元|米|斤|块)?$/);
+                if (!amountMatch) return results;
+                
+                const amount = parseFloat(amountMatch[1]);
+                if (isNaN(amount) || amount <= 0) return results;
+                
+                const content = command.replace(/各(?:号)?(\d+(?:\.\d+)?)(?:元|米|斤|块)?$/, '').trim();
+                
+                if (waveColorMap[content]) {
+                    waveColorMap[content].forEach(num => {
+                        results.push({ number: num, amount: amount, type: 'wave', source: content });
+                    });
+                    return results;
+                }
+                
+                const foundZodiacs = [];
+                let tempContent = content;
+                Object.keys(zodiacMap).forEach(zodiac => {
+                    if (tempContent.includes(zodiac)) {
+                        foundZodiacs.push(zodiac);
+                        tempContent = tempContent.replace(zodiac, '');
+                    }
+                });
+                
+                if (foundZodiacs.length > 0) {
+                    foundZodiacs.forEach(zodiac => {
+                        zodiacMap[zodiac].forEach(num => {
+                            results.push({ number: num, amount: amount, type: 'zodiac', source: zodiac });
                         });
-                    }
+                    });
                     
-                    // 初始化所有号码数据
-                    this.lotteryData = [];
-                    this.moneyMap = {};
-                    for (let i = 1; i <= 49; i++) {
-                        this.lotteryData.push({
-                            number: i,
-                            zodiac: this.numberToZodiac[i] || "未知",
-                            waveColor: this.getWaveColorByNumber(i),
-                            amount: 0,
-                            rank: 0
-                        });
-                        this.moneyMap[i] = 0;
-                    }
+                    const remainingNumbers = extractNumbersFromText(tempContent);
+                    remainingNumbers.forEach(num => {
+                        results.push({ number: num, amount: amount, type: 'number', source: '号码' });
+                    });
                     
-                    // 加载本地数据
-                    this.loadSavedData();
-                },
+                    return results;
+                }
                 
-                // 辅助函数
-                getWaveColorByNumber: function(num) {
-                    for (const [wave, numbers] of Object.entries(this.waveColorMap)) {
-                        if (numbers.includes(num)) return wave;
-                    }
-                    return "";
-                },
+                const numbers = extractNumbersFromText(content);
+                numbers.forEach(num => {
+                    results.push({ number: num, amount: amount, type: 'number', source: '号码' });
+                });
                 
-                // 历史记录功能
-                toggleHistory: function() {
-                    const header = document.getElementById('historyHeader');
-                    const content = document.getElementById('historyContent');
+                return results;
+            }
+
+            function extractNumbersFromText(text) {
+                const numbers = [];
+                
+                let cleanText = text.replace(/[^\d\.\/\-]/g, ',');
+                cleanText = cleanText.replace(/[\.\/]/g, ',');
+                
+                const parts = cleanText.split(',').filter(p => p.trim());
+                
+                parts.forEach(part => {
+                    part = part.trim();
                     
-                    if (this.historyExpanded) {
-                        this.collapseHistory();
+                    const rangeMatch = part.match(/^(\d+)\s*-\s*(\d+)$/);
+                    if (rangeMatch) {
+                        const start = parseInt(rangeMatch[1]);
+                        const end = parseInt(rangeMatch[2]);
+                        if (!isNaN(start) && !isNaN(end) && start >= 1 && end <= 49 && start <= end) {
+                            for (let n = start; n <= end; n++) {
+                                numbers.push(n);
+                            }
+                        }
                     } else {
-                        this.expandHistory();
-                    }
-                    
-                    this.historyExpanded = !this.historyExpanded;
-                },
-                
-                expandHistory: function() {
-                    const header = document.getElementById('historyHeader');
-                    const content = document.getElementById('historyContent');
-                    
-                    header.classList.add('active');
-                    content.classList.add('expanded');
-                    header.querySelector('.history-toggle-icon').textContent = '▲';
-                },
-                
-                collapseHistory: function() {
-                    const header = document.getElementById('historyHeader');
-                    const content = document.getElementById('historyContent');
-                    
-                    header.classList.remove('active');
-                    content.classList.remove('expanded');
-                    header.querySelector('.history-toggle-icon').textContent = '▼';
-                },
-                
-                // 数据解析
-                parseInput: function(input) {
-                    const results = [];
-                    const lines = input.split('\n');
-                    
-                    lines.forEach(line => {
-                        const trimmed = line.trim();
-                        if (!trimmed) return;
-                        
-                        const commands = this.splitCommands(trimmed);
-                        
-                        commands.forEach(command => {
-                            const parsed = this.parseCommandSimple(command);
-                            if (parsed && parsed.length > 0) {
-                                results.push(...parsed);
-                            }
-                        });
-                    });
-                    
-                    return results;
-                },
-                
-                splitCommands: function(text) {
-                    const commands = [];
-                    let pattern = /([^各]+?各(?:号)?\d+(?:\.\d+)?(?:元|米|斤|块)?)/g;
-                    let match;
-                    
-                    while ((match = pattern.exec(text)) !== null) {
-                        commands.push(match[1].trim());
-                    }
-                    
-                    if (commands.length === 0) {
-                        const parts = text.split(/各(?:号)?/);
-                        for (let i = 0; i < parts.length - 1; i++) {
-                            const content = parts[i];
-                            const amountPart = parts[i + 1];
-                            
-                            const amountMatch = amountPart.match(/^(\d+(?:\.\d+)?)(?:元|米|斤|块)?/);
-                            if (amountMatch) {
-                                const amount = amountMatch[1];
-                                commands.push(content + '各' + amount);
-                            }
+                        const num = parseInt(part);
+                        if (!isNaN(num) && num >= 1 && num <= 49) {
+                            numbers.push(num);
                         }
                     }
-                    
-                    return commands;
-                },
+                });
                 
-                parseCommandSimple: function(command) {
-                    const results = [];
-                    const amountMatch = command.match(/各(?:号)?(\d+(?:\.\d+)?)(?:元|米|斤|块)?$/);
-                    if (!amountMatch) return results;
-                    
-                    const amount = parseFloat(amountMatch[1]);
-                    if (isNaN(amount) || amount <= 0) return results;
-                    
-                    const content = command.replace(/各(?:号)?(\d+(?:\.\d+)?)(?:元|米|斤|块)?$/, '').trim();
-                    
-                    // 检查是否是波色
-                    if (this.waveColorMap[content]) {
-                        this.waveColorMap[content].forEach(num => {
-                            results.push({ number: num, amount: amount });
-                        });
-                        return results;
+                return numbers;
+            }
+
+            // ==================== 核心处理函数 ====================
+            window.processData = function() {
+                const input = document.getElementById('inputData').value.trim();
+                if (!input) {
+                    showNotification('请输入数据', 'warning');
+                    return;
+                }
+                
+                saveCurrentStateForUndo();
+                
+                const bets = parseInput(input);
+                
+                if (bets.length === 0) {
+                    showNotification('未识别到有效数据格式\n请检查输入格式', 'warning');
+                    return;
+                }
+                
+                bets.forEach(bet => {
+                    if (bet.number >= 1 && bet.number <= 49) {
+                        window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
                     }
+                });
+                
+                window.lotteryData.forEach(item => {
+                    item.amount = window.moneyMap[item.number] || 0;
+                });
+                
+                const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
+                const uniqueNumbers = new Set(bets.map(bet => bet.number)).size;
+                
+                const stats = {
+                    zodiac: bets.filter(b => b.type === 'zodiac').length,
+                    number: bets.filter(b => b.type === 'number').length,
+                    wave: bets.filter(b => b.type === 'wave').length
+                };
+                
+                addHistoryRecord(input, bets.length, totalAmount, {
+                    zodiac: stats.zodiac,
+                    number: stats.number,
+                    wave: stats.wave,
+                    uniqueNumbers: uniqueNumbers
+                });
+                
+                updateTotalAmount();
+                document.getElementById('inputData').value = '';
+                renderDataTable();
+                renderHistory();
+                updateWaveTotals();
+                updateUndoButton();
+                
+                // 保存数据（本地+云端）
+                saveData();
+                if (window.firebaseDb) {
+                    saveToCloud();
+                }
+                
+                const statText = [
+                    stats.zodiac > 0 ? `生肖${stats.zodiac}` : null,
+                    stats.number > 0 ? `号码${stats.number}` : null,
+                    stats.wave > 0 ? `波色${stats.wave}` : null
+                ].filter(Boolean).join(' ');
+                
+                showNotification(`✅ 成功录入 ${bets.length} 个下注\n💰 总计 ${totalAmount.toFixed(2)} 元\n📊 ${uniqueNumbers}个号码\n${statText}`);
+                
+                expandHistory();
+                historyExpanded = true;
+            }
+
+            function updateTotalAmount() {
+                const total = Object.values(window.moneyMap).reduce((sum, amount) => sum + amount, 0);
+                document.getElementById('totalMoney').textContent = total.toFixed(2);
+                
+                const activeCount = Object.values(window.moneyMap).filter(amount => amount > 0).length;
+                document.getElementById('dataCount').textContent = `${activeCount}/49个号码`;
+            }
+
+            function renderDataTable() {
+                const tbody = document.getElementById('tableBody');
+                
+                const sortedData = [...window.lotteryData].sort((a, b) => {
+                    if (a.amount > 0 && b.amount === 0) return -1;
+                    if (a.amount === 0 && b.amount > 0) return 1;
+                    if (a.amount > 0 && b.amount > 0) return b.amount - a.amount;
+                    return a.number - b.number;
+                });
+                
+                let html = '';
+                let currentRank = 0;
+                
+                sortedData.forEach((item, index) => {
+                    const waveClass = item.waveColor === '红波' ? 'wave-red' :
+                                    item.waveColor === '蓝波' ? 'wave-blue' :
+                                    item.waveColor === '绿波' ? 'wave-green' : '';
                     
-                    // 检查生肖
-                    const foundZodiacs = [];
-                    let tempContent = content;
-                    Object.keys(this.zodiacMap).forEach(zodiac => {
-                        if (tempContent.includes(zodiac)) {
-                            foundZodiacs.push(zodiac);
-                            tempContent = tempContent.replace(zodiac, '');
-                        }
-                    });
+                    let highlightClass = '';
+                    let rowClass = '';
+                    let amountClass = 'amount-cell';
+                    let rankDisplay = '-';
+                    let amountDisplay = '0元';
                     
-                    if (foundZodiacs.length > 0) {
-                        foundZodiacs.forEach(zodiac => {
-                            this.zodiacMap[zodiac].forEach(num => {
-                                results.push({ number: num, amount: amount });
-                            });
-                        });
+                    if (item.amount > 0) {
+                        currentRank++;
+                        rankDisplay = currentRank;
+                        amountDisplay = `${item.amount.toFixed(2)}元`;
                         
-                        // 处理剩余的数字
-                        const remainingNumbers = this.extractNumbersFromText(tempContent);
-                        remainingNumbers.forEach(num => {
-                            results.push({ number: num, amount: amount });
-                        });
-                        
-                        return results;
-                    }
-                    
-                    // 处理纯数字
-                    const numbers = this.extractNumbersFromText(content);
-                    numbers.forEach(num => {
-                        results.push({ number: num, amount: amount });
-                    });
-                    
-                    return results;
-                },
-                
-                extractNumbersFromText: function(text) {
-                    const numbers = [];
-                    let cleanText = text.replace(/[^\d\.\/\-]/g, ',');
-                    cleanText = cleanText.replace(/[\.\/]/g, ',');
-                    
-                    const parts = cleanText.split(',').filter(p => p.trim());
-                    
-                    parts.forEach(part => {
-                        part = part.trim();
-                        
-                        // 处理范围（如1-10）
-                        const rangeMatch = part.match(/^(\d+)\s*-\s*(\d+)$/);
-                        if (rangeMatch) {
-                            const start = parseInt(rangeMatch[1]);
-                            const end = parseInt(rangeMatch[2]);
-                            if (!isNaN(start) && !isNaN(end) && start >= 1 && end <= 49 && start <= end) {
-                                for (let n = start; n <= end; n++) {
-                                    numbers.push(n);
-                                }
-                            }
-                        } else {
-                            const num = parseInt(part);
-                            if (!isNaN(num) && num >= 1 && num <= 49) {
-                                numbers.push(num);
-                            }
+                        if (item.amount >= 200) {
+                            highlightClass = 'highlight highlight-red';
+                        } else if (item.amount >= 100) {
+                            highlightClass = 'highlight highlight-blue';
+                        } else if (item.amount >= 50) {
+                            highlightClass = 'highlight highlight-green';
                         }
-                    });
-                    
-                    return numbers;
-                },
-                
-                // 核心处理
-                processData: function() {
-                    const input = document.getElementById('inputData').value.trim();
-                    if (!input) {
-                        showNotification('请输入数据', 'warning');
-                        return;
+                    } else {
+                        rowClass = 'no-amount-row';
+                        amountClass = 'amount-cell-zero';
                     }
                     
-                    this.saveCurrentStateForUndo();
-                    
-                    const bets = this.parseInput(input);
-                    
-                    if (bets.length === 0) {
-                        showNotification('未识别到有效数据格式\n请检查输入格式', 'warning');
-                        return;
-                    }
-                    
-                    // 更新金额
-                    bets.forEach(bet => {
-                        if (bet.number >= 1 && bet.number <= 49) {
-                            this.moneyMap[bet.number] = (this.moneyMap[bet.number] || 0) + bet.amount;
-                        }
-                    });
-                    
-                    // 更新彩票数据
-                    this.lotteryData.forEach(item => {
-                        item.amount = this.moneyMap[item.number] || 0;
-                    });
-                    
-                    // 统计
-                    const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
-                    const uniqueNumbers = new Set(bets.map(bet => bet.number)).size;
-                    
-                    // 添加到历史记录
-                    this.addHistoryRecord(input, bets.length, totalAmount, uniqueNumbers);
-                    
-                    // 更新界面
-                    this.updateTotalAmount();
-                    document.getElementById('inputData').value = '';
-                    this.renderDataTable();
-                    this.renderHistory();
-                    this.updateWaveTotals();
-                    this.updateUndoButton();
-                    
-                    // 保存数据
-                    this.saveData();
-                    
-                    // 同步到云端
-                    if (window.firebaseDb) {
-                        saveToCloud();
-                    }
-                    
-                    showNotification(`✅ 成功录入 ${bets.length} 个下注\n💰 总计 ${totalAmount.toFixed(2)} 元\n📊 ${uniqueNumbers}个号码`);
-                    
-                    this.expandHistory();
-                    this.historyExpanded = true;
-                },
+                    html += `
+                        <tr class="${highlightClass} ${rowClass}">
+                            <td class="number-cell">${rankDisplay}</td>
+                            <td class="number-cell">${item.number}</td>
+                            <td class="zodiac-cell">${item.zodiac}</td>
+                            <td><span class="wave-cell ${waveClass}">${item.waveColor}</span></td>
+                            <td class="${amountClass}">${amountDisplay}</td>
+                        </tr>
+                    `;
+                });
                 
-                updateTotalAmount: function() {
-                    const total = Object.values(this.moneyMap).reduce((sum, amount) => sum + amount, 0);
-                    document.getElementById('totalMoney').textContent = total.toFixed(2);
-                    
-                    const activeCount = Object.values(this.moneyMap).filter(amount => amount > 0).length;
-                    document.getElementById('dataCount').textContent = `${activeCount}/49个号码`;
-                },
+                tbody.innerHTML = html;
                 
-                renderDataTable: function() {
-                    const tbody = document.getElementById('tableBody');
+                if (sortedData.every(item => item.amount === 0)) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <div>等待数据录入</div>
+                                <div style="font-size: 14px; margin-top: 10px;">（下方显示全部49个号码）</div>
+                            </td>
+                        </tr>
+                    `;
                     
-                    // 排序：有金额的在前，按金额降序
-                    const sortedData = [...this.lotteryData].sort((a, b) => {
-                        if (a.amount > 0 && b.amount === 0) return -1;
-                        if (a.amount === 0 && b.amount > 0) return 1;
-                        if (a.amount > 0 && b.amount > 0) return b.amount - a.amount;
-                        return a.number - b.number;
-                    });
-                    
-                    let html = '';
-                    let currentRank = 0;
-                    
-                    sortedData.forEach((item, index) => {
+                    let allNumbersHtml = '';
+                    window.lotteryData.forEach((item, index) => {
                         const waveClass = item.waveColor === '红波' ? 'wave-red' :
                                         item.waveColor === '蓝波' ? 'wave-blue' :
                                         item.waveColor === '绿波' ? 'wave-green' : '';
                         
-                        let highlightClass = '';
-                        let rowClass = '';
-                        let amountClass = 'amount-cell';
-                        let rankDisplay = '-';
-                        let amountDisplay = '0元';
-                        
-                        if (item.amount > 0) {
-                            currentRank++;
-                            rankDisplay = currentRank;
-                            amountDisplay = `${item.amount.toFixed(2)}元`;
-                            
-                            // 高亮显示大金额
-                            if (item.amount >= 200) {
-                                highlightClass = 'highlight highlight-red';
-                            } else if (item.amount >= 100) {
-                                highlightClass = 'highlight highlight-blue';
-                            } else if (item.amount >= 50) {
-                                highlightClass = 'highlight highlight-green';
-                            }
-                        } else {
-                            rowClass = 'no-amount-row';
-                            amountClass = 'amount-cell-zero';
-                        }
-                        
-                        html += `
-                            <tr class="${highlightClass} ${rowClass}">
-                                <td class="number-cell">${rankDisplay}</td>
+                        allNumbersHtml += `
+                            <tr class="no-amount-row">
+                                <td class="number-cell">-</td>
                                 <td class="number-cell">${item.number}</td>
                                 <td class="zodiac-cell">${item.zodiac}</td>
                                 <td><span class="wave-cell ${waveClass}">${item.waveColor}</span></td>
-                                <td class="${amountClass}">${amountDisplay}</td>
+                                <td class="amount-cell-zero">0元</td>
                             </tr>
                         `;
                     });
                     
-                    tbody.innerHTML = html;
-                    
-                    // 如果全部为0，显示空状态
-                    if (sortedData.every(item => item.amount === 0)) {
-                        tbody.innerHTML = `
-                            <tr>
-                                <td colspan="5" class="empty-state">
-                                    <div class="empty-state-icon">📭</div>
-                                    <div>等待数据录入</div>
-                                </td>
-                            </tr>
-                        `;
-                    }
-                },
-                
-                saveCurrentStateForUndo: function() {
-                    const state = {
-                        moneyMap: {...this.moneyMap},
-                        historyRecords: JSON.parse(JSON.stringify(this.historyRecords)),
-                        timestamp: Date.now()
-                    };
-                    this.undoStack.push(state);
-                    if (this.undoStack.length > 20) this.undoStack.shift();
-                },
-                
-                undoLast: function(event) {
-                    if (event) {
-                        event.stopPropagation();
-                    }
-                    
-                    if (this.undoStack.length === 0) {
-                        showNotification('没有可撤销的操作', 'warning');
-                        return;
-                    }
-                    
-                    const lastState = this.undoStack.pop();
-                    this.moneyMap = lastState.moneyMap;
-                    this.historyRecords = lastState.historyRecords;
-                    
-                    this.lotteryData.forEach(item => {
-                        item.amount = this.moneyMap[item.number] || 0;
-                    });
-                    
-                    this.renderHistory();
-                    this.renderDataTable();
-                    this.updateTotalAmount();
-                    this.updateWaveTotals();
-                    this.updateUndoButton();
-                    
-                    this.saveData();
-                    
-                    if (window.firebaseDb) {
-                        saveToCloud();
-                    }
-                    
-                    showNotification('✅ 已撤销上一次操作');
-                },
-                
-                updateWaveTotals: function() {
-                    let redTotal = 0, blueTotal = 0, greenTotal = 0;
-                    this.lotteryData.forEach(item => {
-                        if (item.amount > 0) {
-                            if (item.waveColor === '红波') redTotal += item.amount;
-                            else if (item.waveColor === '蓝波') blueTotal += item.amount;
-                            else if (item.waveColor === '绿波') greenTotal += item.amount;
-                        }
-                    });
-                    
-                    document.getElementById('redTotal').textContent = redTotal.toFixed(2);
-                    document.getElementById('blueTotal').textContent = blueTotal.toFixed(2);
-                    document.getElementById('greenTotal').textContent = greenTotal.toFixed(2);
-                },
-                
-                addHistoryRecord: function(text, count, amount, uniqueNumbers) {
-                    const now = new Date();
-                    const timeStr = now.toLocaleTimeString('zh-CN', { 
-                        hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
-                    });
-                    
-                    const record = {
-                        id: Date.now(),
-                        text: text,
-                        time: timeStr,
-                        count: count,
-                        amount: amount,
-                        uniqueNumbers: uniqueNumbers || 0
-                    };
-                    
-                    this.historyRecords.unshift(record);
-                    if (this.historyRecords.length > 50) {
-                        this.historyRecords = this.historyRecords.slice(0, 50);
-                    }
-                    document.getElementById('historyCount').textContent = `${this.historyRecords.length}条`;
-                },
-                
-                renderHistory: function() {
-                    const container = document.getElementById('historyList');
-                    if (this.historyRecords.length === 0) {
-                        container.innerHTML = `<div style="text-align: center; color: #95a5a6; padding: 20px;">暂无录入记录</div>`;
-                        return;
-                    }
-                    
-                    let html = '';
-                    this.historyRecords.forEach(record => {
-                        html += `
-                            <div class="history-item">
-                                <button class="delete-btn" onclick="deleteHistoryRecord(${record.id})">×</button>
-                                <span class="history-time">${record.time}</span>
-                                <div class="history-text">${record.text}</div>
-                                <div class="history-stats">
-                                    <span class="history-stat-item">${record.uniqueNumbers}个号</span>
-                                    <span class="history-stat-item">${record.count}个下注</span>
-                                </div>
-                                <div class="history-amount">${record.amount.toFixed(2)}元</div>
-                            </div>
-                        `;
-                    });
-                    container.innerHTML = html;
-                },
-                
-                deleteHistoryRecord: function(id) {
-                    const recordIndex = this.historyRecords.findIndex(r => r.id === id);
-                    if (recordIndex === -1) return;
-                    
-                    this.saveCurrentStateForUndo();
-                    this.historyRecords.splice(recordIndex, 1);
-                    
-                    // 重新计算所有金额
-                    this.moneyMap = {};
-                    this.historyRecords.forEach(record => {
-                        const bets = this.parseInput(record.text);
-                        bets.forEach(bet => {
-                            if (bet.number >= 1 && bet.number <= 49) {
-                                this.moneyMap[bet.number] = (this.moneyMap[bet.number] || 0) + bet.amount;
-                            }
-                        });
-                    });
-                    
-                    this.lotteryData.forEach(item => {
-                        item.amount = this.moneyMap[item.number] || 0;
-                    });
-                    
-                    this.renderHistory();
-                    this.renderDataTable();
-                    this.updateTotalAmount();
-                    this.updateWaveTotals();
-                    this.updateUndoButton();
-                    this.saveData();
-                    
-                    if (window.firebaseDb) {
-                        saveToCloud();
-                    }
-                    
-                    showNotification(`✅ 已删除记录`);
-                },
-                
-                clearHistory: function() {
-                    if (!confirm('确定要清空所有录入记录吗？\n此操作不可恢复！')) return;
-                    this.saveCurrentStateForUndo();
-                    this.historyRecords = [];
-                    this.undoStack = [];
-                    this.init();
-                    this.renderHistory();
-                    this.renderDataTable();
-                    this.updateTotalAmount();
-                    this.updateWaveTotals();
-                    this.updateUndoButton();
-                    this.saveData();
-                    
-                    if (window.firebaseDb) {
-                        saveToCloud();
-                    }
-                    
-                    showNotification('✅ 已清空所有录入记录');
-                },
-                
-                updateUndoButton: function() {
-                    const undoBtn = document.getElementById('undoBtn');
-                    undoBtn.disabled = this.undoStack.length === 0;
-                    undoBtn.style.opacity = this.undoStack.length === 0 ? '0.5' : '1';
-                },
-                
-                // 数据存储
-                saveData: function() {
-                    try {
-                        const saveData = {
-                            moneyMap: this.moneyMap,
-                            historyRecords: this.historyRecords,
-                            undoStack: this.undoStack,
-                            timestamp: Date.now()
-                        };
-                        localStorage.setItem('lottery_data_v2', JSON.stringify(saveData));
-                    } catch (e) {
-                        console.error('保存到本地失败:', e);
-                    }
-                },
-                
-                loadSavedData: function() {
-                    try {
-                        const saved = localStorage.getItem('lottery_data_v2');
-                        if (saved) {
-                            const data = JSON.parse(saved);
-                            
-                            if (data.moneyMap) this.moneyMap = data.moneyMap;
-                            if (data.historyRecords) this.historyRecords = data.historyRecords;
-                            if (data.undoStack) this.undoStack = data.undoStack;
-                            
-                            this.lotteryData.forEach(item => {
-                                item.amount = this.moneyMap[item.number] || 0;
-                            });
-                            
-                            this.updateTotalAmount();
-                            this.updateWaveTotals();
-                            this.updateUndoButton();
-                            this.renderHistory();
-                            this.renderDataTable();
-                            
-                            console.log('✅ 本地数据加载完成');
-                        }
-                    } catch (e) {
-                        console.error('加载本地数据失败:', e);
-                    }
-                },
-                
-                // 应用云端数据（可以从外部调用）
-                applyCloudData: function(data) {
-                    console.log('🌥️ 应用云端数据...');
-                    
-                    if (!data) return;
-                    
-                    // 更新本地数据
-                    if (data.moneyMap) {
-                        this.moneyMap = data.moneyMap;
-                    }
-                    if (data.historyRecords) {
-                        this.historyRecords = data.historyRecords;
-                    }
-                    
-                    // 更新彩票数据
-                    this.lotteryData.forEach(item => {
-                        item.amount = this.moneyMap[item.number] || 0;
-                    });
-                    
-                    // 更新界面
-                    this.updateTotalAmount();
-                    this.renderDataTable();
-                    this.renderHistory();
-                    this.updateWaveTotals();
-                    this.updateUndoButton();
-                    
-                    console.log('✅ 云端数据应用完成');
-                },
-                
-                // 工具函数
-                pasteFromClipboard: async function() {
-                    const input = document.getElementById('inputData');
-                    try {
-                        const text = await navigator.clipboard.readText();
-                        input.value = text;
-                        showNotification('✅ 已粘贴剪贴板内容');
-                    } catch (err) {
-                        input.focus();
-                        showNotification('📱 请长按输入框选择"粘贴"', 'warning');
-                    }
-                },
-                
-                clearInput: function() {
-                    document.getElementById('inputData').value = '';
-                    document.getElementById('inputData').focus();
-                    showNotification('🗑️ 输入框已清空');
-                },
-                
-                copyLink: function() {
-                    // 创建数据快照
-                    const saveData = {
-                        moneyMap: this.moneyMap,
-                        historyRecords: this.historyRecords.slice(0, 10),
-                        timestamp: Date.now()
-                    };
-                    
-                    const dataStr = JSON.stringify(saveData);
-                    const encoded = btoa(encodeURIComponent(dataStr));
-                    const currentUrl = window.location.origin + window.location.pathname + '?data=' + encoded;
-                    
-                    // 复制到剪贴板
-                    navigator.clipboard.writeText(currentUrl).then(() => {
-                        showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
-                    }).catch(err => {
-                        // 备用方法
-                        const tempInput = document.createElement('input');
-                        tempInput.value = currentUrl;
-                        document.body.appendChild(tempInput);
-                        tempInput.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(tempInput);
-                        showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
-                    });
-                },
-                
-                clearAll: function() {
-                    if (!confirm('⚠️ 确定要清空所有数据吗？\n包括所有录入记录和统计！')) return;
-                    this.init();
-                    this.historyRecords = [];
-                    this.undoStack = [];
-                    this.renderDataTable();
-                    this.renderHistory();
-                    this.updateWaveTotals();
-                    this.updateUndoButton();
-                    document.getElementById('totalMoney').textContent = '0';
-                    document.getElementById('dataCount').textContent = '0/49个号码';
-                    document.getElementById('historyCount').textContent = '0条';
-                    localStorage.removeItem('lottery_data_v2');
-                    
-                    // 同步清空到云端
-                    if (window.firebaseDb) {
-                        saveToCloud();
-                    }
-                    
-                    showNotification('✅ 所有数据已清空');
-                    this.collapseHistory();
-                    this.historyExpanded = false;
+                    tbody.innerHTML += allNumbersHtml;
                 }
+            }
+
+            function saveCurrentStateForUndo() {
+                const state = {
+                    moneyMap: {...window.moneyMap},
+                    historyRecords: JSON.parse(JSON.stringify(window.historyRecords)),
+                    timestamp: Date.now()
+                };
+                window.undoStack.push(state);
+                if (window.undoStack.length > 20) window.undoStack.shift();
+            }
+
+            window.undoLast = function(event) {
+                if (event) {
+                    event.stopPropagation();
+                }
+                
+                if (window.undoStack.length === 0) {
+                    showNotification('没有可撤销的操作', 'warning');
+                    return;
+                }
+                
+                const lastState = window.undoStack.pop();
+                window.moneyMap = lastState.moneyMap;
+                window.historyRecords = lastState.historyRecords;
+                
+                window.lotteryData.forEach(item => {
+                    item.amount = window.moneyMap[item.number] || 0;
+                });
+                
+                renderHistory();
+                renderDataTable();
+                updateTotalAmount();
+                updateWaveTotals();
+                updateUndoButton();
+                
+                saveData();
+                if (window.firebaseDb) {
+                    saveToCloud();
+                }
+                
+                showNotification('✅ 已撤销上一次操作');
+            }
+
+            function updateWaveTotals() {
+                let redTotal = 0, blueTotal = 0, greenTotal = 0;
+                window.lotteryData.forEach(item => {
+                    if (item.amount > 0) {
+                        if (item.waveColor === '红波') redTotal += item.amount;
+                        else if (item.waveColor === '蓝波') blueTotal += item.amount;
+                        else if (item.waveColor === '绿波') greenTotal += item.amount;
+                    }
+                });
+                
+                document.getElementById('redTotal').textContent = redTotal.toFixed(2);
+                document.getElementById('blueTotal').textContent = blueTotal.toFixed(2);
+                document.getElementById('greenTotal').textContent = greenTotal.toFixed(2);
+            }
+
+            function addHistoryRecord(text, count, amount, stats = {}) {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('zh-CN', { 
+                    hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
+                
+                const record = {
+                    id: Date.now(),
+                    text: text,
+                    time: timeStr,
+                    count: count,
+                    amount: amount,
+                    stats: {
+                        zodiac: stats.zodiac || 0,
+                        number: stats.number || 0,
+                        wave: stats.wave || 0,
+                        uniqueNumbers: stats.uniqueNumbers || 0
+                    }
+                };
+                
+                window.historyRecords.unshift(record);
+                if (window.historyRecords.length > 50) window.historyRecords = window.historyRecords.slice(0, 50);
+                document.getElementById('historyCount').textContent = `${window.historyRecords.length}条`;
+            }
+
+            function renderHistory() {
+                const container = document.getElementById('historyList');
+                if (window.historyRecords.length === 0) {
+                    container.innerHTML = `<div style="text-align: center; color: #95a5a6; padding: 20px;">暂无录入记录</div>`;
+                    return;
+                }
+                
+                let html = '';
+                window.historyRecords.forEach(record => {
+                    const statItems = [
+                        record.stats.zodiac > 0 ? `生肖${record.stats.zodiac}` : null,
+                        record.stats.number > 0 ? `号码${record.stats.number}` : null,
+                        record.stats.wave > 0 ? `波色${record.stats.wave}` : null,
+                        record.stats.uniqueNumbers > 0 ? `${record.stats.uniqueNumbers}个号` : null
+                    ].filter(Boolean);
+                    
+                    html += `
+                        <div class="history-item">
+                            <button class="delete-btn" onclick="deleteHistoryRecord(${record.id})">×</button>
+                            <span class="history-time">${record.time}</span>
+                            <div class="history-text">${record.text}</div>
+                            ${statItems.length > 0 ? `<div class="history-stats">${statItems.map(item => `<span class="history-stat-item">${item}</span>`).join('')}</div>` : ''}
+                            <div class="history-amount">${record.amount.toFixed(2)}元 (${record.count}个)</div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+
+            window.deleteHistoryRecord = function(id) {
+                const recordIndex = window.historyRecords.findIndex(r => r.id === id);
+                if (recordIndex === -1) return;
+                
+                saveCurrentStateForUndo();
+                window.historyRecords.splice(recordIndex, 1);
+                
+                window.moneyMap = {};
+                window.historyRecords.forEach(record => {
+                    const bets = parseInput(record.text);
+                    bets.forEach(bet => {
+                        if (bet.number >= 1 && bet.number <= 49) {
+                            window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
+                        }
+                    });
+                });
+                
+                window.lotteryData.forEach(item => {
+                    item.amount = window.moneyMap[item.number] || 0;
+                });
+                
+                renderHistory();
+                renderDataTable();
+                updateTotalAmount();
+                updateWaveTotals();
+                updateUndoButton();
+                saveData();
+                if (window.firebaseDb) {
+                    saveToCloud();
+                }
+                
+                showNotification(`✅ 已删除记录`);
+            }
+
+            window.clearHistory = function() {
+                if (!confirm('确定要清空所有录入记录吗？\n此操作不可恢复！')) return;
+                saveCurrentStateForUndo();
+                window.historyRecords = [];
+                window.undoStack = [];
+                initData();
+                renderHistory();
+                renderDataTable();
+                updateTotalAmount();
+                updateWaveTotals();
+                updateUndoButton();
+                saveData();
+                if (window.firebaseDb) {
+                    saveToCloud();
+                }
+                showNotification('✅ 已清空所有录入记录');
+            }
+
+            function updateUndoButton() {
+                const undoBtn = document.getElementById('undoBtn');
+                undoBtn.disabled = window.undoStack.length === 0;
+                undoBtn.style.opacity = window.undoStack.length === 0 ? '0.5' : '1';
+            }
+
+            // ==================== 数据存储 ====================
+            function saveData() {
+                const saveData = {
+                    moneyMap: window.moneyMap,
+                    historyRecords: window.historyRecords,
+                    undoStack: window.undoStack,
+                    timestamp: Date.now(),
+                    source: 'local_save'
+                };
+                try {
+                    localStorage.setItem('lottery_data_v2', JSON.stringify(saveData));
+                } catch (e) {
+                    console.error('保存到本地失败:', e);
+                }
+                saveToURL();
+            }
+
+            function loadSavedData() {
+                try {
+                    // 先检查URL参数
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const urlData = urlParams.get('data');
+                    if (urlData) {
+                        const decoded = JSON.parse(decodeURIComponent(atob(urlData)));
+                        if (decoded && decoded.moneyMap) {
+                            applyCloudData(decoded);
+                            return;
+                        }
+                    }
+                    
+                    // 再检查本地存储
+                    const saved = localStorage.getItem('lottery_data_v2');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        applyCloudData(data);
+                        console.log('✅ 本地数据加载完成');
+                    }
+                } catch (e) {
+                    console.error('加载失败:', e);
+                }
+            }
+
+            function applyCloudData(data) {
+                if (!data) return;
+                
+                console.log('应用云端数据...');
+                
+                if (data.moneyMap) window.moneyMap = data.moneyMap;
+                if (data.historyRecords) window.historyRecords = data.historyRecords;
+                if (data.undoStack) window.undoStack = data.undoStack;
+                
+                window.lotteryData.forEach(item => {
+                    item.amount = window.moneyMap[item.number] || 0;
+                });
+                
+                updateTotalAmount();
+                updateWaveTotals();
+                updateUndoButton();
+                renderHistory();
+                renderDataTable();
+            }
+
+            function saveToURL() {
+                const saveData = {
+                    moneyMap: window.moneyMap,
+                    historyRecords: window.historyRecords.slice(0, 30),
+                    timestamp: Date.now()
+                };
+                const dataStr = JSON.stringify(saveData);
+                const encoded = btoa(encodeURIComponent(dataStr));
+                const newURL = window.location.origin + window.location.pathname + '?data=' + encoded;
+                window.history.replaceState(null, '', newURL);
+            }
+
+            window.copyLink = function() {
+                saveToURL();
+                const currentUrl = window.location.href;
+                navigator.clipboard.writeText(currentUrl).then(() => {
+                    showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看实时数据');
+                }).catch(err => {
+                    const tempInput = document.createElement('input');
+                    tempInput.value = currentUrl;
+                    document.body.appendChild(tempInput);
+                    tempInput.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempInput);
+                    showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看实时数据');
+                });
             };
-            
-            // 初始化彩票系统
-            system.init();
-            
-            // 将系统方法绑定到全局window对象，以便HTML onclick调用
-            window.toggleHistory = () => system.toggleHistory();
-            window.processData = () => system.processData();
-            window.undoLast = (event) => system.undoLast(event);
-            window.clearHistory = () => system.clearHistory();
-            window.deleteHistoryRecord = (id) => system.deleteHistoryRecord(id);
-            window.pasteFromClipboard = () => system.pasteFromClipboard();
-            window.clearInput = () => system.clearInput();
-            window.copyLink = () => system.copyLink();
-            window.clearAll = () => system.clearAll();
-            
-            return system;
+
+            window.clearAll = function() {
+                if (!confirm('⚠️ 确定要清空所有数据吗？\n包括所有录入记录和统计！')) return;
+                initData();
+                window.historyRecords = [];
+                window.undoStack = [];
+                renderDataTable();
+                renderHistory();
+                updateWaveTotals();
+                updateUndoButton();
+                document.getElementById('totalMoney').textContent = '0';
+                document.getElementById('dataCount').textContent = '0/49个号码';
+                document.getElementById('historyCount').textContent = '0条';
+                localStorage.removeItem('lottery_data_v2');
+                window.history.replaceState(null, '', window.location.pathname);
+                
+                // 同步清空到云端
+                if (window.firebaseDb) {
+                    saveToCloud();
+                }
+                
+                showNotification('✅ 所有数据已清空');
+                collapseHistory();
+                historyExpanded = false;
+            }
+
+            // ==================== 辅助函数 ====================
+            window.pasteFromClipboard = async function() {
+                const input = document.getElementById('inputData');
+                try {
+                    const text = await navigator.clipboard.readText();
+                    input.value = text;
+                    showNotification('✅ 已粘贴剪贴板内容');
+                } catch (err) {
+                    input.focus();
+                    showNotification('📱 请长按输入框选择"粘贴"', 'warning');
+                }
+            }
+
+            window.clearInput = function() {
+                document.getElementById('inputData').value = '';
+                document.getElementById('inputData').focus();
+                showNotification('🗑️ 输入框已清空');
+            }
         }
 
-        // ==================== Firebase 实时同步 ====================
+        // ==================== Firebase 初始化 ====================
         async function initializeFirebase() {
-            console.log('🔥 初始化Firebase...');
+            console.log('🎯 正在初始化 Firebase...');
+            updateCloudStatus('连接中...', 'connecting');
             
             try {
+                // 检查是否已初始化
+                if (window.firebaseApp) {
+                    console.log('ℹ️ Firebase 已初始化');
+                    return window.firebaseApp;
+                }
+                
                 // 动态加载Firebase SDK
                 await loadFirebaseSDK();
                 
-                // 配置
-                const firebaseConfig = {
-                    apiKey: "AIzaSyAgUU04dt1igPFNTC-zJ3WhGfWp8-wKmfo",
-                    authDomain: "my-lottery-board.firebaseapp.com",
-                    projectId: "my-lottery-board",
-                    storageBucket: "my-lottery-board.firebasestorage.app",
-                    messagingSenderId: "714450363816",
-                    appId: "1:714450363816:web:8335befb5ed25c98f3a99d"
-                };
-                
-                // 初始化
-                const app = firebase.initializeApp(firebaseConfig);
+                // 初始化Firebase
+                const app = firebase.initializeApp(FIREBASE_CONFIG);
                 const db = app.firestore();
                 
+                // 配置设置
+                db.settings({
+                    ignoreUndefinedProperties: true,
+                    merge: true
+                });
+                
+                // 测试连接
+                const testQuery = db.collection('lottery_data').limit(1);
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('连接超时 (5秒)')), 5000);
+                });
+                
+                await Promise.race([testQuery.get(), timeoutPromise]);
+                
+                console.log('✅ Firebase 连接成功！');
                 window.firebaseApp = app;
                 window.firebaseDb = db;
+                window.isFirebaseInitialized = true;
                 
-                console.log('✅ Firebase初始化成功');
+                // 启动实时监听
+                startRealTimeListener();
+                updateCloudStatus('实时同步', 'online');
                 
-                // 开始实时监听
-                startFirebaseListener();
-                
-                // 加载云端现有数据
-                loadCloudData();
+                return app;
                 
             } catch (error) {
-                console.error('❌ Firebase初始化失败:', error);
-                updateCloudStatus('离线模式', 'offline');
+                console.error('❌ Firebase 连接失败:', error.message);
+                updateCloudStatus('连接失败', 'offline');
+                return null;
             }
         }
 
         async function loadFirebaseSDK() {
+            if (typeof firebase !== 'undefined') {
+                return; // 已加载
+            }
+            
             return new Promise((resolve, reject) => {
-                if (typeof firebase !== 'undefined') {
-                    resolve();
-                    return;
-                }
-                
-                const script = document.createElement('script');
-                script.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js';
-                script.onload = () => {
+                const script1 = document.createElement('script');
+                script1.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js';
+                script1.onload = function() {
                     const script2 = document.createElement('script');
                     script2.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js';
                     script2.onload = resolve;
                     script2.onerror = reject;
                     document.head.appendChild(script2);
                 };
-                script.onerror = reject;
-                document.head.appendChild(script);
+                script1.onerror = reject;
+                document.head.appendChild(script1);
             });
         }
 
-        function startFirebaseListener() {
-            if (!window.firebaseDb || !lotterySystem) return;
+        // ==================== 实时数据同步 ====================
+        function startRealTimeListener() {
+            if (!window.isFirebaseInitialized || !window.firebaseDb) {
+                console.log('Firebase未初始化，跳过实时监听');
+                return;
+            }
             
-            console.log('👂 开始实时监听...');
+            console.log('🔄 启动实时数据监听...');
             
-            // 监听lottery_data集合的所有文档变化
-            window.unsubscribeFirebase = window.firebaseDb.collection('lottery_data')
+            // 监听最新的一条数据
+            window.firebaseUnsubscribe = window.firebaseDb.collection('lottery_data')
                 .orderBy('timestamp', 'desc')
                 .limit(1)
-                .onSnapshot((snapshot) => {
-                    if (!snapshot.empty) {
-                        const doc = snapshot.docs[0];
-                        const data = doc.data();
-                        console.log('📥 收到云端数据更新', data);
-                        
-                        // 应用云端数据到本地
-                        if (lotterySystem && lotterySystem.applyCloudData) {
-                            lotterySystem.applyCloudData(data);
+                .onSnapshot({
+                    next: (snapshot) => {
+                        if (!snapshot.empty) {
+                            const data = snapshot.docs[0].data();
+                            console.log('📥 收到云端数据更新');
+                            // 这里不调用applyCloudData，因为数据已经在彩票系统中
+                            updateCloudStatus('实时同步', 'online');
                         }
-                        
-                        updateCloudStatus('实时同步', 'online');
-                        showNotification('✅ 数据已同步更新');
+                    },
+                    error: (error) => {
+                        console.error('❌ 实时监听错误:', error);
+                        updateCloudStatus('同步错误', 'offline');
                     }
-                }, (error) => {
-                    console.error('❌ 实时监听错误:', error);
-                    updateCloudStatus('同步错误', 'offline');
                 });
         }
 
-        async function loadCloudData() {
-            if (!window.firebaseDb || !lotterySystem) return;
-            
-            try {
-                console.log('📥 从云端加载数据...');
-                const snapshot = await window.firebaseDb.collection('lottery_data')
-                    .orderBy('timestamp', 'desc')
-                    .limit(1)
-                    .get();
-                
-                if (!snapshot.empty) {
-                    const data = snapshot.docs[0].data();
-                    if (lotterySystem.applyCloudData) {
-                        lotterySystem.applyCloudData(data);
-                    }
-                    console.log('✅ 云端数据加载完成');
-                    showNotification('✅ 已加载云端最新数据');
-                }
-            } catch (error) {
-                console.error('加载云端数据失败:', error);
-            }
-        }
-
         async function saveToCloud() {
-            if (!window.firebaseDb || !lotterySystem) {
-                console.log('⚠️ Firebase未连接，跳过云端保存');
+            if (!window.isFirebaseInitialized || !window.firebaseDb) {
+                console.log('Firebase未连接，仅保存到本地');
                 return;
             }
             
             try {
-                console.log('☁️ 保存到云端...');
-                updateCloudStatus('同步中...', 'connecting');
-                
                 const saveData = {
-                    moneyMap: lotterySystem.moneyMap || {},
-                    historyRecords: lotterySystem.historyRecords || [],
+                    moneyMap: window.moneyMap || {},
+                    historyRecords: window.historyRecords || [],
                     timestamp: Date.now(),
-                    deviceId: 'device_' + Math.random().toString(36).substr(2, 9),
-                    updatedAt: new Date().toISOString()
+                    updatedAt: new Date().toISOString(),
+                    deviceId: 'device_' + Math.random().toString(36).substr(2, 9)
                 };
                 
-                // 检查是否有现有数据
+                // 获取最新文档
                 const snapshot = await window.firebaseDb.collection('lottery_data')
                     .orderBy('timestamp', 'desc')
                     .limit(1)
                     .get();
                 
                 if (!snapshot.empty) {
-                    // 更新现有文档
+                    // 更新最新文档
                     await snapshot.docs[0].ref.update(saveData);
-                    console.log('✅ 云端数据已更新');
+                    console.log('✅ 数据已更新到云端');
                 } else {
                     // 创建新文档
                     await window.firebaseDb.collection('lottery_data').add(saveData);
-                    console.log('✅ 云端数据已创建');
+                    console.log('✅ 数据已创建到云端');
                 }
                 
                 updateCloudStatus('实时同步', 'online');
-                console.log('✅ 数据保存到云端完成');
                 
             } catch (error) {
-                console.error('❌ 保存到云端失败:', error);
+                console.error('保存到云端失败:', error);
                 updateCloudStatus('同步失败', 'offline');
-                showNotification('⚠️ 云端同步失败，数据已保存到本地');
             }
         }
+
+        // ==================== 网络状态监听 ====================
+        function setupNetworkListeners() {
+            window.addEventListener('online', () => {
+                console.log('🌐 网络恢复');
+                document.getElementById('networkIndicator').className = 'network-indicator network-online';
+                showNotification('✅ 网络已恢复');
+            });
+
+            window.addEventListener('offline', () => {
+                console.log('🌐 网络断开');
+                document.getElementById('networkIndicator').className = 'network-indicator network-offline';
+                showNotification('⚠️ 网络已断开，切换到离线模式');
+                updateCloudStatus('离线模式', 'offline');
+            });
+
+            // 初始网络状态
+            const networkIndicator = document.getElementById('networkIndicator');
+            if (navigator.onLine) {
+                networkIndicator.className = 'network-indicator network-online';
+            } else {
+                networkIndicator.className = 'network-indicator network-offline';
+                updateCloudStatus('离线模式', 'offline');
+            }
+        }
+
+        // 初始化网络监听
+        document.addEventListener('DOMContentLoaded', function() {
+            setupNetworkListeners();
+        });
     </script>
 </body>
 </html>
