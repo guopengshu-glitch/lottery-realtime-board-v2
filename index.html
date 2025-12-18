@@ -929,9 +929,27 @@
 function loadSavedData() {
     console.log('📂 加载本地数据');
 }
-        // ==================== 主应用初始化 ====================
-        function initializeApplication() {
-            console.log('🚀 初始化应用...');
+
+// ==================== 数据保存函数 ==================== （添加在这里！）
+function saveData() {
+    try {
+        const dataToSave = {
+            moneyMap: window.moneyMap || {},
+            historyRecords: window.historyRecords || [],
+            undoStack: window.undoStack || [],
+            timestamp: Date.now(),
+            source: 'local_save'
+        };
+        localStorage.setItem('lottery_data_v2', JSON.stringify(dataToSave));
+        console.log('💾 数据已保存到本地');
+    } catch (e) {
+        console.error('保存数据失败:', e);
+    }
+}
+
+// ==================== 主应用初始化 ====================
+function initializeApplication() {
+    console.log('🚀 初始化应用...');
             
             // 更新状态
             document.getElementById('statusBar').textContent = '🔄 初始化系统中...';
@@ -2025,4 +2043,5 @@ async function initializeFirebase() {
 </body>
 
 </html>
+
 
