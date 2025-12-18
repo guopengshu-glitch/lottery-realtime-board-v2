@@ -1027,80 +1027,86 @@ function loadSavedData() {
         }
 
         // ==================== Firebase 初始化 ====================
-        async function initializeFirebase() {
-            // 检查网络状态
-            if (!navigator.onLine) {
-                console.log('🌐 当前离线，跳过Firebase初始化');
-                updateCloudStatus('离线模式', 'offline');
-                loadSavedData(); // 加载本地数据
-                return;
-            }
-            
-            try {
-                console.log('🎯 正在初始化 Firebase...');
-                updateCloudStatus('连接中...', 'connecting');
-                
-                // 清理旧的Firebase实例
-                if (firebase.apps.length > 0) {
-                    firebase.apps.forEach(app => app.delete());
-                }
-                
-                // 初始化 Firebase
-                const app = firebase.initializeApp(firebaseConfig);
-                const db = firebase.firestore();
-                
-                // 设置超时
-                const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('连接超时 (10秒)')), 10000);
-                });
-                
-                // 测试连接
-                await Promise.race([
-                    db.collection('_test_connection').limit(1).get(),
-                    timeoutPromise
-                ]);
-                
-                console.log('✅ Firebase 连接成功');
-                console.log('项目ID:', app.options.projectId);
-                
-                // 保存到全局变量
-                window.firebaseApp = app;
-                window.firebaseDb = db;
-                window.isFirebaseInitialized = true;
-                
-                // 开始实时监听
-                startRealTimeListener();
-                
-                // 更新状态
-                updateCloudStatus('实时同步', 'online');
-                
-            } catch (error) {
-                console.error('❌ Firebase 连接失败:', error.message);
-                
-                // 显示具体错误
-                let errorMsg = '连接失败';
-                if (error.message.includes('timeout')) {
-                    errorMsg = '连接超时，请检查网络';
-                } else if (error.message.includes('permission')) {
-                    errorMsg = '权限错误，请检查Firebase规则';
-                } else if (error.code === 'failed-precondition') {
-                    errorMsg = 'Firebase配置错误';
-                }
-                
-                updateCloudStatus(errorMsg, 'offline');
-                document.getElementById('statusBar').textContent = `⚠️ ${errorMsg}`;
-                
-                // 加载本地数据
-                loadSavedData();
-                
-                // 10秒后重试
-                setTimeout(() => {
-                    if (navigator.onLine) {
-                        initializeFirebase();
-                    }
-                }, 10000);
+async function initializeFirebase() {
+    console.log('🎯 正在初始化 Firebase...');
+    updateCloudStatus('连接中...', 'connecting');
+    
+    // 🔥 关键修复1：清理所有可能的旧实例
+    try {
+        // 列出所有已初始化的Firebase应用并删除
+        const apps = firebase.apps;
+        const deletionPromises = [];
+        for (const app of apps) {
+            if (app.name && app.name !== '[DEFAULT]') {
+                deletionPromises.push(app.delete());
             }
         }
+        if (deletionPromises.length > 0) {
+            await Promise.all(deletionPromises);
+            console.log('🗑️ 已清理旧的Firebase实例');
+        }
+    } catch (cleanupError) {
+        console.log('清理旧实例时的小问题（可忽略）:', cleanupError.message);
+    }
+    
+    try {
+        // 🔥 关键修复2：使用唯一的应用名称避免冲突
+        const appName = 'LotteryBoard_' + Date.now();
+        const app = firebase.initializeApp(firebaseConfig, appName);
+        const db = app.firestore();
+        
+        // 🔥 关键修复3：缩短超时时间，设置更宽松的配置
+        db.settings({
+            ignoreUndefinedProperties: true,
+            merge: true
+        });
+        
+        // 🔥 关键修复4：更简单的连接测试（直接检查集合）
+        console.log('⏳ 尝试连接Firestore...');
+        const testQuery = db.collection('lottery_data').limit(1);
+        
+        // 使用更短的5秒超时
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('连接超时 (5秒)')), 5000);
+        });
+        
+        await Promise.race([testQuery.get(), timeoutPromise]);
+        
+        console.log('✅ Firebase 连接成功！');
+        window.firebaseApp = app;
+        window.firebaseDb = db;
+        window.isFirebaseInitialized = true;
+        
+        // 立即开始监听数据
+        startRealTimeListener();
+        updateCloudStatus('实时同步', 'online');
+        
+    } catch (error) {
+        console.error('❌ Firebase 连接失败:', error.message);
+        
+        let errorMsg = '连接失败';
+        if (error.message.includes('timeout')) {
+            errorMsg = '连接超时，请检查网络';
+            // 如果是超时，可能是网络问题，建议用户检查
+            showNotification('⚠️ 网络连接较慢，正在重试...');
+        }
+        
+        updateCloudStatus(errorMsg, 'offline');
+        
+        // 加载本地数据（使用之前添加的函数）
+        if (typeof loadSavedData === 'function') {
+            setTimeout(loadSavedData, 100);
+        }
+        
+        // 15秒后重试（不要太频繁）
+        setTimeout(() => {
+            if (navigator.onLine) {
+                console.log('🔄 重新尝试连接Firebase...');
+                initializeFirebase();
+            }
+        }, 15000);
+    }
+}
 
         // ==================== 实时数据同步 ====================
         function startRealTimeListener() {
@@ -2019,3 +2025,4 @@ function loadSavedData() {
 </body>
 
 </html>
+
