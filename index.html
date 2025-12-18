@@ -901,12 +901,10 @@
                 // 初始化Firestore
                 window.firebaseDb = firebase.firestore(window.firebaseApp);
                 
-                // 设置Firestore配置
-                window.firebaseDb.settings({
-                    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
-                    experimentalForceLongPolling: true, // 修复连接问题
-                    merge: true
-                });
+                // 设置Firestore配置（修复冲突）
+window.firebaseDb.settings({
+    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+});
                 
                 console.log('✅ Firestore初始化成功');
                 window.firebaseInitialized = true;
@@ -2071,3 +2069,4 @@
     </script>
 </body>
 </html>
+
