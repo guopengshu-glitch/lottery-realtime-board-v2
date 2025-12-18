@@ -8,6 +8,99 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
     <!-- Firebase SDK (使用CDN回退) -->
     <script>
+        <script>
+// ==================== 强制修复（放在最前面） ====================
+(function() {
+    console.log('🔧 执行强制修复...');
+    
+    // 1. 强制定义密码函数
+    if (typeof window.checkPassword === 'undefined') {
+        window.checkPassword = function() {
+            console.log('🔑 checkPassword被调用（强制版）');
+            var input = document.getElementById('passwordInput');
+            var errorEl = document.getElementById('passwordError');
+            
+            if (!input || !input.value) {
+                if (errorEl) errorEl.textContent = '请输入密码';
+                return false;
+            }
+            
+            if (input.value.trim() === 'Master123456') {
+                if (errorEl) errorEl.textContent = '';
+                
+                // 保存登录状态（两种方式都存，确保兼容）
+                localStorage.setItem('lottery_admin_auth', JSON.stringify({
+                    loggedIn: true,
+                    loginTime: Date.now(),
+                    token: 'force_fix_' + Date.now()
+                }));
+                localStorage.setItem('lottery_simple_auth', '1'); // 简单备份
+                
+                // 显示主应用
+                document.getElementById('passwordOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                
+                console.log('✅ 登录成功（强制版）');
+                return true;
+            } else {
+                if (errorEl) errorEl.textContent = '密码错误，请重试';
+                input.value = '';
+                input.focus();
+                return false;
+            }
+        };
+        console.log('✅ window.checkPassword已强制定义');
+    }
+    
+    // 2. 强制自动登录检查
+    setTimeout(function() {
+        console.log('🔄 检查自动登录...');
+        
+        // 检查多种认证方式
+        const authSources = [
+            localStorage.getItem('lottery_admin_auth'),
+            localStorage.getItem('lottery_simple_auth'),
+            localStorage.getItem('lottery_auth')
+        ];
+        
+        let shouldAutoLogin = false;
+        
+        for (const authStr of authSources) {
+            if (!authStr) continue;
+            
+            try {
+                if (authStr === '1') { // 简单认证
+                    shouldAutoLogin = true;
+                    break;
+                }
+                
+                const authData = JSON.parse(authStr);
+                if (authData && authData.loggedIn) {
+                    shouldAutoLogin = true;
+                    break;
+                }
+            } catch(e) {
+                // 忽略错误
+            }
+        }
+        
+        if (shouldAutoLogin) {
+            document.getElementById('passwordOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            console.log('✅ 强制自动登录成功');
+        } else {
+            console.log('📭 无有效认证，等待手动登录');
+        }
+    }, 150);
+    
+    console.log('✅ 强制修复完成');
+})();
+
+// 动态加载Firebase SDK，支持CDN回退
+(function() {
+    const firebaseVersion = '9.22.0';
+    // ... 你的原有代码继续 ...
+        
 // ==================== 最前面定义的函数 ====================
 window.checkPassword = function() {
     console.log('checkPassword被调用');
@@ -2250,6 +2343,7 @@ function initializeApplication() {
 </body>
 
 </html>
+
 
 
 
