@@ -1369,27 +1369,57 @@ function applyCloudData(data) {
         }
         
         function checkAuth() {
-            const authStr = localStorage.getItem('lottery_admin_auth');
-            if (!authStr) return false;
-            
-            try {
-                const authData = JSON.parse(authStr);
-                const now = new Date().getTime();
-                const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
-                const isValid = authData.loggedIn === true && 
-                               authData.loginTime && 
-                               (now - authData.loginTime) < THREE_DAYS_MS;
-                
-                if (isValid) {
-                    return true;
-                } else {
-                    localStorage.removeItem('lottery_admin_auth');
-                    return false;
-                }
-            } catch (e) {
-                return false;
-            }
+    const authStr = localStorage.getItem('lottery_admin_auth');
+    if (!authStr) return false;
+    
+    try {
+        const authData = JSON.parse(authStr);
+        const now = new Date().getTime();
+        const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+        const isValid = authData.loggedIn === true && 
+                       authData.loginTime && 
+                       (now - authData.loginTime) < THREE_DAYS_MS;
+        
+        if (isValid) {
+            return true;
+        } else {
+            localStorage.removeItem('lottery_admin_auth');
+            return false;
         }
+    } catch (e) {
+        return false;
+    }
+} // ← checkAuth函数结束
+
+// ==================== 密码验证函数 ==================== （立即添加在这里）
+function checkPassword() {
+    const input = document.getElementById('passwordInput').value.trim();
+    const errorEl = document.getElementById('passwordError');
+    
+    if (!input) {
+        errorEl.textContent = '❌ 请输入密码';
+        return;
+    }
+    
+    if (input === 'Master123456') {
+        errorEl.textContent = '';
+        const authData = {
+            loggedIn: true,
+            loginTime: Date.now(),
+            token: 'auth_' + Date.now()
+        };
+        localStorage.setItem('lottery_admin_auth', JSON.stringify(authData));
+        showMainApp();
+    } else {
+        errorEl.textContent = '❌ 密码错误，请重试';
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('passwordInput').focus();
+    }
+}
+
+// ==================== 主应用初始化 ==================== 
+function initializeApplication() {
+    console.log('🚀 初始化应用...');
         
         function showMainApp() {
             document.getElementById('passwordOverlay').style.display = 'none';
@@ -2081,6 +2111,7 @@ function applyCloudData(data) {
 </body>
 
 </html>
+
 
 
 
