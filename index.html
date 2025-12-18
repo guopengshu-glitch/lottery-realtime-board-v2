@@ -1427,7 +1427,7 @@ function applyCloudData(data) {
     }
 }
         
-        function checkAuth() {
+       function checkAuth() {
     const authStr = localStorage.getItem('lottery_admin_auth');
     if (!authStr) return false;
     
@@ -1449,6 +1449,62 @@ function applyCloudData(data) {
         return false;
     }
 } // ← checkAuth函数结束
+
+// ==================== 登录按钮事件绑定 ==================== （添加在这里）
+function setupLoginButton() {
+    const loginBtn = document.querySelector('.login-btn');
+    if (!loginBtn) return;
+    
+    // 移除旧的onclick属性（避免冲突）
+    loginBtn.removeAttribute('onclick');
+    
+    // 添加新的事件监听
+    loginBtn.addEventListener('click', function() {
+        console.log('登录按钮点击');
+        
+        const input = document.getElementById('passwordInput');
+        const errorEl = document.getElementById('passwordError');
+        
+        if (!input || !input.value) {
+            if (errorEl) errorEl.textContent = '请输入密码';
+            return;
+        }
+        
+        if (input.value.trim() === 'Master123456') {
+            if (errorEl) errorEl.textContent = '';
+            
+            // 保存登录状态
+            localStorage.setItem('lottery_admin_auth', JSON.stringify({
+                loggedIn: true,
+                loginTime: Date.now()
+            }));
+            
+            // 显示主应用
+            document.getElementById('passwordOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            
+            console.log('✅ 登录成功');
+        } else {
+            if (errorEl) errorEl.textContent = '密码错误，请重试';
+            input.value = '';
+            input.focus();
+        }
+    });
+    
+    console.log('✅ 登录按钮事件已绑定');
+}
+
+// 在页面加载后执行
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupLoginButton);
+} else {
+    setupLoginButton(); // 立即执行
+}
+
+// ==================== 主应用初始化 ==================== 
+function initializeApplication() {
+    console.log('🚀 初始化应用...');
+    // ... 原有代码继续 ...
 
 // ==================== 密码验证函数 ==================== （立即添加在这里）
 function checkPassword() {
@@ -2170,6 +2226,7 @@ function initializeApplication() {
 </body>
 
 </html>
+
 
 
 
