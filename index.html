@@ -827,7 +827,21 @@
             messagingSenderId: "714450363816",
             appId: "1:714450363816:web:8335befb5ed25c98f3a99d"
         };
-
+// ==================== 通用工具函数 ====================
+window.showNotification = function(message, type = 'success') {
+    const existing = document.querySelector('.notification');
+    if (existing) existing.remove();
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.style.background = type === 'warning' ? '#ff9f43' : '#2ecc71';
+    notification.innerHTML = message.replace(/\n/g, '<br>');
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+};
         // ==================== 全局变量 ====================
         window.firebaseApp = null;
         window.firebaseDb = null;
@@ -1288,10 +1302,20 @@ window.firebaseDb.settings({
             if (typeof updateWaveTotals === 'function') updateWaveTotals();
             if (typeof updateUndoButton === 'function') updateUndoButton();
             
-            // 保存到本地存储
-            saveData();
-        }
-
+            // 直接保存到本地存储
+try {
+    const saveDataObj = {
+        moneyMap: window.moneyMap || {},
+        historyRecords: window.historyRecords || [],
+        undoStack: window.undoStack || [],
+        timestamp: Date.now(),
+        deviceId: window.currentDeviceId
+    };
+    localStorage.setItem('lottery_data_simple', JSON.stringify(saveDataObj));
+    console.log('✅ 本地数据保存成功');
+} catch (e) {
+    console.error('保存本地数据失败:', e);
+}
         // ==================== 密码验证模块 ====================
         const CORRECT_PASSWORD_HASH = 'TWFzdGVyMTIzNDU2';
         
@@ -2069,4 +2093,5 @@ window.firebaseDb.settings({
     </script>
 </body>
 </html>
+
 
