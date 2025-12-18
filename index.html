@@ -8,16 +8,37 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
     <!-- Firebase SDK (使用CDN回退) -->
     <script>
-// ==================== 最前面定义的函数（方法1） ====================
+// ==================== 最前面定义的函数 ====================
 window.checkPassword = function() {
-    console.log('🔑 checkPassword被调用（最前面定义）');
-    const input = document.getElementById('passwordInput').value.trim();
-    const errorEl = document.getElementById('passwordError');
+    console.log('checkPassword被调用');
+    var input = document.getElementById('passwordInput');
+    var errorEl = document.getElementById('passwordError');
     
-    if (!input) {
-        errorEl.textContent = '❌ 请输入密码';
+    if (!input || !input.value) {
+        if (errorEl) errorEl.textContent = '请输入密码';
         return;
     }
+    
+    if (input.value.trim() === 'Master123456') {
+        if (errorEl) errorEl.textContent = '';
+        
+        localStorage.setItem('lottery_admin_auth', JSON.stringify({
+            loggedIn: true,
+            loginTime: Date.now()
+        }));
+        
+        document.getElementById('passwordOverlay').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        
+        console.log('密码验证成功');
+    } else {
+        if (errorEl) errorEl.textContent = '密码错误，请重试';
+        input.value = '';
+        input.focus();
+    }
+};
+
+console.log('checkPassword函数已定义');
     
     if (input === 'Master123456') {
         errorEl.textContent = '';
@@ -2149,6 +2170,7 @@ function initializeApplication() {
 </body>
 
 </html>
+
 
 
 
