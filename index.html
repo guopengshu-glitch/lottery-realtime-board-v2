@@ -1346,27 +1346,38 @@ function applyCloudData(data) {
             showNotification('🗑️ 输入框已清空');
         }
         
-        function checkPassword() {
-            const input = document.getElementById('passwordInput').value.trim();
-            const errorEl = document.getElementById('passwordError');
-            
-            const inputHash = btoa(encodeURIComponent(input));
-            
-            if (inputHash === CORRECT_PASSWORD_HASH) {
-                errorEl.textContent = '';
-                const authData = {
-                    loggedIn: true,
-                    loginTime: new Date().getTime(),
-                    token: btoa(`auth-${Date.now()}-${Math.random()}`)
-                };
-                localStorage.setItem('lottery_admin_auth', JSON.stringify(authData));
-                showMainApp();
-            } else {
-                errorEl.textContent = '❌ 密码错误，请重试。';
-                document.getElementById('passwordInput').value = '';
-                document.getElementById('passwordInput').focus();
-            }
+       function checkPassword() {
+    const input = document.getElementById('passwordInput').value.trim();
+    const errorEl = document.getElementById('passwordError');
+    
+    if (!input) {
+        errorEl.textContent = '❌ 请输入密码';
+        return;
+    }
+    
+    // 直接比较明文密码
+    if (input === 'Master123456') {
+        errorEl.textContent = '';
+        const authData = {
+            loggedIn: true,
+            loginTime: Date.now(),
+            token: 'auth_' + Date.now()
+        };
+        localStorage.setItem('lottery_admin_auth', JSON.stringify(authData));
+        
+        if (typeof showMainApp === 'function') {
+            showMainApp();
+        } else {
+            // 备用方案
+            document.getElementById('passwordOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
         }
+    } else {
+        errorEl.textContent = '❌ 密码错误，请重试';
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('passwordInput').focus();
+    }
+}
         
         function checkAuth() {
     const authStr = localStorage.getItem('lottery_admin_auth');
@@ -2111,6 +2122,7 @@ function initializeApplication() {
 </body>
 
 </html>
+
 
 
 
