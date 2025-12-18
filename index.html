@@ -8,27 +8,54 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
     <!-- Firebase SDK (使用CDN回退) -->
     <script>
-        // 动态加载Firebase SDK，支持CDN回退
-        (function() {
-            const firebaseVersion = '9.22.0';
-            const scripts = [
-                {
-                    id: 'firebase-app',
-                    urls: [
-                        `https://www.gstatic.com/firebasejs/${firebaseVersion}/firebase-app-compat.js`,
-                        `https://cdn.bootcdn.net/ajax/libs/firebase/${firebaseVersion}/firebase-app-compat.min.js`,
-                        `https://cdnjs.cloudflare.com/ajax/libs/firebase/${firebaseVersion}/firebase-app-compat.min.js`
-                    ]
-                },
-                {
-                    id: 'firebase-firestore',
-                    urls: [
-                        `https://www.gstatic.com/firebasejs/${firebaseVersion}/firebase-firestore-compat.js`,
-                        `https://cdn.bootcdn.net/ajax/libs/firebase/${firebaseVersion}/firebase-firestore-compat.min.js`,
-                        `https://cdnjs.cloudflare.com/ajax/libs/firebase/${firebaseVersion}/firebase-firestore-compat.min.js`
-                    ]
-                }
-            ];
+// ==================== 最前面定义的函数（方法1） ====================
+window.checkPassword = function() {
+    console.log('🔑 checkPassword被调用（最前面定义）');
+    const input = document.getElementById('passwordInput').value.trim();
+    const errorEl = document.getElementById('passwordError');
+    
+    if (!input) {
+        errorEl.textContent = '❌ 请输入密码';
+        return;
+    }
+    
+    if (input === 'Master123456') {
+        errorEl.textContent = '';
+        // 保存登录状态
+        const authData = {
+            loggedIn: true,
+            loginTime: Date.now(),
+            token: 'auth_' + Date.now()
+        };
+        localStorage.setItem('lottery_admin_auth', JSON.stringify(authData));
+        
+        // 显示主应用
+        document.getElementById('passwordOverlay').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        
+        console.log('✅ 密码验证成功，进入主应用');
+    } else {
+        errorEl.textContent = '❌ 密码错误，请重试';
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('passwordInput').focus();
+    }
+};
+
+console.log('✅ checkPassword函数已定义到window对象');
+
+// 动态加载Firebase SDK，支持CDN回退
+(function() {
+    const firebaseVersion = '9.22.0';
+    const scripts = [
+        {
+            id: 'firebase-app',
+            urls: [
+                `https://www.gstatic.com/firebasejs/${firebaseVersion}/firebase-app-compat.js`,
+                `https://cdn.bootcdn.net/ajax/libs/firebase/${firebaseVersion}/firebase-app-compat.min.js`,
+                `https://cdnjs.cloudflare.com/ajax/libs/firebase/${firebaseVersion}/firebase-app-compat.min.js`
+            ]
+        },
+        // ... 原有代码继续 ...
 
             function loadScript(scriptInfo, callback) {
                 let currentIndex = 0;
@@ -2122,6 +2149,7 @@ function initializeApplication() {
 </body>
 
 </html>
+
 
 
 
