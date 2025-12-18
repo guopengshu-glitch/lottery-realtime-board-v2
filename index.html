@@ -945,6 +945,26 @@ function saveData() {
     } catch (e) {
         console.error('保存数据失败:', e);
     }
+} // ← saveData函数结束
+
+// ==================== 通知显示函数 ==================== （立即添加在这里！）
+function showNotification(message, type = 'success') {
+    // 防止重复通知
+    const existing = document.querySelector('.notification');
+    if (existing) existing.remove();
+    
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.style.background = type === 'warning' ? '#ff9f43' : '#2ecc71';
+    notification.innerHTML = message.replace(/\n/g, '<br>');
+    document.body.appendChild(notification);
+    
+    // 3秒后自动消失
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
 }
 
 // ==================== 主应用初始化 ====================
@@ -2043,5 +2063,6 @@ async function initializeFirebase() {
 </body>
 
 </html>
+
 
 
