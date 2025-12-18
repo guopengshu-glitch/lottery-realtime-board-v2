@@ -831,11 +831,11 @@ console.log('✅ checkPassword函数已定义到window对象');
                 <label for="passwordInput">请输入管理员密码</label>
                 <input type="password" id="passwordInput" placeholder="输入密码后按回车或点击进入">
             </div>
-            <button class="login-btn" onclick="checkPassword()">🚪 进入实时看板</button>
-            <div id="passwordError" class="password-error"></div>
-            <div class="password-hint">提示：验证通过后，3天内无需重复输入密码。</div>
-        </div>
-    </div>
+            <button class="login-btn" onclick="window.checkPassword && window.checkPassword()">🚪 进入实时看板</button>
+<div id="passwordError" class="password-error"></div>
+<div class="password-hint">提示：验证通过后，3天内无需重复输入密码。</div>
+</div>
+</div>
 
     <!-- 主看板页面 (默认隐藏) -->
     <div id="mainApp" style="display: none;">
@@ -2170,6 +2170,7 @@ function initializeApplication() {
 </body>
 
 </html>
+
 
 
 
