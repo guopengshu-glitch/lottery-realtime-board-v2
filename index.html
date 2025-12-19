@@ -155,7 +155,6 @@
             transition: all 0.3s;
             background: white;
             -webkit-appearance: none;
-            font-size: 16px;
             min-height: 50px;
         }
 
@@ -583,24 +582,20 @@
             transform: translateY(0);
         }
 
-        /* 手机端竖列表格样式 */
-        .mobile-table {
-            display: none;
-        }
-
         .data-section {
             background: white;
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
             margin-bottom: 20px;
+            overflow-x: hidden; /* 禁止横向滚动 */
         }
 
         .section-title {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             padding-bottom: 12px;
             border-bottom: 2px solid #f5f7fa;
         }
@@ -617,41 +612,91 @@
             align-self: flex-end;
         }
 
-        /* 桌面端表格 */
-        .desktop-table {
+        /* ==================== 紧凑竖列表格样式 ==================== */
+        .compact-table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed; /* 固定布局，防止超出 */
         }
 
-        .desktop-table th {
+        /* 表格列宽分配 */
+        .compact-table th:nth-child(1),
+        .compact-table td:nth-child(1) {
+            width: 12%; /* 排名 */
+            text-align: center;
+            padding: 10px 4px;
+        }
+
+        .compact-table th:nth-child(2),
+        .compact-table td:nth-child(2) {
+            width: 12%; /* 号码 */
+            text-align: center;
+            padding: 10px 4px;
+        }
+
+        .compact-table th:nth-child(3),
+        .compact-table td:nth-child(3) {
+            width: 18%; /* 生肖 */
+            text-align: center;
+            padding: 10px 4px;
+        }
+
+        .compact-table th:nth-child(4),
+        .compact-table td:nth-child(4) {
+            width: 28%; /* 波色 */
+            text-align: center;
+            padding: 10px 4px;
+        }
+
+        .compact-table th:nth-child(5),
+        .compact-table td:nth-child(5) {
+            width: 30%; /* 金额 */
+            text-align: right;
+            padding: 10px 8px 10px 4px;
+        }
+
+        .compact-table th {
             background: #f8f9fa;
             color: #666;
             font-weight: 600;
-            text-align: left;
-            padding: 18px 20px;
-            font-size: 16px;
+            font-size: 14px;
             border-bottom: 2px solid #eee;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .compact-table td {
+            border-bottom: 1px solid #f5f7fa;
+            transition: background 0.3s;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
             white-space: nowrap;
         }
 
-        .desktop-table td {
-            padding: 18px 20px;
-            border-bottom: 1px solid #f5f7fa;
-            transition: background 0.3s;
-            font-size: 16px;
-        }
-
-        .desktop-table tr:hover td {
+        .compact-table tr:hover td {
             background: #f8f9fa;
         }
 
-        .desktop-table tr:last-child td {
+        .compact-table tr:last-child td {
             border-bottom: none;
         }
 
+        .rank-cell {
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* 前3名特殊样式 */
+        .rank-1 { color: #FFD700; } /* 金色 */
+        .rank-2 { color: #C0C0C0; } /* 银色 */
+        .rank-3 { color: #CD7F32; } /* 铜色 */
+
         .number-cell {
             font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-            font-weight: 600;
+            font-weight: 700;
             color: #333;
         }
 
@@ -662,12 +707,12 @@
 
         .wave-cell {
             display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
             font-weight: 600;
             text-align: center;
-            min-width: 70px;
+            min-width: 50px;
         }
 
         .wave-red {
@@ -685,17 +730,17 @@
             color: white;
         }
 
-        /* 修改金额为红色 */
+        /* 金额红色样式 */
         .amount-cell {
             color: #e74c3c !important;
             font-weight: 700;
-            font-size: 18px;
+            font-size: 14px;
         }
 
         .amount-cell-zero {
             color: #bbb;
             font-weight: 500;
-            font-size: 16px;
+            font-size: 13px;
         }
 
         /* 通知样式 */
@@ -741,8 +786,52 @@
             border-radius: 0 0 15px 15px;
         }
 
-        /* 响应式设计 - 移动端 */
-        @media (max-width: 768px) {
+        /* ==================== 响应式设计 ==================== */
+        
+        /* 小手机屏幕优化 (≤375px) */
+        @media (max-width: 375px) {
+            .compact-table th,
+            .compact-table td {
+                font-size: 13px;
+                padding: 8px 2px;
+            }
+            
+            .compact-table th:nth-child(1),
+            .compact-table td:nth-child(1) {
+                width: 10%;
+            }
+            
+            .compact-table th:nth-child(2),
+            .compact-table td:nth-child(2) {
+                width: 10%;
+            }
+            
+            .compact-table th:nth-child(3),
+            .compact-table td:nth-child(3) {
+                width: 16%;
+            }
+            
+            .compact-table th:nth-child(4),
+            .compact-table td:nth-child(4) {
+                width: 32%;
+            }
+            
+            .compact-table th:nth-child(5),
+            .compact-table td:nth-child(5) {
+                width: 32%;
+                padding-right: 4px;
+            }
+            
+            .wave-cell {
+                padding: 3px 6px;
+                font-size: 11px;
+                min-width: 45px;
+            }
+            
+            .amount-cell {
+                font-size: 13px;
+            }
+            
             .header h1 {
                 font-size: 22px;
             }
@@ -774,94 +863,9 @@
                 font-size: 18px;
             }
             
-            .section-title span:last-child {
-                font-size: 13px;
-            }
-            
-            /* 移动端隐藏桌面表格 */
-            .desktop-table {
-                display: none;
-            }
-            
-            /* 显示移动端竖列表格 */
-            .mobile-table {
-                display: block;
-            }
-            
-            .mobile-number-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-            }
-            
-            .mobile-number-item {
-                background: #f8f9fa;
-                border-radius: 10px;
-                padding: 15px;
-                border: 1px solid #eee;
-            }
-            
-            .mobile-number-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 10px;
-                padding-bottom: 8px;
-                border-bottom: 1px solid #e0e0e0;
-            }
-            
-            .mobile-number {
-                font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-                font-weight: 700;
-                font-size: 18px;
-                color: #333;
-            }
-            
-            .mobile-rank {
-                font-weight: 700;
-                color: #667eea;
-                font-size: 16px;
-            }
-            
-            .mobile-number-content {
-                display: grid;
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-            
-            .mobile-zodiac {
-                color: #666;
-                font-size: 15px;
-                font-weight: 500;
-            }
-            
-            .mobile-wave {
-                display: inline-block;
-                padding: 5px 10px;
-                border-radius: 15px;
-                font-size: 13px;
-                font-weight: 600;
-                text-align: center;
-            }
-            
-            .mobile-amount {
-                font-weight: 700;
-                font-size: 17px;
-                text-align: right;
-                margin-top: 5px;
-                color: #e74c3c !important;
-            }
-            
-            .mobile-amount-zero {
-                color: #bbb;
-                font-weight: 500;
-                font-size: 15px;
-            }
-            
             .btn {
                 font-size: 15px;
                 padding: 14px;
-                min-height: 45px;
             }
             
             .notification {
@@ -869,7 +873,23 @@
             }
         }
 
-        /* 大屏幕样式 */
+        /* 中等手机屏幕 (376px-768px) */
+        @media (min-width: 376px) and (max-width: 768px) {
+            .compact-table th,
+            .compact-table td {
+                font-size: 14px;
+            }
+            
+            .wave-cell {
+                font-size: 12px;
+            }
+            
+            .amount-cell {
+                font-size: 14px;
+            }
+        }
+
+        /* 大屏幕样式 (≥769px) */
         @media (min-width: 769px) {
             .container {
                 padding: 20px;
@@ -936,6 +956,27 @@
                 gap: 0;
             }
             
+            /* 桌面端表格字体放大 */
+            .compact-table th {
+                font-size: 16px;
+                padding: 14px 6px;
+            }
+            
+            .compact-table td {
+                font-size: 16px;
+                padding: 14px 6px;
+            }
+            
+            .wave-cell {
+                font-size: 14px;
+                padding: 6px 10px;
+                min-width: 60px;
+            }
+            
+            .amount-cell {
+                font-size: 16px;
+            }
+            
             .history-modal-content {
                 margin: 10vh auto;
                 height: 70vh;
@@ -949,6 +990,7 @@
             }
         }
 
+        /* 超大屏幕 (≥1024px) */
         @media (min-width: 1024px) {
             .container {
                 padding: 30px;
@@ -958,23 +1000,24 @@
                 gap: 20px;
             }
             
-            .desktop-table th {
+            .compact-table th {
                 font-size: 17px;
-                padding: 20px 25px;
+                padding: 16px 8px;
             }
             
-            .desktop-table td {
+            .compact-table td {
                 font-size: 17px;
-                padding: 20px 25px;
+                padding: 16px 8px;
             }
             
             .wave-cell {
                 font-size: 15px;
-                padding: 9px 18px;
+                padding: 8px 12px;
+                min-width: 70px;
             }
             
             .amount-cell {
-                font-size: 20px;
+                font-size: 18px;
             }
         }
 
@@ -1089,28 +1132,21 @@
                     <span id="dataCount">0/49个号码</span>
                 </div>
                 
-                <!-- 桌面端表格 -->
-                <table class="desktop-table" id="desktopTable">
+                <!-- 紧凑竖列表格 -->
+                <table class="compact-table" id="dataTable">
                     <thead>
                         <tr>
-                            <th width="15%">排名</th>
-                            <th width="20%">号码</th>
-                            <th width="20%">生肖</th>
-                            <th width="25%">波色</th>
-                            <th width="20%">金额</th>
+                            <th>排名</th>
+                            <th>号码</th>
+                            <th>生肖</th>
+                            <th>波色</th>
+                            <th>金额</th>
                         </tr>
                     </thead>
-                    <tbody id="desktopTableBody">
+                    <tbody id="tableBody">
                         <!-- 表格数据会在JS中动态生成 -->
                     </tbody>
                 </table>
-                
-                <!-- 移动端竖列表格 -->
-                <div class="mobile-table" id="mobileTable">
-                    <div class="mobile-number-grid" id="mobileNumberGrid">
-                        <!-- 移动端数据会在JS中动态生成 -->
-                    </div>
-                </div>
             </div>
             
             <div class="footer-info">
@@ -1461,17 +1497,9 @@
                 document.getElementById('dataCount').textContent = `${activeCount}/49个号码`;
             }
             
-            // 渲染数据表格 - 根据设备类型渲染不同的表格
+            // 渲染紧凑竖列表格
             function renderDataTable() {
-                // 渲染桌面端表格
-                renderDesktopTable();
-                
-                // 渲染移动端表格
-                renderMobileTable();
-            }
-            
-            function renderDesktopTable() {
-                const tbody = document.getElementById('desktopTableBody');
+                const tbody = document.getElementById('tableBody');
                 const sortedData = [...window.lotteryData].sort((a, b) => {
                     if (a.amount > 0 && b.amount === 0) return -1;
                     if (a.amount === 0 && b.amount > 0) return 1;
@@ -1487,6 +1515,8 @@
                                     item.waveColor === '蓝波' ? 'wave-blue' :
                                     item.waveColor === '绿波' ? 'wave-green' : '';
                     
+                    // 确定排名样式
+                    let rankClass = '';
                     let rankDisplay = '-';
                     let amountDisplay = '0元';
                     let amountClass = 'amount-cell-zero';
@@ -1494,13 +1524,19 @@
                     if (item.amount > 0) {
                         currentRank++;
                         rankDisplay = currentRank;
+                        
+                        // 前3名特殊样式
+                        if (currentRank === 1) rankClass = 'rank-1';
+                        else if (currentRank === 2) rankClass = 'rank-2';
+                        else if (currentRank === 3) rankClass = 'rank-3';
+                        
                         amountDisplay = `${item.amount.toFixed(2)}元`;
                         amountClass = 'amount-cell';
                     }
                     
                     html += `
                         <tr>
-                            <td class="number-cell">${rankDisplay}</td>
+                            <td class="rank-cell ${rankClass}">${rankDisplay}</td>
                             <td class="number-cell">${item.number}</td>
                             <td class="zodiac-cell">${item.zodiac}</td>
                             <td><span class="wave-cell ${waveClass}">${item.waveColor}</span></td>
@@ -1510,52 +1546,6 @@
                 });
                 
                 tbody.innerHTML = html;
-            }
-            
-            function renderMobileTable() {
-                const container = document.getElementById('mobileNumberGrid');
-                const sortedData = [...window.lotteryData].sort((a, b) => {
-                    if (a.amount > 0 && b.amount === 0) return -1;
-                    if (a.amount === 0 && b.amount > 0) return 1;
-                    if (a.amount > 0 && b.amount > 0) return b.amount - a.amount;
-                    return a.number - b.number;
-                });
-                
-                let html = '';
-                let currentRank = 0;
-                
-                sortedData.forEach((item) => {
-                    const waveClass = item.waveColor === '红波' ? 'wave-red' :
-                                    item.waveColor === '蓝波' ? 'wave-blue' :
-                                    item.waveColor === '绿波' ? 'wave-green' : '';
-                    
-                    let rankDisplay = '-';
-                    let amountDisplay = '0元';
-                    let amountClass = 'mobile-amount-zero';
-                    
-                    if (item.amount > 0) {
-                        currentRank++;
-                        rankDisplay = currentRank;
-                        amountDisplay = `${item.amount.toFixed(2)}元`;
-                        amountClass = 'mobile-amount';
-                    }
-                    
-                    html += `
-                        <div class="mobile-number-item">
-                            <div class="mobile-number-header">
-                                <div class="mobile-number">${item.number}</div>
-                                <div class="mobile-rank">${rankDisplay}</div>
-                            </div>
-                            <div class="mobile-number-content">
-                                <div class="mobile-zodiac">${item.zodiac}</div>
-                                <span class="mobile-wave ${waveClass}">${item.waveColor}</span>
-                                <div class="${amountClass}">${amountDisplay}</div>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                container.innerHTML = html;
                 updateDataCount();
             }
             
