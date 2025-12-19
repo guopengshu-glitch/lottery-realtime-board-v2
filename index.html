@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>📊 彩票实时看板 - 多人实时同步</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
     <style>
@@ -13,12 +13,18 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
             background: #f5f7fa;
             min-height: 100vh;
             color: #333;
             line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         /* 网络状态指示器 */
@@ -123,7 +129,7 @@
         .login-box h1 {
             margin-bottom: 30px;
             color: #333;
-            font-size: 24px;
+            font-size: clamp(20px, 5vw, 24px);
             font-weight: 600;
         }
 
@@ -142,12 +148,15 @@
 
         #passwordInput {
             width: 100%;
-            padding: 15px 20px;
+            padding: 16px 20px;
             border: 2px solid #e0e0e0;
             border-radius: 12px;
             font-size: 16px;
             transition: all 0.3s;
             background: white;
+            -webkit-appearance: none;
+            font-size: clamp(16px, 4vw, 18px);
+            min-height: 50px;
         }
 
         #passwordInput:focus {
@@ -158,16 +167,18 @@
 
         .login-btn {
             width: 100%;
-            padding: 16px;
+            padding: 18px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 12px;
-            font-size: 16px;
+            font-size: clamp(16px, 4vw, 18px);
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
             margin-top: 10px;
+            min-height: 55px;
+            touch-action: manipulation;
         }
 
         .login-btn:hover {
@@ -189,7 +200,7 @@
         .password-hint {
             margin-top: 20px;
             color: #95a5a6;
-            font-size: 13px;
+            font-size: clamp(12px, 3vw, 14px);
             line-height: 1.5;
         }
 
@@ -204,6 +215,7 @@
             background: rgba(0, 0, 0, 0.5);
             z-index: 10001;
             animation: fadeIn 0.3s ease;
+            touch-action: none;
         }
 
         .history-modal-header {
@@ -218,7 +230,7 @@
 
         .history-modal-header h2 {
             color: #333;
-            font-size: 20px;
+            font-size: clamp(18px, 4vw, 20px);
             font-weight: 600;
         }
 
@@ -229,13 +241,14 @@
             color: #95a5a6;
             cursor: pointer;
             padding: 0;
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
             transition: all 0.3s;
+            touch-action: manipulation;
         }
 
         .close-history-btn:hover {
@@ -245,15 +258,16 @@
 
         .history-modal-content {
             background: white;
-            margin: 10vh auto;
+            margin: 5vh auto;
             width: 95%;
             max-width: 600px;
-            height: 70vh;
+            height: 90vh;
             border-radius: 15px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            position: relative;
         }
 
         .history-list {
@@ -261,6 +275,7 @@
             overflow-y: auto;
             padding: 20px;
             background: #f8f9fa;
+            -webkit-overflow-scrolling: touch;
         }
 
         .history-item {
@@ -285,8 +300,8 @@
             background: #ffebee;
             color: #e74c3c;
             border: none;
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             cursor: pointer;
             font-size: 16px;
@@ -294,6 +309,7 @@
             align-items: center;
             justify-content: center;
             transition: all 0.3s;
+            touch-action: manipulation;
         }
 
         .delete-btn:hover {
@@ -303,22 +319,23 @@
         .history-time {
             color: #667eea;
             font-weight: 600;
-            font-size: 14px;
+            font-size: clamp(13px, 3vw, 14px);
             margin-bottom: 8px;
             display: block;
         }
 
         .history-text {
             color: #333;
-            font-size: 15px;
+            font-size: clamp(14px, 3.5vw, 15px);
             margin-bottom: 5px;
             word-break: break-all;
+            line-height: 1.4;
         }
 
         .history-amount {
             color: #2ecc71;
             font-weight: 600;
-            font-size: 14px;
+            font-size: clamp(13px, 3vw, 14px);
         }
 
         .history-actions-bar {
@@ -328,24 +345,28 @@
             padding: 15px 25px;
             background: white;
             border-top: 1px solid #eee;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .history-count {
             color: #666;
-            font-size: 14px;
+            font-size: clamp(13px, 3vw, 14px);
             font-weight: 500;
         }
 
         .history-btn {
-            padding: 10px 20px;
+            padding: 12px 20px;
             background: #667eea;
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: clamp(13px, 3vw, 14px);
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s;
+            touch-action: manipulation;
+            min-height: 44px;
         }
 
         .history-btn:hover {
@@ -357,18 +378,19 @@
         #mainApp {
             min-height: 100vh;
             background: #f5f7fa;
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 15px;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            padding: 30px 20px;
+            margin-bottom: 20px;
+            padding: 25px 20px;
             background: white;
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
@@ -388,22 +410,23 @@
 
         .header h1 {
             color: #333;
-            font-size: 28px;
+            font-size: clamp(20px, 5vw, 28px);
             font-weight: 700;
             margin-bottom: 10px;
+            line-height: 1.3;
         }
 
         .header p {
             color: #666;
-            font-size: 15px;
+            font-size: clamp(13px, 3vw, 15px);
             opacity: 0.8;
         }
 
         .status-bar {
             background: white;
-            padding: 15px 25px;
+            padding: 15px 20px;
             border-radius: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
             border-left: 4px solid #667eea;
             font-weight: 500;
@@ -411,49 +434,51 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            font-size: clamp(14px, 3.5vw, 16px);
         }
 
         .total-section {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            gap: 20px;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
         .total-box {
-            flex: 1;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 25px 30px;
+            padding: 25px 20px;
             border-radius: 15px;
-            font-size: 24px;
+            font-size: clamp(18px, 4vw, 24px);
             font-weight: 700;
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
             text-align: center;
+            order: 1;
         }
 
         .total-box span {
-            font-size: 36px;
-            margin: 0 10px;
+            font-size: clamp(28px, 6vw, 36px);
+            margin: 0 8px;
             text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: inline-block;
         }
 
         .clear-all-btn {
-            padding: 0 30px;
+            padding: 18px 20px;
             background: white;
             color: #e74c3c;
             border: 2px solid #ffebee;
             border-radius: 12px;
-            font-size: 16px;
+            font-size: clamp(15px, 4vw, 16px);
             font-weight: 600;
             cursor: pointer;
-            height: 70px;
             transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            white-space: nowrap;
+            min-height: 60px;
+            touch-action: manipulation;
+            order: 2;
         }
 
         .clear-all-btn:hover {
@@ -464,9 +489,9 @@
 
         .input-section {
             background: white;
-            padding: 30px;
+            padding: 20px;
             border-radius: 15px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
         }
 
@@ -474,25 +499,26 @@
             display: block;
             color: #667eea;
             font-weight: 600;
-            font-size: 16px;
-            margin-bottom: 15px;
+            font-size: clamp(15px, 4vw, 16px);
+            margin-bottom: 12px;
         }
 
         #inputData {
             width: 100%;
-            min-height: 150px;
-            padding: 20px;
+            min-height: 120px;
+            padding: 16px;
             border: 2px solid #e0e0e0;
             border-radius: 12px;
-            font-size: 16px;
+            font-size: clamp(15px, 4vw, 16px);
             font-family: 'SF Mono', Monaco, 'Courier New', monospace;
             resize: vertical;
             transition: all 0.3s;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             line-height: 1.6;
             -webkit-user-select: text !important;
             user-select: text !important;
             -webkit-touch-callout: default !important;
+            -webkit-appearance: none;
         }
 
         #inputData:focus {
@@ -503,21 +529,21 @@
 
         #inputData::placeholder {
             color: #bbb;
+            font-size: clamp(14px, 3.5vw, 16px);
         }
 
         .btn-group {
             display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .btn {
-            flex: 1;
-            min-width: 200px;
-            padding: 16px 30px;
+            width: 100%;
+            padding: 18px 20px;
             border: none;
             border-radius: 12px;
-            font-size: 16px;
+            font-size: clamp(15px, 4vw, 16px);
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
@@ -525,22 +551,27 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
+            min-height: 55px;
+            touch-action: manipulation;
         }
 
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            order: 1;
         }
 
         .btn-history {
             background: #f8f9fa;
             color: #666;
             border: 2px solid #e0e0e0;
+            order: 2;
         }
 
         .btn-success {
             background: #2ecc71;
             color: white;
+            order: 3;
         }
 
         .btn:hover {
@@ -554,26 +585,33 @@
 
         .data-section {
             background: white;
-            padding: 25px;
+            padding: 20px;
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .section-title {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
             border-bottom: 2px solid #f5f7fa;
         }
 
         .section-title span:first-child {
             color: #333;
-            font-size: 20px;
+            font-size: clamp(16px, 4vw, 20px);
             font-weight: 700;
+        }
+
+        .section-title span:last-child {
+            font-size: clamp(11px, 2.5vw, 12px);
+            color: #7f8c8d;
+            align-self: flex-end;
         }
 
         .data-table {
@@ -587,17 +625,17 @@
             color: #666;
             font-weight: 600;
             text-align: left;
-            padding: 15px 20px;
-            font-size: 14px;
+            padding: 12px 15px;
+            font-size: clamp(12px, 2.5vw, 14px);
             border-bottom: 2px solid #eee;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            white-space: nowrap;
         }
 
         .data-table td {
-            padding: 15px 20px;
+            padding: 12px 15px;
             border-bottom: 1px solid #f5f7fa;
             transition: background 0.3s;
+            font-size: clamp(13px, 3vw, 14px);
         }
 
         .data-table tr:hover td {
@@ -621,12 +659,12 @@
 
         .wave-cell {
             display: inline-block;
-            padding: 6px 15px;
+            padding: 6px 12px;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: clamp(11px, 2.5vw, 13px);
             font-weight: 600;
             text-align: center;
-            min-width: 70px;
+            min-width: 60px;
         }
 
         .wave-red {
@@ -647,7 +685,7 @@
         .amount-cell {
             color: #2ecc71;
             font-weight: 700;
-            font-size: 16px;
+            font-size: clamp(14px, 3.5vw, 16px);
         }
 
         .amount-cell-zero {
@@ -658,157 +696,153 @@
         /* 通知样式 */
         .notification {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
+            bottom: 20px;
+            right: 20px;
+            left: 20px;
             background: #2ecc71;
             color: white;
-            padding: 15px 25px;
+            padding: 15px 20px;
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             z-index: 9997;
             animation: slideIn 0.3s ease;
-            max-width: 350px;
+            max-width: 100%;
             font-weight: 500;
             line-height: 1.5;
+            font-size: clamp(14px, 3.5vw, 16px);
+            text-align: center;
         }
 
         @keyframes slideIn {
             from {
                 opacity: 0;
-                transform: translateX(100%);
+                transform: translateY(100%);
             }
             to {
                 opacity: 1;
-                transform: translateX(0);
+                transform: translateY(0);
             }
         }
 
-        /* 响应式设计 */
-        @media (max-width: 768px) {
+        /* 底部信息 */
+        .footer-info {
+            text-align: center;
+            padding: 15px;
+            color: #7f8c8d;
+            font-size: clamp(11px, 2.5vw, 12px);
+            border-top: 1px solid #eee;
+            background: #f8f9fa;
+            margin-top: 20px;
+            border-radius: 0 0 15px 15px;
+        }
+
+        /* 大屏幕样式 */
+        @media (min-width: 768px) {
             .container {
-                padding: 15px;
-            }
-            
-            .header h1 {
-                font-size: 22px;
-            }
-            
-            .header p {
-                font-size: 14px;
-            }
-            
-            .total-section {
-                flex-direction: column;
-            }
-            
-            .total-box {
-                width: 100%;
-                font-size: 20px;
                 padding: 20px;
             }
             
-            .total-box span {
-                font-size: 28px;
-            }
-            
-            .clear-all-btn {
-                width: 100%;
-                height: 60px;
-                padding: 0 20px;
-            }
-            
-            .input-section {
-                padding: 20px;
-            }
-            
-            .btn {
-                min-width: 100%;
-            }
-            
-            .btn-group {
-                flex-direction: column;
-            }
-            
-            .data-section {
-                padding: 15px;
-            }
-            
-            .history-modal-content {
-                margin: 5vh auto;
-                width: 95%;
-                height: 85vh;
-            }
-            
-            .history-modal-header {
-                padding: 15px 20px;
-            }
-            
-            .history-actions-bar {
-                padding: 15px 20px;
-                flex-direction: column;
-                gap: 15px;
-                align-items: stretch;
-            }
-            
-            .history-btn {
-                width: 100%;
-            }
-            
-            .history-count {
-                text-align: center;
-            }
-            
-            .cloud-status {
-                top: 50px;
-                font-size: 11px;
-                padding: 5px 10px;
-            }
-        }
-
-        @media (max-width: 480px) {
             .header {
-                padding: 20px 15px;
-            }
-            
-            .header h1 {
-                font-size: 20px;
+                padding: 30px;
+                margin-bottom: 30px;
             }
             
             .status-bar {
-                padding: 12px 15px;
-                font-size: 14px;
+                padding: 15px 25px;
+                margin-bottom: 20px;
+            }
+            
+            .total-section {
+                flex-direction: row;
+                align-items: stretch;
+                gap: 20px;
+            }
+            
+            .total-box {
+                flex: 1;
+                padding: 25px 30px;
+                order: 1;
+            }
+            
+            .clear-all-btn {
+                width: auto;
+                min-width: 180px;
+                padding: 0 30px;
+                order: 2;
+            }
+            
+            .input-section {
+                padding: 30px;
+                margin-bottom: 25px;
             }
             
             #inputData {
-                min-height: 120px;
-                padding: 15px;
-                font-size: 15px;
+                min-height: 150px;
+                padding: 20px;
+                margin-bottom: 20px;
             }
             
-            .data-table th,
-            .data-table td {
-                padding: 10px 12px;
-                font-size: 13px;
+            .btn-group {
+                flex-direction: row;
+                gap: 15px;
             }
             
-            .wave-cell {
-                padding: 4px 10px;
-                font-size: 12px;
-                min-width: 60px;
+            .btn {
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .data-section {
+                padding: 25px;
+                margin-bottom: 30px;
+            }
+            
+            .section-title {
+                flex-direction: row;
+                align-items: center;
+                gap: 0;
+            }
+            
+            .history-modal-content {
+                margin: 10vh auto;
+                height: 70vh;
             }
             
             .notification {
-                bottom: 20px;
-                right: 20px;
-                left: 20px;
-                max-width: none;
+                right: 30px;
+                left: auto;
+                max-width: 350px;
+                text-align: left;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                padding: 30px;
+            }
+            
+            .btn-group {
+                gap: 20px;
+            }
+        }
+
+        /* 修复iPhone安全区域 */
+        @supports (padding: max(0px)) {
+            #mainApp {
+                padding-left: max(15px, env(safe-area-inset-left));
+                padding-right: max(15px, env(safe-area-inset-right));
+                padding-bottom: max(15px, env(safe-area-inset-bottom));
+            }
+            
+            .notification {
+                bottom: max(20px, env(safe-area-inset-bottom));
             }
         }
     </style>
     
-    <!-- 先加载Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase SDK 添加 defer 属性避免阻塞渲染 -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" defer></script>
 </head>
 <body>
     <!-- 网络状态指示器 -->
@@ -826,7 +860,7 @@
             <h1>🔐 管理员验证</h1>
             <div class="input-group">
                 <label for="passwordInput">请输入管理员密码</label>
-                <input type="password" id="passwordInput" placeholder="输入密码后按回车或点击进入">
+                <input type="password" id="passwordInput" placeholder="输入密码后按回车或点击进入" autocomplete="current-password">
             </div>
             <button class="login-btn" onclick="checkPassword()">🚪 进入实时看板</button>
             <div id="passwordError" class="password-error"></div>
@@ -860,7 +894,7 @@
         <div class="container">
             <div class="header">
                 <h1>📊 彩票实时看板 - 多人实时同步</h1>
-                <p style="opacity: 0.9; font-size: 14px;">支持任意格式 • 实时多人同步 • 国内优化</p>
+                <p>支持任意格式 • 实时多人同步 • 国内优化</p>
             </div>
             
             <div class="status-bar" id="statusBar">
@@ -882,11 +916,6 @@
                 <textarea 
                     id="inputData" 
                     placeholder="粘贴彩票数据（支持任意格式）"
-                    style="
-                        -webkit-user-select: text !important;
-                        user-select: text !important;
-                        -webkit-touch-callout: default !important;
-                    "
                 ></textarea>
                 
                 <div class="btn-group">
@@ -905,7 +934,7 @@
             <div class="data-section">
                 <div class="section-title">
                     <span>📈 号码数据（按金额排序）</span>
-                    <span style="font-size: 12px; color: #7f8c8d; margin-left: auto;" id="dataCount">0/49个号码</span>
+                    <span id="dataCount">0/49个号码</span>
                 </div>
                 
                 <table class="data-table" id="dataTable">
@@ -924,17 +953,95 @@
                 </table>
             </div>
             
-            <div style="text-align: center; padding: 15px; color: #7f8c8d; font-size: 12px; border-top: 1px solid #eee; background: #f8f9fa;">
+            <div class="footer-info">
                 📱 支持手机访问 • 🔄 实时同步 • 💾 离线保存
             </div>
         </div>
     </div>
 
     <script>
+        // 先加载核心功能，Firebase稍后加载
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 页面加载完成 - 核心功能启动');
+            
+            // 绑定密码输入框回车事件
+            document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkPassword();
+                }
+            });
+            
+            // 检查自动登录
+            try {
+                const authStr = localStorage.getItem('lottery_admin_auth');
+                if (authStr) {
+                    const authData = JSON.parse(authStr);
+                    const now = Date.now();
+                    const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+                    
+                    if (authData.loggedIn && authData.loginTime && (now - authData.loginTime) < THREE_DAYS_MS) {
+                        document.getElementById('passwordOverlay').style.display = 'none';
+                        document.getElementById('mainApp').style.display = 'block';
+                        startApplication();
+                        console.log('✅ 自动登录成功');
+                        return;
+                    }
+                }
+            } catch(e) {
+                console.log('自动登录检查失败');
+            }
+            
+            document.getElementById('passwordInput').focus();
+            
+            // 添加触摸事件支持
+            initTouchSupport();
+        });
+
+        // ==================== 触摸支持 ====================
+        function initTouchSupport() {
+            // 防止双击缩放
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = Date.now();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+
+            // 提高触摸按钮的响应性
+            const buttons = document.querySelectorAll('button, .btn, .login-btn, .clear-all-btn, .history-btn, .delete-btn, .close-history-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.98)';
+                });
+                btn.addEventListener('touchend', function() {
+                    this.style.transform = '';
+                });
+                btn.addEventListener('touchcancel', function() {
+                    this.style.transform = '';
+                });
+            });
+
+            // 修复iOS输入框问题
+            const inputs = document.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('touchstart', function(e) {
+                    e.stopPropagation();
+                });
+            });
+        }
+
         // ==================== 修复版本 - 专为Firebase优化 ====================
         
         // 修复1: 确保Firebase SDK已加载
-        console.log('Firebase状态:', typeof firebase);
+        function checkFirebaseLoaded() {
+            console.log('Firebase状态:', typeof firebase);
+            if (typeof firebase !== 'undefined') {
+                return true;
+            }
+            return false;
+        }
         
         // 修复2: 简化的密码验证
         function checkPassword() {
@@ -976,43 +1083,9 @@
             // 初始化彩票系统
             initLotterySystem();
             
-            // 初始化Firebase（异步）
-            setTimeout(initFirebase, 500);
+            // 异步初始化Firebase
+            setTimeout(initFirebase, 100);
         }
-        
-        // 修复4: 检查自动登录
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 页面加载完成');
-            
-            // 绑定密码输入框回车事件
-            document.getElementById('passwordInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    checkPassword();
-                }
-            });
-            
-            // 检查自动登录
-            try {
-                const authStr = localStorage.getItem('lottery_admin_auth');
-                if (authStr) {
-                    const authData = JSON.parse(authStr);
-                    const now = Date.now();
-                    const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
-                    
-                    if (authData.loggedIn && authData.loginTime && (now - authData.loginTime) < THREE_DAYS_MS) {
-                        document.getElementById('passwordOverlay').style.display = 'none';
-                        document.getElementById('mainApp').style.display = 'block';
-                        startApplication();
-                        console.log('✅ 自动登录成功');
-                        return;
-                    }
-                }
-            } catch(e) {
-                console.log('自动登录检查失败');
-            }
-            
-            document.getElementById('passwordInput').focus();
-        });
         
         // ==================== 彩票系统核心 ====================
         let lotterySystem = null;
@@ -1483,17 +1556,39 @@
                 const encoded = btoa(encodeURIComponent(dataStr));
                 const currentUrl = window.location.origin + window.location.pathname + '?data=' + encoded;
                 
-                navigator.clipboard.writeText(currentUrl).then(() => {
-                    showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
-                }).catch(err => {
-                    const tempInput = document.createElement('input');
-                    tempInput.value = currentUrl;
-                    document.body.appendChild(tempInput);
-                    tempInput.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(tempInput);
-                    showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
-                });
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(currentUrl).then(() => {
+                        showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
+                    }).catch(err => {
+                        fallbackCopyToClipboard(currentUrl);
+                    });
+                } else {
+                    fallbackCopyToClipboard(currentUrl);
+                }
+            }
+            
+            function fallbackCopyToClipboard(text) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
+                    } else {
+                        showNotification('❌ 复制失败，请手动复制链接');
+                    }
+                } catch (err) {
+                    console.error('复制失败:', err);
+                    showNotification('❌ 复制失败，请手动复制链接');
+                }
+                
+                document.body.removeChild(textarea);
             }
             
             // 初始化
@@ -1514,42 +1609,64 @@
             console.log('🔥 初始化Firebase...');
             updateCloudStatus('连接中...', 'connecting');
             
-            if (typeof firebase === 'undefined') {
-                console.error('❌ Firebase SDK未加载');
-                updateCloudStatus('SDK加载失败', 'offline');
-                return;
-            }
-            
-            try {
-                // Firebase配置
-                const firebaseConfig = {
-                    apiKey: "AIzaSyAgUU04dt1igPFNTC-zJ3WhGfWp8-wKmfo",
-                    authDomain: "my-lottery-board.firebaseapp.com",
-                    projectId: "my-lottery-board",
-                    storageBucket: "my-lottery-board.firebasestorage.app",
-                    messagingSenderId: "714450363816",
-                    appId: "1:714450363816:web:8335befb5ed25c98f3a99d"
+            // 延迟检查Firebase是否加载
+            setTimeout(() => {
+                if (typeof firebase === 'undefined') {
+                    console.log('Firebase SDK未加载，重试...');
+                    // 如果Firebase未加载，尝试重新加载
+                    loadFirebase();
+                    return;
+                }
+                
+                try {
+                    // Firebase配置
+                    const firebaseConfig = {
+                        apiKey: "AIzaSyAgUU04dt1igPFNTC-zJ3WhGfWp8-wKmfo",
+                        authDomain: "my-lottery-board.firebaseapp.com",
+                        projectId: "my-lottery-board",
+                        storageBucket: "my-lottery-board.firebasestorage.app",
+                        messagingSenderId: "714450363816",
+                        appId: "1:714450363816:web:8335befb5ed25c98f3a99d"
+                    };
+                    
+                    // 初始化Firebase
+                    const app = firebase.initializeApp(firebaseConfig);
+                    const db = firebase.firestore(app);
+                    
+                    window.firebaseApp = app;
+                    window.firebaseDb = db;
+                    
+                    console.log('✅ Firebase初始化成功');
+                    
+                    // 启动实时监听
+                    startFirebaseListener();
+                    
+                    updateCloudStatus('实时同步', 'online');
+                    document.getElementById('statusBar').textContent = '✅ 系统就绪 | 实时同步中';
+                    
+                } catch (error) {
+                    console.error('❌ Firebase初始化失败:', error.message);
+                    updateCloudStatus('连接失败', 'offline');
+                    document.getElementById('statusBar').textContent = '⚠️ 系统就绪 | 离线模式';
+                }
+            }, 500);
+        }
+        
+        function loadFirebase() {
+            // 动态加载Firebase脚本
+            if (!document.querySelector('script[src*="firebase-app"]')) {
+                const script1 = document.createElement('script');
+                script1.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js";
+                script1.defer = true;
+                document.head.appendChild(script1);
+                
+                const script2 = document.createElement('script');
+                script2.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js";
+                script2.defer = true;
+                script2.onload = function() {
+                    setTimeout(initFirebase, 1000);
                 };
-                
-                // 初始化Firebase
-                const app = firebase.initializeApp(firebaseConfig);
-                const db = firebase.firestore(app);
-                
-                window.firebaseApp = app;
-                window.firebaseDb = db;
-                
-                console.log('✅ Firebase初始化成功');
-                
-                // 启动实时监听
-                startFirebaseListener();
-                
-                updateCloudStatus('实时同步', 'online');
-                document.getElementById('statusBar').textContent = '✅ 系统就绪 | 实时同步中';
-                
-            } catch (error) {
-                console.error('❌ Firebase初始化失败:', error.message);
-                updateCloudStatus('连接失败', 'offline');
-                document.getElementById('statusBar').textContent = '⚠️ 系统就绪 | 离线模式';
+                document.head.appendChild(script2);
             }
         }
         
@@ -1663,7 +1780,7 @@
             
             setTimeout(() => {
                 notification.style.opacity = '0';
-                notification.style.transform = 'translateX(100%)';
+                notification.style.transform = 'translateY(100%)';
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
         }
@@ -1698,7 +1815,7 @@
             showNotification('✅ 网络已恢复');
             
             if (!window.firebaseDb && typeof firebase !== 'undefined') {
-                initFirebase();
+                setTimeout(initFirebase, 1000);
             }
         });
         
