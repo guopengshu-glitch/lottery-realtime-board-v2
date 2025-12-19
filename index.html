@@ -812,11 +812,19 @@
                 });
             }
             
-            updateTotalAmount();
-            renderDataTable();
+            // 调用更新函数
+            if (typeof window.updateTotalAmount === 'function') {
+                window.updateTotalAmount();
+            }
+            
+            if (typeof window.renderDataTable === 'function') {
+                window.renderDataTable();
+            }
             
             // 保存合并后的数据到本地
-            saveData();
+            if (typeof window.saveData === 'function') {
+                window.saveData();
+            }
             
             console.log('✅ 云端数据应用完成');
         };
@@ -1220,7 +1228,7 @@
                 showNotification(`✅ 成功录入 ${bets.length} 个下注\n💰 总计 ${totalAmount.toFixed(2)} 元`);
             }
 
-            function updateTotalAmount() {
+            window.updateTotalAmount = function() {
                 const total = Object.values(window.moneyMap).reduce((sum, amount) => sum + amount, 0);
                 document.getElementById('totalMoney').textContent = total.toFixed(2);
                 
@@ -1228,7 +1236,7 @@
                 document.getElementById('dataCount').textContent = `${activeCount}/49个号码`;
             }
 
-            function renderDataTable() {
+            window.renderDataTable = function() {
                 const tbody = document.getElementById('tableBody');
                 
                 const sortedData = [...window.lotteryData].sort((a, b) => {
@@ -1420,7 +1428,7 @@
             }
 
             // ==================== 数据存储 ====================
-            function saveData() {
+            window.saveData = function() {
                 const saveData = {
                     moneyMap: window.moneyMap,
                     historyRecords: window.historyRecords,
@@ -1500,7 +1508,7 @@
                 window.historyRecords = [];
                 window.undoStack = [];
                 renderDataTable();
-                updateUndoButton();
+                updateTotalAmount();
                 document.getElementById('totalMoney').textContent = '0';
                 document.getElementById('dataCount').textContent = '0/49个号码';
                 localStorage.removeItem('lottery_data_v2');
@@ -1647,7 +1655,9 @@
             
             // 确保文档存在
             docRef.get().then((doc) => {
-                if (!doc.exists()) {
+                // 兼容不同版本的exists检查
+                const exists = doc.exists ? (typeof doc.exists === 'function' ? doc.exists() : doc.exists) : false;
+                if (!exists) {
                     // 创建初始文档
                     docRef.set({
                         moneyMap: {},
@@ -1657,6 +1667,8 @@
                         createdAt: new Date().toISOString()
                     });
                 }
+            }).catch(error => {
+                console.error('检查文档存在性失败:', error);
             });
         }
 
