@@ -1423,12 +1423,6 @@
                     saveCurrentStateForUndo();
                     window.historyRecords = [];
                     closeHistoryPopup();
-                    
-                    // 同步到云端
-                    if (window.firebaseDb) {
-                        saveToCloud();
-                    }
-                    
                     showNotification('✅ 历史记录已清空');
                 }
             }
@@ -1508,33 +1502,24 @@
                 });
             };
 
-            // ==================== 清空所有数据 ====================
             window.clearAll = function() {
                 if (!confirm('⚠️ 确定要清空所有数据吗？\n包括所有录入记录和统计！')) return;
-                
-                saveCurrentStateForUndo();
-                
-                // 清空本地数据
                 initData();
                 window.historyRecords = [];
                 window.undoStack = [];
-                
-                // 更新UI
                 renderDataTable();
                 updateTotalAmount();
                 document.getElementById('totalMoney').textContent = '0';
                 document.getElementById('dataCount').textContent = '0/49个号码';
-                
-                // 清空本地存储
                 localStorage.removeItem('lottery_data_v2');
                 window.history.replaceState(null, '', window.location.pathname);
                 
-                // 强制同步到云端 - 清空云端数据
+                // 同步清空到云端
                 if (window.firebaseDb) {
-                    saveToCloud(); // 这会同步空数据到云端
+                    saveToCloud();
                 }
                 
-                showNotification('✅ 所有数据已清空（已同步到所有设备）');
+                showNotification('✅ 所有数据已清空');
             }
 
             // ==================== 辅助函数 ====================
