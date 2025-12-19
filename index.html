@@ -150,87 +150,98 @@
             border-bottom: 3px solid #27ae60;
         }
         
-        .history-section {
-            padding: 15px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #eee;
+        /* 历史记录弹窗样式 */
+        .history-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 1000;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            display: none;
         }
         
-        .history-header {
+        .history-modal-header {
+            background: linear-gradient(to right, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0;
-            cursor: pointer;
-            padding: 10px;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            transition: all 0.3s ease;
         }
         
-        .history-header:hover {
-            background: #f5f5f5;
-        }
-        
-        .history-header.active {
-            background: #e8f4fc;
-            border-color: #3498db;
-        }
-        
-        .history-title {
-            color: #2c3e50;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .history-toggle-icon {
+        .history-modal-header h2 {
             font-size: 18px;
-            transition: transform 0.3s ease;
-        }
-        
-        .history-header.active .history-toggle-icon {
-            transform: rotate(180deg);
-        }
-        
-        .history-actions {
             display: flex;
-            gap: 8px;
             align-items: center;
+            gap: 8px;
+        }
+        
+        .close-history-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        
+        .close-history-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .history-modal-content {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+        
+        .history-actions-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-radius: 0 0 15px 15px;
+            border-top: 1px solid #eee;
         }
         
         .history-btn {
-            padding: 6px 12px;
+            padding: 8px 16px;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 6px;
             background: white;
-            font-size: 12px;
+            font-size: 14px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 3px;
+            gap: 5px;
         }
         
         .history-btn:hover {
             background: #f5f5f5;
         }
         
-        .history-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            margin-top: 0;
-        }
-        
-        .history-content.expanded {
-            max-height: 300px;
-            margin-top: 10px;
+        .history-count {
+            font-size: 14px;
+            color: #7f8c8d;
         }
         
         .history-list {
-            max-height: 280px;
+            max-height: 300px;
             overflow-y: auto;
         }
         
@@ -306,7 +317,11 @@
             margin-top: 5px;
         }
         
-        .input-section {
+        /* 总计金额和清空按钮 */
+        .total-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             padding: 20px;
             background: white;
             border-bottom: 1px solid #eee;
@@ -318,54 +333,65 @@
             padding: 15px;
             border-radius: 10px;
             text-align: center;
-            margin-bottom: 15px;
+            flex: 1;
             font-size: 20px;
             font-weight: bold;
             box-shadow: 0 5px 15px rgba(231, 76, 60, 0.2);
+        }
+        
+        .clear-all-btn {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 5px 15px rgba(44, 62, 80, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .clear-all-btn:hover {
+            background: #34495e;
+            transform: translateY(-2px);
+        }
+        
+        /* 简化粘贴框 */
+        .input-section {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .paste-label {
+            color: #2c3e50;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+            font-size: 16px;
         }
         
         textarea {
             width: 100%;
             height: 120px;
             padding: 15px;
-            border: 2px solid #3498db;
+            border: 2px solid #ddd;
             border-radius: 10px;
             font-size: 16px;
             margin-bottom: 15px;
             resize: none;
-            background: white;
+            background: #f8f9fa;
             font-family: 'Microsoft YaHei', monospace;
         }
         
         textarea:focus {
             outline: none;
-            border-color: #e74c3c;
-            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
-        }
-        
-        .input-examples {
-            background: #e8f4fc;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 12px;
-            border-left: 4px solid #3498db;
-        }
-        
-        .input-examples strong {
-            display: block;
-            margin-bottom: 5px;
-            color: #2c3e50;
-            font-size: 13px;
-        }
-        
-        .input-examples code {
+            border-color: #3498db;
             background: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            border: 1px solid #ddd;
         }
         
         .btn-group {
@@ -399,19 +425,19 @@
             color: white;
         }
         
-        .btn-danger {
-            background: linear-gradient(to right, #e74c3c, #c0392b);
-            color: white;
-        }
-        
         .btn-success {
             background: linear-gradient(to right, #2ecc71, #27ae60);
             color: white;
         }
         
+        .btn-history {
+            background: linear-gradient(to right, #9b59b6, #8e44ad);
+            color: white;
+        }
+        
         .data-section {
             padding: 15px;
-            background: #f8f9fa;
+            background: white;
         }
         
         .section-title {
@@ -422,6 +448,7 @@
             gap: 8px;
         }
         
+        /* 表格样式 - 不滑动，随页面滚动 */
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -456,11 +483,12 @@
             background: #f0f7ff;
         }
         
+        /* 增大号码字体到20px */
         .number-cell {
             font-weight: bold;
             color: #2c3e50;
             font-family: Arial, sans-serif;
-            font-size: 18px;
+            font-size: 20px;
         }
         
         .zodiac-cell {
@@ -536,46 +564,6 @@
             opacity: 1;
         }
         
-        .wave-info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 0;
-            padding: 15px;
-            background: white;
-            border-radius: 8px;
-            font-size: 16px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        
-        .wave-total {
-            font-weight: bold;
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-size: 16px;
-        }
-        
-        .wave-total.red { 
-            background: #ffebee;
-            color: #e74c3c;
-        }
-        .wave-total.blue { 
-            background: #e3f2fd;
-            color: #3498db;
-        }
-        .wave-total.green { 
-            background: #e8f5e9;
-            color: #27ae60;
-        }
-        
-        .table-container {
-            overflow-x: auto;
-            border-radius: 8px;
-            margin-top: 10px;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-        
         .notification {
             position: fixed;
             top: 20px;
@@ -619,8 +607,21 @@
                 padding: 15px;
             }
             
-            .history-section,
-            .input-section,
+            .history-modal {
+                width: 95%;
+                max-height: 85vh;
+            }
+            
+            .total-section {
+                padding: 15px;
+                flex-direction: column;
+            }
+            
+            .clear-all-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
             .data-section {
                 padding: 12px;
             }
@@ -634,8 +635,14 @@
                 padding: 12px 6px;
             }
             
-            .number-cell,
-            .zodiac-cell,
+            .number-cell {
+                font-size: 18px;
+            }
+            
+            .zodiac-cell {
+                font-size: 16px;
+            }
+            
             .amount-cell {
                 font-size: 16px;
             }
@@ -657,25 +664,12 @@
             .total-box {
                 font-size: 18px;
                 padding: 12px;
-            }
-            
-            .history-list {
-                max-height: 250px;
+                width: 100%;
             }
             
             textarea {
                 font-size: 14px;
                 padding: 12px;
-            }
-            
-            .wave-info-row {
-                font-size: 14px;
-                padding: 12px;
-            }
-            
-            .wave-total {
-                font-size: 14px;
-                padding: 6px 10px;
             }
             
             .cloud-status {
@@ -715,6 +709,27 @@
         </div>
     </div>
 
+    <!-- 历史记录弹窗 -->
+    <div class="history-modal" id="historyModal">
+        <div class="history-modal-header">
+            <h2>📝 录入记录</h2>
+            <button class="close-history-btn" onclick="closeHistoryModal()">×</button>
+        </div>
+        <div class="history-modal-content">
+            <div class="history-list" id="historyList">
+                <div style="text-align: center; color: #95a5a6; padding: 20px;">
+                    暂无录入记录
+                </div>
+            </div>
+        </div>
+        <div class="history-actions-bar">
+            <div class="history-count" id="historyCount">0条记录</div>
+            <button class="history-btn" onclick="clearHistory()" style="background: #ffebee; color: #e74c3c;">
+                🗑️ 清空记录
+            </button>
+        </div>
+    </div>
+
     <!-- 主看板页面 (默认隐藏) -->
     <div id="mainApp" style="display: none;">
         <div class="container">
@@ -727,50 +742,21 @@
                 🚀 系统启动中...
             </div>
             
-            <div class="history-section" id="historySection">
-                <div class="history-header" id="historyHeader" onclick="toggleHistory()">
-                    <div class="history-title">
-                        <span class="history-toggle-icon">▼</span>
-                        <span>📝 录入记录</span>
-                    </div>
-                    <div class="history-actions">
-                        <button class="history-btn" onclick="undoLast(event)" id="undoBtn" disabled>
-                            ↩️ 撤销
-                        </button>
-                        <span style="font-size: 12px; color: #7f8c8d;" id="historyCount">0条</span>
-                    </div>
-                </div>
-                <div class="history-content" id="historyContent">
-                    <div class="history-list" id="historyList">
-                        <div style="text-align: center; color: #95a5a6; padding: 20px;">
-                            暂无录入记录
-                        </div>
-                    </div>
-                    <div style="text-align: right; margin-top: 10px;">
-                        <button class="history-btn" onclick="clearHistory()" style="background: #ffebee; color: #e74c3c;">
-                            🗑️ 清空记录
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="input-section">
+            <!-- 总计金额和清空按钮 -->
+            <div class="total-section">
                 <div class="total-box">
                     总计: <span id="totalMoney">0</span> 元
                 </div>
-                
-                <div class="input-examples">
-                    <strong>💡 支持任意格式：</strong>
-                    <code>羊鸡马牛各号10</code>
-                    <code>猪.狗.鸡.猴.虎.兔.各号52元</code>
-                    <code>23.35.07.19.12.24.08.40各号10元</code>
-                    <br>支持：. / 分隔符 | 元/米/斤/块单位或无单位
-                </div>
-                
+                <button class="clear-all-btn" onclick="clearAll()">
+                    🗑️ 清空数据
+                </button>
+            </div>
+            
+            <div class="input-section">
+                <label class="paste-label">&lt;粘贴输入框&gt;</label>
                 <textarea 
                     id="inputData" 
-                    placeholder="输入示例（支持任意格式）：
-猪.狗.鸡.猴.虎.兔.各号52元.羊.鸡.马.牛各号10元羊.牛.狗.虎各号10元羊.蛇.狗.牛各号10元羊.狗.鸡.虎各号10元羊.牛.狗.鸡各号10元蛇.马.鸡.羊各号10元.23.35.07.19.12.24.08.40各号10元10.11.47.31.43.03.15.27.39.36.48.20.32.44.04.16.28各号5斤07.08.13.18.23.30.34.45.05.11.21.27.28.33.39.44各号10斤03.09.14.20.25.26.31.47各号5斤"
+                    placeholder="粘贴彩票数据（支持任意格式）"
                     style="
                         -webkit-user-select: text !important;
                         user-select: text !important;
@@ -778,21 +764,12 @@
                     "
                 ></textarea>
                 
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <button type="button" onclick="pasteFromClipboard()" style="flex:1; padding:10px; background:#3498db; color:white; border:none; border-radius:8px; font-size:14px;">
-                        📋 粘贴剪贴板
-                    </button>
-                    <button type="button" onclick="clearInput()" style="flex:1; padding:10px; background:#95a5a6; color:white; border:none; border-radius:8px; font-size:14px;">
-                        🗑️ 清空输入
-                    </button>
-                </div>
-                
                 <div class="btn-group">
                     <button class="btn btn-primary" onclick="processData()">
                         📤 发布数据
                     </button>
-                    <button class="btn btn-danger" onclick="clearAll()">
-                        🗑️ 清空数据
+                    <button class="btn btn-history" onclick="openHistoryModal()">
+                        📋 查看记录
                     </button>
                     <button class="btn btn-success" onclick="copyLink()">
                         🔗 分享链接
@@ -806,28 +783,20 @@
                     <span style="font-size: 12px; color: #7f8c8d; margin-left: auto;" id="dataCount">0/49个号码</span>
                 </div>
                 
-                <div class="wave-info-row">
-                    <span class="wave-total red">红波: <span id="redTotal">0</span>元</span>
-                    <span class="wave-total blue">蓝波: <span id="blueTotal">0</span>元</span>
-                    <span class="wave-total green">绿波: <span id="greenTotal">0</span>元</span>
-                </div>
-                
-                <div class="table-container">
-                    <table class="data-table" id="dataTable">
-                        <thead>
-                            <tr>
-                                <th width="15%">排名</th>
-                                <th width="20%">号码</th>
-                                <th width="20%">生肖</th>
-                                <th width="25%">波色</th>
-                                <th width="20%">金额</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody">
-                            <!-- 表格数据会在JS中动态生成 -->
-                        </tbody>
-                    </table>
-                </div>
+                <table class="data-table" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th width="15%">排名</th>
+                            <th width="20%">号码</th>
+                            <th width="20%">生肖</th>
+                            <th width="25%">波色</th>
+                            <th width="20%">金额</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- 表格数据会在JS中动态生成 -->
+                    </tbody>
+                </table>
             </div>
             
             <div style="text-align: center; padding: 15px; color: #7f8c8d; font-size: 12px; border-top: 1px solid #eee; background: #f8f9fa;">
@@ -1053,7 +1022,7 @@
                         });
                         
                         updateTotalAmount();
-                        updateWaveTotals();
+                        updateDataCount();
                         updateUndoButton();
                         renderHistory();
                         renderDataTable();
@@ -1082,25 +1051,12 @@
             function updateTotalAmount() {
                 const total = Object.values(window.moneyMap).reduce((sum, amount) => sum + amount, 0);
                 document.getElementById('totalMoney').textContent = total.toFixed(2);
-                
-                const activeCount = Object.values(window.moneyMap).filter(amount => amount > 0).length;
-                document.getElementById('dataCount').textContent = `${activeCount}/49个号码`;
             }
             
-            // 更新波色总计
-            function updateWaveTotals() {
-                let redTotal = 0, blueTotal = 0, greenTotal = 0;
-                window.lotteryData.forEach(item => {
-                    if (item.amount > 0) {
-                        if (item.waveColor === '红波') redTotal += item.amount;
-                        else if (item.waveColor === '蓝波') blueTotal += item.amount;
-                        else if (item.waveColor === '绿波') greenTotal += item.amount;
-                    }
-                });
-                
-                document.getElementById('redTotal').textContent = redTotal.toFixed(2);
-                document.getElementById('blueTotal').textContent = blueTotal.toFixed(2);
-                document.getElementById('greenTotal').textContent = greenTotal.toFixed(2);
+            // 更新数据计数
+            function updateDataCount() {
+                const activeCount = Object.values(window.moneyMap).filter(amount => amount > 0).length;
+                document.getElementById('dataCount').textContent = `${activeCount}/49个号码`;
             }
             
             // 渲染数据表格
@@ -1144,40 +1100,10 @@
                 });
                 
                 tbody.innerHTML = html;
+                updateDataCount();
             }
             
             // 历史记录相关
-            let historyExpanded = false;
-            
-            window.toggleHistory = function() {
-                const header = document.getElementById('historyHeader');
-                const content = document.getElementById('historyContent');
-                
-                if (historyExpanded) {
-                    collapseHistory();
-                } else {
-                    expandHistory();
-                }
-                
-                historyExpanded = !historyExpanded;
-            }
-            
-            function expandHistory() {
-                const header = document.getElementById('historyHeader');
-                const content = document.getElementById('historyContent');
-                header.classList.add('active');
-                content.classList.add('expanded');
-                header.querySelector('.history-toggle-icon').textContent = '▲';
-            }
-            
-            function collapseHistory() {
-                const header = document.getElementById('historyHeader');
-                const content = document.getElementById('historyContent');
-                header.classList.remove('active');
-                content.classList.remove('expanded');
-                header.querySelector('.history-toggle-icon').textContent = '▼';
-            }
-            
             function addHistoryRecord(text, count, amount) {
                 const now = new Date();
                 const timeStr = now.toLocaleTimeString('zh-CN', { 
@@ -1196,7 +1122,7 @@
                 if (window.historyRecords.length > 50) {
                     window.historyRecords = window.historyRecords.slice(0, 50);
                 }
-                document.getElementById('historyCount').textContent = `${window.historyRecords.length}条`;
+                document.getElementById('historyCount').textContent = `${window.historyRecords.length}条记录`;
             }
             
             function renderHistory() {
@@ -1247,7 +1173,6 @@
                 renderHistory();
                 renderDataTable();
                 updateTotalAmount();
-                updateWaveTotals();
                 updateUndoButton();
                 saveData();
                 
@@ -1271,9 +1196,17 @@
             }
             
             function updateUndoButton() {
-                const undoBtn = document.getElementById('undoBtn');
-                undoBtn.disabled = window.undoStack.length === 0;
-                undoBtn.style.opacity = window.undoStack.length === 0 ? '0.5' : '1';
+                // 现在没有单独的撤销按钮，所以不更新
+            }
+            
+            // 历史记录弹窗
+            window.openHistoryModal = function() {
+                renderHistory();
+                document.getElementById('historyModal').style.display = 'block';
+            }
+            
+            window.closeHistoryModal = function() {
+                document.getElementById('historyModal').style.display = 'none';
             }
             
             // 主处理函数
@@ -1314,7 +1247,6 @@
                 document.getElementById('inputData').value = '';
                 renderDataTable();
                 renderHistory();
-                updateWaveTotals();
                 updateUndoButton();
                 
                 // 保存数据
@@ -1326,39 +1258,6 @@
                 }
                 
                 showNotification(`✅ 成功录入 ${bets.length} 个下注\n💰 总计 ${totalAmount.toFixed(2)} 元`);
-                
-                expandHistory();
-                historyExpanded = true;
-            }
-            
-            window.undoLast = function(event) {
-                if (event) event.stopPropagation();
-                
-                if (window.undoStack.length === 0) {
-                    showNotification('没有可撤销的操作', 'warning');
-                    return;
-                }
-                
-                const lastState = window.undoStack.pop();
-                window.moneyMap = lastState.moneyMap;
-                window.historyRecords = lastState.historyRecords;
-                
-                window.lotteryData.forEach(item => {
-                    item.amount = window.moneyMap[item.number] || 0;
-                });
-                
-                renderHistory();
-                renderDataTable();
-                updateTotalAmount();
-                updateWaveTotals();
-                updateUndoButton();
-                saveData();
-                
-                if (window.firebaseDb) {
-                    saveToCloud();
-                }
-                
-                showNotification('✅ 已撤销上一次操作');
             }
             
             window.clearHistory = function() {
@@ -1371,7 +1270,6 @@
                 renderHistory();
                 renderDataTable();
                 updateTotalAmount();
-                updateWaveTotals();
                 updateUndoButton();
                 saveData();
                 
@@ -1379,6 +1277,7 @@
                     saveToCloud();
                 }
                 
+                closeHistoryModal();
                 showNotification('✅ 已清空所有录入记录');
             }
             
@@ -1390,38 +1289,18 @@
                 window.undoStack = [];
                 renderDataTable();
                 renderHistory();
-                updateWaveTotals();
                 updateUndoButton();
                 document.getElementById('totalMoney').textContent = '0';
                 document.getElementById('dataCount').textContent = '0/49个号码';
-                document.getElementById('historyCount').textContent = '0条';
+                document.getElementById('historyCount').textContent = '0条记录';
                 localStorage.removeItem('lottery_data_v2');
                 
                 if (window.firebaseDb) {
                     saveToCloud();
                 }
                 
+                closeHistoryModal();
                 showNotification('✅ 所有数据已清空');
-                collapseHistory();
-                historyExpanded = false;
-            }
-            
-            window.pasteFromClipboard = async function() {
-                const input = document.getElementById('inputData');
-                try {
-                    const text = await navigator.clipboard.readText();
-                    input.value = text;
-                    showNotification('✅ 已粘贴剪贴板内容');
-                } catch (err) {
-                    input.focus();
-                    showNotification('📱 请长按输入框选择"粘贴"', 'warning');
-                }
-            }
-            
-            window.clearInput = function() {
-                document.getElementById('inputData').value = '';
-                document.getElementById('inputData').focus();
-                showNotification('🗑️ 输入框已清空');
             }
             
             window.copyLink = function() {
@@ -1455,7 +1334,6 @@
             // 保存引用
             lotterySystem = {
                 updateTotalAmount,
-                updateWaveTotals,
                 renderDataTable,
                 renderHistory,
                 saveData
@@ -1558,8 +1436,6 @@
                     lotterySystem.updateTotalAmount();
                     lotterySystem.renderDataTable();
                     lotterySystem.renderHistory();
-                    lotterySystem.updateWaveTotals();
-                    updateUndoButton();
                 }
             }
         }
