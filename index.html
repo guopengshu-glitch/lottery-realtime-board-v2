@@ -316,41 +316,10 @@
         
         /* ===== 数据统计区 ===== */
         .stats-section {
-            padding: 12px 15px;
+            padding: 15px;
             background: white;
             border-bottom: 1px solid #eee;
         }
-        
-        .total-box {
-            background: #f8f9fa;
-            color: #2c3e50;
-            padding: 10px 15px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        
-        .wave-stats {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-        }
-        
-        .wave-stat {
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 16px;
-        }
-        
-        .wave-red { background: #ffebee; color: #e74c3c; }
-        .wave-blue { background: #e3f2fd; color: #3498db; }
-        .wave-green { background: #e8f5e9; color: #27ae60; }
         
         /* ===== 表格区域 ===== */
         .table-section {
@@ -367,20 +336,19 @@
         }
         
         .table-container {
-            overflow-x: auto;
+            border: 1px solid #dee2e6;
             border-radius: 8px;
             margin-top: 10px;
-            max-height: 500px;
-            overflow-y: auto;
+            background: white;
+            height: auto;
+            overflow: visible;
         }
         
+        /* ===== 表格样式 ===== */
         .data-table {
             width: 100%;
             border-collapse: collapse;
             background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             font-size: 16px;
         }
         
@@ -408,11 +376,12 @@
             background: #f0f7ff;
         }
         
+        /* ===== 增大号码字体 ===== */
         .number-cell {
             font-weight: bold;
             color: #2c3e50;
             font-family: Arial, sans-serif;
-            font-size: 18px;
+            font-size: 20px;
         }
         
         .zodiac-cell {
@@ -486,38 +455,6 @@
         
         .no-amount-row:hover {
             opacity: 1;
-        }
-        
-        .wave-info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 0;
-            padding: 15px;
-            background: white;
-            border-radius: 8px;
-            font-size: 16px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        
-        .wave-total {
-            font-weight: bold;
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-size: 16px;
-        }
-        
-        .wave-total.red { 
-            background: #ffebee;
-            color: #e74c3c;
-        }
-        .wave-total.blue { 
-            background: #e3f2fd;
-            color: #3498db;
-        }
-        .wave-total.green { 
-            background: #e8f5e9;
-            color: #27ae60;
         }
         
         .notification {
@@ -594,76 +531,44 @@
                 font-size: 16px;
             }
             
-            /* 统计区域 */
-            .stats-section {
-                padding: 10px;
-            }
-            
-            .total-box {
-                font-size: 16px;
-                padding: 8px 12px;
-                margin-bottom: 8px;
-            }
-            
-            .wave-stats {
-                gap: 8px;
-            }
-            
-            .wave-stat {
-                padding: 8px;
-                font-size: 14px;
-            }
-            
-            /* 表格优化 - 更紧凑 */
+            /* 表格优化 */
             .table-section {
                 padding: 10px;
             }
             
             .data-table {
-                font-size: 12px;
-                min-width: 100%;
+                font-size: 14px;
             }
             
             .data-table th {
-                padding: 10px 6px;
-                font-size: 12px;
-                white-space: nowrap;
+                padding: 12px 8px;
+                font-size: 14px;
             }
             
             .data-table td {
-                padding: 8px 4px;
-                font-size: 12px;
+                padding: 10px 8px;
+                font-size: 14px;
             }
             
-            /* 列宽优化 */
-            .data-table th:nth-child(1),
-            .data-table td:nth-child(1) { width: 15%; } /* 排名 */
-            .data-table th:nth-child(2),
-            .data-table td:nth-child(2) { width: 15%; } /* 号码 */
-            .data-table th:nth-child(3),
-            .data-table td:nth-child(3) { width: 20%; } /* 生肖 */
-            .data-table th:nth-child(4),
-            .data-table td:nth-child(4) { width: 25%; } /* 波色 */
-            .data-table th:nth-child(5),
-            .data-table td:nth-child(5) { width: 25%; } /* 金额 */
+            /* 增大手机端字体 */
+            .number-cell {
+                font-size: 18px;
+            }
             
-            .number-cell,
-            .zodiac-cell,
+            .zodiac-cell {
+                font-size: 16px;
+            }
+            
             .amount-cell {
-                font-size: 13px;
+                font-size: 16px;
             }
             
-            .amount-cell-zero {
-                font-size: 12px;
-            }
-            
-            /* 波色显示优化 */
             .wave-cell {
-                font-size: 11px;
-                padding: 3px 6px;
+                font-size: 14px;
+                padding: 4px 8px;
             }
             
-            /* 简化历史记录 */
+            /* 历史弹窗 */
             .history-popup-content {
                 width: 95%;
                 max-height: 80%;
@@ -676,10 +581,6 @@
             .history-popup-list {
                 max-height: 300px;
                 font-size: 12px;
-            }
-            
-            .history-popup-item {
-                padding: 8px 0;
             }
             
             /* 云状态 */
@@ -712,33 +613,22 @@
                 font-size: 14px;
             }
             
-            .total-box {
-                font-size: 15px;
-            }
-            
-            .wave-stat {
-                font-size: 12px;
-                padding: 6px;
-            }
-            
             .data-table th,
             .data-table td {
-                padding: 6px 3px;
-                font-size: 11px;
+                padding: 8px 6px;
+                font-size: 13px;
             }
             
-            .number-cell,
+            .number-cell {
+                font-size: 16px;
+            }
+            
             .zodiac-cell {
-                font-size: 12px;
+                font-size: 14px;
             }
             
             .amount-cell {
-                font-size: 12px;
-            }
-            
-            .wave-cell {
-                font-size: 10px;
-                padding: 2px 4px;
+                font-size: 14px;
             }
         }
     </style>
@@ -802,20 +692,14 @@
             
             <!-- 数据统计区 -->
             <div class="stats-section">
-                <div class="total-box">
-                    总计: <span id="totalMoney">0</span> 元
-                </div>
-                
-                <div class="wave-stats">
-                    <div class="wave-stat wave-red">
-                        红波: <span id="redTotal">0</span>元
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div class="total-box" style="flex: 1; margin: 0; margin-right: 10px; background: linear-gradient(to right, #e74c3c, #c0392b); color: white; padding: 15px; border-radius: 10px; text-align: center; font-size: 20px; font-weight: bold; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.2);">
+                        总计: <span id="totalMoney">0</span> 元
                     </div>
-                    <div class="wave-stat wave-blue">
-                        蓝波: <span id="blueTotal">0</span>元
-                    </div>
-                    <div class="wave-stat wave-green">
-                        绿波: <span id="greenTotal">0</span>元
-                    </div>
+                    <button onclick="clearAll()" 
+                            style="padding: 15px 20px; background: #2c3e50; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                        🗑️ 清空所有数据
+                    </button>
                 </div>
             </div>
             
@@ -824,12 +708,6 @@
                 <div class="section-title">
                     <span>📈 号码数据（按金额排序）</span>
                     <span style="font-size: 12px; color: #7f8c8d; margin-left: auto;" id="dataCount">0/49个号码</span>
-                </div>
-                
-                <div class="wave-info-row">
-                    <span class="wave-total red">红波: <span id="redTotal2">0</span>元</span>
-                    <span class="wave-total blue">蓝波: <span id="blueTotal2">0</span>元</span>
-                    <span class="wave-total green">绿波: <span id="greenTotal2">0</span>元</span>
                 </div>
                 
                 <div class="table-container">
@@ -883,35 +761,6 @@
             storageBucket: "my-lottery-board.firebasestorage.app",
             messagingSenderId: "714450363816",
             appId: "1:714450363816:web:8335befb5ed25c98f3a99d"
-        };
-
-        // 生肖映射
-        const zodiacMap = {
-            "鼠": [6, 18, 30, 42],
-            "牛": [5, 17, 29, 41],
-            "虎": [4, 16, 28, 40],
-            "兔": [3, 15, 27, 39],
-            "龙": [2, 14, 26, 38],
-            "蛇": [1, 13, 25, 37, 49],
-            "马": [12, 24, 36, 48],
-            "羊": [11, 23, 35, 47],
-            "猴": [10, 22, 34, 46],
-            "鸡": [9, 21, 33, 45],
-            "狗": [8, 20, 32, 44],
-            "猪": [7, 19, 31, 43]
-        };
-
-        const numberToZodiac = {};
-        for (const [zodiac, numbers] of Object.entries(zodiacMap)) {
-            numbers.forEach(num => {
-                numberToZodiac[num] = zodiac;
-            });
-        }
-
-        const waveColorMap = {
-            "红波": [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
-            "蓝波": [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
-            "绿波": [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
         };
 
         // ==================== 页面初始化 ====================
@@ -1035,253 +884,44 @@
             }
         }
 
-        // ==================== 智能解析器 ====================
-        class SmartLotteryParser {
-            constructor() {
-                // 中文数字映射
-                this.chineseNumbers = {
-                    '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
-                    '六': 6, '七': 7, '八': 8, '九': 9, '十': 10,
-                    '十一': 11, '十二': 12, '十三': 13, '十四': 14, '十五': 15,
-                    '十六': 16, '十七': 17, '十八': 18, '十九': 19, '二十': 20,
-                    '三十': 30, '四十': 40, '五十': 50,
-                    '两': 2, '俩': 2, '仨': 3
-                };
-                
-                // 单位映射
-                this.unitMap = {
-                    '元': 1, '块': 1, '米': 1, '斤': 1,
-                    '角': 0.1, '毛': 0.1,
-                    '分': 0.01
-                };
-            }
-            
-            // 主解析函数
-            parse(input) {
-                console.log('🔍 开始智能解析:', input);
-                
-                // 1. 预处理
-                const cleaned = this.preprocessInput(input);
-                
-                // 2. 解析
-                const results = this.parseCommands(cleaned);
-                
-                console.log('✅ 解析完成，找到', results.length, '个下注');
-                return results;
-            }
-            
-            // 预处理输入
-            preprocessInput(input) {
-                let text = input.trim();
-                
-                // 移除期号干扰
-                text = text.replace(/\d+期[特号]/g, '')
-                          .replace(/第\d+期/g, '');
-                
-                // 统一全角/半角
-                text = text.replace(/[，。]/g, ',')
-                          .replace(/[、]/g, '.')
-                          .replace(/\s+/g, ' ');
-                
-                // 统一单位
-                text = text.replace(/[块米斤]/g, '元');
-                
-                // 统一"各"的表达
-                text = text.replace(/每号码/g, '各')
-                          .replace(/每个/g, '各')
-                          .replace(/每号/g, '各');
-                
-                return text;
-            }
-            
-            // 解析命令
-            parseCommands(text) {
-                const results = [];
-                
-                // 分割命令（按逗号或句号）
-                const segments = text.split(/[,，]/).filter(s => s.trim());
-                
-                segments.forEach(segment => {
-                    segment = segment.trim();
-                    if (!segment) return;
-                    
-                    // 尝试多种解析方式
-                    const bets = this.parseSegment(segment);
-                    if (bets && bets.length > 0) {
-                        results.push(...bets);
-                    }
-                });
-                
-                return results;
-            }
-            
-            // 解析单个片段
-            parseSegment(segment) {
-                console.log('解析片段:', segment);
-                
-                // 方法1：标准格式 "内容各X元"
-                const standardMatch = segment.match(/(.+?)各\s*(\S+?)\s*元/);
-                if (standardMatch) {
-                    const content = standardMatch[1].trim();
-                    const amountStr = standardMatch[2];
-                    const amount = this.parseAmount(amountStr);
-                    
-                    if (amount > 0) {
-                        return this.parseContent(content, amount);
-                    }
-                }
-                
-                // 方法2：直接格式 "内容X元"
-                const directMatch = segment.match(/(.+?)(\S+?)\s*元$/);
-                if (directMatch) {
-                    const content = directMatch[1].trim();
-                    const amountStr = directMatch[2];
-                    const amount = this.parseAmount(amountStr);
-                    
-                    if (amount > 0) {
-                        return this.parseContent(content, amount);
-                    }
-                }
-                
-                // 方法3：混合格式 "各X元"在中间
-                const mixedMatch = segment.match(/(.+?)各\s*(\S+?)\s*元\s*(.+)/);
-                if (mixedMatch) {
-                    const content1 = mixedMatch[1].trim();
-                    const amountStr = mixedMatch[2];
-                    const content2 = mixedMatch[3].trim();
-                    const amount = this.parseAmount(amountStr);
-                    
-                    if (amount > 0) {
-                        const bets1 = this.parseContent(content1, amount);
-                        const bets2 = this.parseContent(content2, amount);
-                        return [...bets1, ...bets2];
-                    }
-                }
-                
-                return [];
-            }
-            
-            // 解析金额
-            parseAmount(amountStr) {
-                // 如果是数字
-                if (!isNaN(amountStr)) {
-                    return parseFloat(amountStr);
-                }
-                
-                // 如果是中文数字
-                const chineseNum = this.chineseNumbers[amountStr];
-                if (chineseNum !== undefined) {
-                    return chineseNum;
-                }
-                
-                // 尝试提取数字
-                const numMatch = amountStr.match(/\d+(\.\d+)?/);
-                if (numMatch) {
-                    return parseFloat(numMatch[0]);
-                }
-                
-                return 0;
-            }
-            
-            // 解析内容
-            parseContent(content, amount) {
-                const results = [];
-                
-                // 1. 检查是否是波色
-                for (const [wave, numbers] of Object.entries(waveColorMap)) {
-                    if (content === wave || content.includes(wave)) {
-                        numbers.forEach(num => {
-                            results.push({ number: num, amount: amount });
-                        });
-                        return results;
-                    }
-                }
-                
-                // 2. 检查是否包含生肖
-                const foundZodiacs = [];
-                let remainingContent = content;
-                
-                for (const [zodiac, numbers] of Object.entries(zodiacMap)) {
-                    if (remainingContent.includes(zodiac)) {
-                        foundZodiacs.push(zodiac);
-                        numbers.forEach(num => {
-                            results.push({ number: num, amount: amount });
-                        });
-                        // 移除已识别的生肖
-                        remainingContent = remainingContent.replace(zodiac, ' ');
-                    }
-                }
-                
-                // 3. 提取数字号码
-                const numbers = this.extractNumbers(remainingContent);
-                numbers.forEach(num => {
-                    // 避免重复（如果生肖已经包含这个号码）
-                    if (!results.some(r => r.number === num)) {
-                        results.push({ number: num, amount: amount });
-                    }
-                });
-                
-                return results;
-            }
-            
-            // 提取数字
-            extractNumbers(text) {
-                const numbers = [];
-                
-                // 清理文本
-                const cleaned = text.replace(/[^\d\.\-\/~]/g, ' ').trim();
-                if (!cleaned) return numbers;
-                
-                // 分割
-                const parts = cleaned.split(/\s+/);
-                
-                parts.forEach(part => {
-                    if (!part) return;
-                    
-                    // 处理范围
-                    if (part.includes('-') || part.includes('~')) {
-                        const separator = /[-~]/;
-                        const [startStr, endStr] = part.split(separator);
-                        const start = parseInt(startStr);
-                        const end = parseInt(endStr);
-                        
-                        if (!isNaN(start) && !isNaN(end) && start <= end) {
-                            for (let n = start; n <= end; n++) {
-                                if (n >= 1 && n <= 49) numbers.push(n);
-                            }
-                        }
-                    }
-                    // 处理分隔符
-                    else if (part.includes('.') || part.includes('/')) {
-                        const separator = /[\.\/]/;
-                        part.split(separator).forEach(numStr => {
-                            const num = parseInt(numStr.trim());
-                            if (!isNaN(num) && num >= 1 && num <= 49) numbers.push(num);
-                        });
-                    }
-                    // 单个数字
-                    else {
-                        const num = parseInt(part);
-                        if (!isNaN(num) && num >= 1 && num <= 49) numbers.push(num);
-                    }
-                });
-                
-                return numbers;
-            }
-        }
-
         // ==================== 彩票看板主程序 ====================
         function initializeLotteryApp() {
             console.log('🎯 彩票看板系统启动...');
             
+            // ==================== 数据配置 ====================
+            const zodiacMap = {
+                "鼠": [6, 18, 30, 42],
+                "牛": [5, 17, 29, 41],
+                "虎": [4, 16, 28, 40],
+                "兔": [3, 15, 27, 39],
+                "龙": [2, 14, 26, 38],
+                "蛇": [1, 13, 25, 37, 49],
+                "马": [12, 24, 36, 48],
+                "羊": [11, 23, 35, 47],
+                "猴": [10, 22, 34, 46],
+                "鸡": [9, 21, 33, 45],
+                "狗": [8, 20, 32, 44],
+                "猪": [7, 19, 31, 43]
+            };
+
+            const numberToZodiac = {};
+            for (const [zodiac, numbers] of Object.entries(zodiacMap)) {
+                numbers.forEach(num => {
+                    numberToZodiac[num] = zodiac;
+                });
+            }
+
+            const waveColorMap = {
+                "红波": [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
+                "蓝波": [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
+                "绿波": [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
+            };
+
             // ==================== 数据初始化 ====================
             window.lotteryData = [];
             window.moneyMap = {};
             window.historyRecords = [];
             window.undoStack = [];
-            
-            // 初始化智能解析器
-            window.smartParser = new SmartLotteryParser();
 
             function initData() {
                 window.lotteryData = [];
@@ -1316,6 +956,166 @@
                 initializeFirebase();
             }, 500);
 
+            // ==================== 智能解析器 ====================
+            function parseInput(input) {
+                const results = [];
+                const lines = input.split('\n');
+                
+                lines.forEach(line => {
+                    const trimmed = line.trim();
+                    if (!trimmed) return;
+                    
+                    // 移除期号干扰
+                    let cleanLine = trimmed.replace(/\d+期[特号]/g, '');
+                    
+                    // 按逗号或句号分割命令
+                    const segments = cleanLine.split(/[,，]/);
+                    
+                    segments.forEach(segment => {
+                        segment = segment.trim();
+                        if (!segment) return;
+                        
+                        // 尝试解析这个片段
+                        const parsed = parseSegment(segment);
+                        if (parsed && parsed.length > 0) {
+                            results.push(...parsed);
+                        }
+                    });
+                });
+                
+                return results;
+            }
+
+            function parseSegment(segment) {
+                const results = [];
+                
+                // 方法1：标准格式 "内容各X元"
+                const standardMatch = segment.match(/(.+?)各\s*(\d+(?:\.\d+)?)\s*(?:元|斤|块|米)/);
+                if (standardMatch) {
+                    const content = standardMatch[1].trim();
+                    const amount = parseFloat(standardMatch[2]);
+                    
+                    if (!isNaN(amount) && amount > 0) {
+                        return parseContent(content, amount);
+                    }
+                }
+                
+                // 方法2：直接格式 "内容X元"
+                const directMatch = segment.match(/(.+?)(\d+(?:\.\d+)?)\s*(?:元|斤|块|米)$/);
+                if (directMatch) {
+                    const content = directMatch[1].trim();
+                    const amount = parseFloat(directMatch[2]);
+                    
+                    if (!isNaN(amount) && amount > 0) {
+                        return parseContent(content, amount);
+                    }
+                }
+                
+                // 方法3：中文金额格式
+                const chineseMatch = segment.match(/(.+?)([一二三四五六七八九十百千万]+)\s*(?:元|斤|块|米)$/);
+                if (chineseMatch) {
+                    const content = chineseMatch[1].trim();
+                    const chineseAmount = chineseMatch[2];
+                    const amount = chineseToNumber(chineseAmount);
+                    
+                    if (!isNaN(amount) && amount > 0) {
+                        return parseContent(content, amount);
+                    }
+                }
+                
+                return results;
+            }
+
+            function chineseToNumber(chinese) {
+                const map = {
+                    '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
+                    '六': 6, '七': 7, '八': 8, '九': 9, '十': 10,
+                    '十一': 11, '十二': 12, '十三': 13, '十四': 14, '十五': 15,
+                    '十六': 16, '十七': 17, '十八': 18, '十九': 19, '二十': 20,
+                    '三十': 30, '四十': 40, '五十': 50
+                };
+                return map[chinese] || parseInt(chinese);
+            }
+
+            function parseContent(content, amount) {
+                const results = [];
+                
+                // 检查是否是波色
+                if (waveColorMap[content]) {
+                    waveColorMap[content].forEach(num => {
+                        results.push({ number: num, amount: amount, type: 'wave', source: content });
+                    });
+                    return results;
+                }
+                
+                // 检查是否包含生肖
+                const foundZodiacs = [];
+                let tempContent = content;
+                Object.keys(zodiacMap).forEach(zodiac => {
+                    if (tempContent.includes(zodiac)) {
+                        foundZodiacs.push(zodiac);
+                        tempContent = tempContent.replace(zodiac, '');
+                    }
+                });
+                
+                if (foundZodiacs.length > 0) {
+                    foundZodiacs.forEach(zodiac => {
+                        zodiacMap[zodiac].forEach(num => {
+                            results.push({ number: num, amount: amount, type: 'zodiac', source: zodiac });
+                        });
+                    });
+                    
+                    // 处理剩余的号码
+                    const remainingNumbers = extractNumbersFromText(tempContent);
+                    remainingNumbers.forEach(num => {
+                        results.push({ number: num, amount: amount, type: 'number', source: '号码' });
+                    });
+                    
+                    return results;
+                }
+                
+                // 处理纯号码
+                const numbers = extractNumbersFromText(content);
+                numbers.forEach(num => {
+                    results.push({ number: num, amount: amount, type: 'number', source: '号码' });
+                });
+                
+                return results;
+            }
+
+            function extractNumbersFromText(text) {
+                const numbers = [];
+                
+                // 清理文本
+                let cleanText = text.replace(/[^\d\.\/\-]/g, ',');
+                cleanText = cleanText.replace(/[\.\/]/g, ',');
+                
+                const parts = cleanText.split(',').filter(p => p.trim());
+                
+                parts.forEach(part => {
+                    part = part.trim();
+                    
+                    // 处理范围格式
+                    const rangeMatch = part.match(/^(\d+)\s*-\s*(\d+)$/);
+                    if (rangeMatch) {
+                        const start = parseInt(rangeMatch[1]);
+                        const end = parseInt(rangeMatch[2]);
+                        if (!isNaN(start) && !isNaN(end) && start >= 1 && end <= 49 && start <= end) {
+                            for (let n = start; n <= end; n++) {
+                                numbers.push(n);
+                            }
+                        }
+                    } else {
+                        const num = parseInt(part);
+                        if (!isNaN(num) && num >= 1 && num <= 49) {
+                            numbers.push(num);
+                        }
+                    }
+                });
+                
+                return numbers;
+            }
+
             // ==================== 核心处理函数 ====================
             window.processData = function() {
                 const input = document.getElementById('inputData').value.trim();
@@ -1326,8 +1126,7 @@
                 
                 saveCurrentStateForUndo();
                 
-                // 使用智能解析器
-                const bets = window.smartParser.parse(input);
+                const bets = parseInput(input);
                 
                 if (bets.length === 0) {
                     showNotification('未识别到有效数据格式\n请检查输入格式', 'warning');
@@ -1354,7 +1153,6 @@
                 updateTotalAmount();
                 document.getElementById('inputData').value = '';
                 renderDataTable();
-                updateWaveTotals();
                 updateUndoButton();
                 
                 // 保存数据（本地+云端）
@@ -1491,7 +1289,6 @@
                 renderHistory();
                 renderDataTable();
                 updateTotalAmount();
-                updateWaveTotals();
                 updateUndoButton();
                 
                 saveData();
@@ -1502,22 +1299,8 @@
                 showNotification('✅ 已撤销上一次操作');
             }
 
-            function updateWaveTotals() {
-                let redTotal = 0, blueTotal = 0, greenTotal = 0;
-                window.lotteryData.forEach(item => {
-                    if (item.amount > 0) {
-                        if (item.waveColor === '红波') redTotal += item.amount;
-                        else if (item.waveColor === '蓝波') blueTotal += item.amount;
-                        else if (item.waveColor === '绿波') greenTotal += item.amount;
-                    }
-                });
-                
-                document.getElementById('redTotal').textContent = redTotal.toFixed(2);
-                document.getElementById('blueTotal').textContent = blueTotal.toFixed(2);
-                document.getElementById('greenTotal').textContent = greenTotal.toFixed(2);
-                document.getElementById('redTotal2').textContent = redTotal.toFixed(2);
-                document.getElementById('blueTotal2').textContent = blueTotal.toFixed(2);
-                document.getElementById('greenTotal2').textContent = greenTotal.toFixed(2);
+            function updateUndoButton() {
+                // 更新撤销按钮状态
             }
 
             function addHistoryRecord(text, count, amount, stats = {}) {
@@ -1580,11 +1363,6 @@
                 }
             }
 
-            function updateUndoButton() {
-                // 更新撤销按钮状态
-                // 这里保持原有逻辑，如果需要可以添加撤销按钮
-            }
-
             // ==================== 数据存储 ====================
             function saveData() {
                 const saveData = {
@@ -1641,7 +1419,6 @@
                 });
                 
                 updateTotalAmount();
-                updateWaveTotals();
                 updateUndoButton();
                 renderDataTable();
             }
@@ -1680,7 +1457,6 @@
                 window.historyRecords = [];
                 window.undoStack = [];
                 renderDataTable();
-                updateWaveTotals();
                 updateUndoButton();
                 document.getElementById('totalMoney').textContent = '0';
                 document.getElementById('dataCount').textContent = '0/49个号码';
@@ -1716,7 +1492,6 @@
             
             // 初始渲染
             renderDataTable();
-            updateWaveTotals();
         }
 
         // ==================== Firebase 初始化 ====================
@@ -1808,7 +1583,7 @@
                         if (!snapshot.empty) {
                             const data = snapshot.docs[0].data();
                             console.log('📥 收到云端数据更新');
-                            // 这里不调用applyCloudData，因为数据已经在彩票系统中
+                            applyCloudData(data);
                             updateCloudStatus('实时同步', 'online');
                         }
                     },
