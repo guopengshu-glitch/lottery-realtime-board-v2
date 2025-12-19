@@ -1558,7 +1558,7 @@
                 
                 // 初始化Firebase
                 const app = firebase.initializeApp(FIREBASE_CONFIG);
-                const db = app.firestore();
+                const db = firebase.firestore();
                 
                 // 配置设置
                 db.settings({
@@ -1625,10 +1625,10 @@
             const docId = 'current_lottery_data';
             const docRef = window.firebaseDb.collection('lottery_data').doc(docId);
             
-            // 设置监听器
-            window.firebaseUnsubscribe = docRef.onSnapshot({
-                next: (snapshot) => {
-                    if (snapshot.exists()) {
+            // 设置监听器 - 修复API兼容性问题
+            window.firebaseUnsubscribe = docRef.onSnapshot(
+                (snapshot) => {
+                    if (snapshot && snapshot.data) {
                         const data = snapshot.data();
                         console.log('📥 收到实时更新:', data);
                         
@@ -1639,15 +1639,15 @@
                         updateCloudStatus('实时同步', 'online');
                     }
                 },
-                error: (error) => {
+                (error) => {
                     console.error('❌ 实时监听错误:', error);
                     updateCloudStatus('同步错误', 'offline');
                 }
-            });
+            );
             
             // 确保文档存在
             docRef.get().then((doc) => {
-                if (!doc.exists) {
+                if (!doc.exists()) {
                     // 创建初始文档
                     docRef.set({
                         moneyMap: {},
