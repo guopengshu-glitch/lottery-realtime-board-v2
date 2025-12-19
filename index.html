@@ -763,6 +763,64 @@
             appId: "1:714450363816:web:8335befb5ed25c98f3a99d"
         };
 
+        // 设备唯一标识
+        window.deviceId = localStorage.getItem('lottery_device_id') || 
+                         'device_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('lottery_device_id', window.deviceId);
+
+        // ==================== 核心数据同步函数 ====================
+        window.applyCloudData = function(data) {
+            if (!data) return;
+            
+            console.log('🔄 应用云端数据...', data);
+            
+            // 如果是自己发送的数据，跳过
+            if (data.deviceId === window.deviceId) {
+                console.log('跳过自己发送的数据');
+                return;
+            }
+            
+            // 合并金额数据
+            if (data.moneyMap) {
+                Object.keys(data.moneyMap).forEach(num => {
+                    const cloudAmount = data.moneyMap[num] || 0;
+                    const currentAmount = window.moneyMap[num] || 0;
+                    // 取较大值（防止数据被覆盖）
+                    window.moneyMap[num] = Math.max(currentAmount, cloudAmount);
+                });
+            }
+            
+            // 合并历史记录，避免重复
+            if (data.historyRecords) {
+                const existingIds = new Set(window.historyRecords.map(r => r.id));
+                data.historyRecords.forEach(record => {
+                    if (!existingIds.has(record.id)) {
+                        window.historyRecords.unshift(record);
+                    }
+                });
+                
+                // 限制数量
+                if (window.historyRecords.length > 50) {
+                    window.historyRecords = window.historyRecords.slice(0, 50);
+                }
+            }
+            
+            // 更新UI
+            if (window.lotteryData) {
+                window.lotteryData.forEach(item => {
+                    item.amount = window.moneyMap[item.number] || 0;
+                });
+            }
+            
+            updateTotalAmount();
+            renderDataTable();
+            
+            // 保存合并后的数据到本地
+            saveData();
+            
+            console.log('✅ 云端数据应用完成');
+        };
+
         // ==================== 页面初始化 ====================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📄 页面加载完成');
@@ -948,13 +1006,11 @@
             // 初始化数据
             initData();
             
-            // 从本地加载数据
-            loadSavedData();
-
-            // 初始化Firebase
-            setTimeout(() => {
-                initializeFirebase();
-            }, 500);
+            // 初始化Firebase，然后加载数据
+            initializeFirebase().then(() => {
+                // 从本地加载数据
+                loadSavedData();
+            });
 
             // ==================== 智能解析器 ====================
             function parseInput(input) {
@@ -1386,10 +1442,15 @@
                     const urlParams = new URLSearchParams(window.location.search);
                     const urlData = urlParams.get('data');
                     if (urlData) {
-                        const decoded = JSON.parse(decodeURIComponent(atob(urlData)));
-                        if (decoded && decoded.moneyMap) {
-                            applyCloudData(decoded);
-                            return;
+                        try {
+                            const decoded = JSON.parse(decodeURIComponent(atob(urlData)));
+                            if (decoded && decoded.moneyMap) {
+                                console.log('从URL加载数据');
+                                applyCloudData(decoded);
+                                return;
+                            }
+                        } catch (e) {
+                            console.error('URL数据解析失败:', e);
                         }
                     }
                     
@@ -1397,30 +1458,12 @@
                     const saved = localStorage.getItem('lottery_data_v2');
                     if (saved) {
                         const data = JSON.parse(saved);
+                        console.log('从本地存储加载数据');
                         applyCloudData(data);
-                        console.log('✅ 本地数据加载完成');
                     }
                 } catch (e) {
                     console.error('加载失败:', e);
                 }
-            }
-
-            function applyCloudData(data) {
-                if (!data) return;
-                
-                console.log('应用云端数据...');
-                
-                if (data.moneyMap) window.moneyMap = data.moneyMap;
-                if (data.historyRecords) window.historyRecords = data.historyRecords;
-                if (data.undoStack) window.undoStack = data.undoStack;
-                
-                window.lotteryData.forEach(item => {
-                    item.amount = window.moneyMap[item.number] || 0;
-                });
-                
-                updateTotalAmount();
-                updateUndoButton();
-                renderDataTable();
             }
 
             function saveToURL() {
@@ -1492,6 +1535,9 @@
             
             // 初始渲染
             renderDataTable();
+            
+            // 设置网络监听
+            setupNetworkListeners();
         }
 
         // ==================== Firebase 初始化 ====================
@@ -1503,6 +1549,7 @@
                 // 检查是否已初始化
                 if (window.firebaseApp) {
                     console.log('ℹ️ Firebase 已初始化');
+                    startRealTimeListener();
                     return window.firebaseApp;
                 }
                 
@@ -1574,24 +1621,43 @@
             
             console.log('🔄 启动实时数据监听...');
             
-            // 监听最新的一条数据
-            window.firebaseUnsubscribe = window.firebaseDb.collection('lottery_data')
-                .orderBy('timestamp', 'desc')
-                .limit(1)
-                .onSnapshot({
-                    next: (snapshot) => {
-                        if (!snapshot.empty) {
-                            const data = snapshot.docs[0].data();
-                            console.log('📥 收到云端数据更新');
-                            applyCloudData(data);
-                            updateCloudStatus('实时同步', 'online');
+            // 使用固定文档ID进行同步
+            const docId = 'current_lottery_data';
+            const docRef = window.firebaseDb.collection('lottery_data').doc(docId);
+            
+            // 设置监听器
+            window.firebaseUnsubscribe = docRef.onSnapshot({
+                next: (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.data();
+                        console.log('📥 收到实时更新:', data);
+                        
+                        // 应用云端数据
+                        if (window.applyCloudData) {
+                            window.applyCloudData(data);
                         }
-                    },
-                    error: (error) => {
-                        console.error('❌ 实时监听错误:', error);
-                        updateCloudStatus('同步错误', 'offline');
+                        updateCloudStatus('实时同步', 'online');
                     }
-                });
+                },
+                error: (error) => {
+                    console.error('❌ 实时监听错误:', error);
+                    updateCloudStatus('同步错误', 'offline');
+                }
+            });
+            
+            // 确保文档存在
+            docRef.get().then((doc) => {
+                if (!doc.exists) {
+                    // 创建初始文档
+                    docRef.set({
+                        moneyMap: {},
+                        historyRecords: [],
+                        timestamp: Date.now(),
+                        deviceId: window.deviceId,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+            });
         }
 
         async function saveToCloud() {
@@ -1601,29 +1667,21 @@
             }
             
             try {
+                // 使用固定文档ID
+                const docId = 'current_lottery_data';
+                const docRef = window.firebaseDb.collection('lottery_data').doc(docId);
+                
                 const saveData = {
                     moneyMap: window.moneyMap || {},
                     historyRecords: window.historyRecords || [],
                     timestamp: Date.now(),
                     updatedAt: new Date().toISOString(),
-                    deviceId: 'device_' + Math.random().toString(36).substr(2, 9)
+                    deviceId: window.deviceId
                 };
                 
-                // 获取最新文档
-                const snapshot = await window.firebaseDb.collection('lottery_data')
-                    .orderBy('timestamp', 'desc')
-                    .limit(1)
-                    .get();
-                
-                if (!snapshot.empty) {
-                    // 更新最新文档
-                    await snapshot.docs[0].ref.update(saveData);
-                    console.log('✅ 数据已更新到云端');
-                } else {
-                    // 创建新文档
-                    await window.firebaseDb.collection('lottery_data').add(saveData);
-                    console.log('✅ 数据已创建到云端');
-                }
+                // 使用合并模式更新，避免覆盖其他设备的数据
+                await docRef.set(saveData, { merge: true });
+                console.log('✅ 数据已同步到云端');
                 
                 updateCloudStatus('实时同步', 'online');
                 
@@ -1639,6 +1697,11 @@
                 console.log('🌐 网络恢复');
                 document.getElementById('networkIndicator').className = 'network-indicator network-online';
                 showNotification('✅ 网络已恢复');
+                
+                // 重新初始化Firebase连接
+                if (!window.isFirebaseInitialized) {
+                    initializeFirebase();
+                }
             });
 
             window.addEventListener('offline', () => {
@@ -1657,11 +1720,6 @@
                 updateCloudStatus('离线模式', 'offline');
             }
         }
-
-        // 初始化网络监听
-        document.addEventListener('DOMContentLoaded', function() {
-            setupNetworkListeners();
-        });
     </script>
 </body>
 </html>
