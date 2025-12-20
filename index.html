@@ -612,14 +612,15 @@
             align-self: flex-end;
         }
 
-        /* ==================== 紧凑竖列表格样式 ==================== */
+        /* ==================== 修改后的紧凑竖列表格样式 ==================== */
+        /* 列顺序：排名 | 号码 | 生肖 | 金额 | 波色 */
         .compact-table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed; /* 固定布局，防止超出 */
+            table-layout: fixed;
         }
 
-        /* 表格列宽分配 */
+        /* 表格列宽分配 - 已调整顺序 */
         .compact-table th:nth-child(1),
         .compact-table td:nth-child(1) {
             width: 12%; /* 排名 */
@@ -643,16 +644,16 @@
 
         .compact-table th:nth-child(4),
         .compact-table td:nth-child(4) {
-            width: 28%; /* 波色 */
-            text-align: center;
-            padding: 10px 4px;
+            width: 30%; /* 金额 - 调整到第4列 */
+            text-align: right;
+            padding: 10px 8px 10px 4px;
         }
 
         .compact-table th:nth-child(5),
         .compact-table td:nth-child(5) {
-            width: 30%; /* 金额 */
-            text-align: right;
-            padding: 10px 8px 10px 4px;
+            width: 28%; /* 波色 - 调整到第5列 */
+            text-align: center;
+            padding: 10px 4px;
         }
 
         .compact-table th {
@@ -813,13 +814,13 @@
             
             .compact-table th:nth-child(4),
             .compact-table td:nth-child(4) {
-                width: 32%;
+                width: 32%; /* 金额列 */
+                padding-right: 4px;
             }
             
             .compact-table th:nth-child(5),
             .compact-table td:nth-child(5) {
-                width: 32%;
-                padding-right: 4px;
+                width: 32%; /* 波色列 */
             }
             
             .wave-cell {
@@ -1132,15 +1133,15 @@
                     <span id="dataCount">0/49个号码</span>
                 </div>
                 
-                <!-- 紧凑竖列表格 -->
+                <!-- 修改后的表格：排名 | 号码 | 生肖 | 金额 | 波色 -->
                 <table class="compact-table" id="dataTable">
                     <thead>
                         <tr>
                             <th>排名</th>
                             <th>号码</th>
                             <th>生肖</th>
-                            <th>波色</th>
                             <th>金额</th>
+                            <th>波色</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
@@ -1497,7 +1498,7 @@
                 document.getElementById('dataCount').textContent = `${activeCount}/49个号码`;
             }
             
-            // 渲染紧凑竖列表格
+            // 渲染紧凑竖列表格 - 修改后的顺序：排名 | 号码 | 生肖 | 金额 | 波色
             function renderDataTable() {
                 const tbody = document.getElementById('tableBody');
                 const sortedData = [...window.lotteryData].sort((a, b) => {
@@ -1534,13 +1535,14 @@
                         amountClass = 'amount-cell';
                     }
                     
+                    // 修改后的表格行结构：排名 | 号码 | 生肖 | 金额 | 波色
                     html += `
                         <tr>
                             <td class="rank-cell ${rankClass}">${rankDisplay}</td>
                             <td class="number-cell">${item.number}</td>
                             <td class="zodiac-cell">${item.zodiac}</td>
-                            <td><span class="wave-cell ${waveClass}">${item.waveColor}</span></td>
                             <td class="${amountClass}">${amountDisplay}</td>
+                            <td><span class="wave-cell ${waveClass}">${item.waveColor}</span></td>
                         </tr>
                     `;
                 });
