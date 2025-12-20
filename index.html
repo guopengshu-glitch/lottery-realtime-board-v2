@@ -1037,7 +1037,7 @@
         }
     </style>
     
-    <!-- Firebase SDK 添加 defer 属性避免阻塞渲染 -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" defer></script>
 </head>
@@ -1086,7 +1086,7 @@
         </div>
     </div>
 
-    <!-- 主看板页面 (默认隐藏) -->
+    <!-- 主看板页面 -->
     <div id="mainApp" style="display: none;">
         <div class="container">
             <div class="header">
@@ -1134,7 +1134,6 @@
                     <span id="dataCount">0/49个号码</span>
                 </div>
                 
-                <!-- 修改后的表格：排名 | 号码 | 生肖 | 金额 | 波色 -->
                 <table class="compact-table" id="dataTable">
                     <thead>
                         <tr>
@@ -1146,7 +1145,7 @@
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <!-- 表格数据会在JS中动态生成 -->
+                        <!-- 表格数据动态生成 -->
                     </tbody>
                 </table>
             </div>
@@ -1179,7 +1178,7 @@
             amountUnits: ['元', '斤', '米', '块', '￥'],
             
             // 干扰词过滤
-            filterWords: ['多少钱', '多少米', '一共', '总计', '总共', '合计', '共', 
+            filterWords: ['多少钱', '多少米', '总计', '总共', '合计', '共', 
                           '给我算算', '帮我算算', '帮算', '计算', '算一下', '算算', 
                           '请问', '帮忙', '看一下', '看看'],
             
@@ -1190,45 +1189,37 @@
             numberRange: { min: 1, max: 49 }
         };
 
-        // ==================== 修正版彩票投注解析器 ====================
+        // ==================== 万能彩票解析器（修复版） ====================
         class LotteryBetParser {
             constructor(config = LOTTERY_CONFIG) {
                 this.config = config;
             }
             
-            /**
-             * 主解析函数 - 解析任意格式的投注文本
-             */
             parseInput(input) {
                 if (!input || typeof input !== 'string') return [];
                 
-                // 1. 预处理文本
-                const cleanedText = this.preprocessText(input);
+                // 1. 清理文本
+                const cleaned = this._cleanInput(input);
                 
-                // 2. 提取所有投注项
-                const betItems = this.extractBetItems(cleanedText);
+                // 2. 分割成独立投注项
+                const betItems = this._splitToBetItems(cleaned);
                 
                 // 3. 解析每个投注项
-                const allResults = [];
-                betItems.forEach((item) => {
-                    const results = this.parseSingleBet(item.content, item.amount);
-                    allResults.push(...results);
+                const allBets = [];
+                betItems.forEach(item => {
+                    const bets = this._parseBetItem(item);
+                    allBets.push(...bets);
                 });
                 
-                return allResults;
+                return allBets;
             }
             
-            /**
-             * 预处理文本
-             */
-            preprocessText(text) {
+            _cleanInput(text) {
                 let cleaned = text.trim();
                 
-                // 移除干扰词
-                this.config.filterWords.forEach(word => {
-                    const regex = new RegExp(`${word}[：:]*\\s*`, 'gi');
-                    cleaned = cleaned.replace(regex, '');
-                });
+                // 只移除开头的干扰词
+                const startPattern = /^(一共|帮我算算|计算|算一下)[：:]*\s*/i;
+                cleaned = cleaned.replace(startPattern, '');
                 
                 // 统一金额单位
                 cleaned = cleaned.replace(/斤|米|块|￥/g, '元');
@@ -1236,211 +1227,186 @@
                 return cleaned;
             }
             
-            /**
-             * 提取投注项 - 改进版
-             */
-            extractBetItems(text) {
+            _splitToBetItems(text) {
                 const items = [];
+                let currentItem = '';
+                let inAmount = false;
+                let amountBuffer = '';
                 
-                // 方法：找到所有"金额元"的模式，然后向前提取内容
-                const amountRegex = /(\d+(?:\.\d+)?)\s*元/g;
-                let lastEnd = 0;
-                let match;
-                
-                while ((match = amountRegex.exec(text)) !== null) {
-                    const amount = parseFloat(match[1]);
-                    const amountEnd = match.index + match[0].length;
+                for (let i = 0; i < text.length; i++) {
+                    const char = text[i];
+                    const nextChar = text[i + 1] || '';
                     
-                    if (isNaN(amount) || amount <= 0) continue;
+                    currentItem += char;
                     
-                    // 向前查找投注内容开始位置
-                    let contentStart = lastEnd;
+                    // 检测"各号"模式
+                    if (char === '各' && nextChar === '号') {
+                        inAmount = true;
+                        continue;
+                    }
                     
-                    // 从金额位置向前找，直到遇到分隔符或开头
-                    for (let i = match.index - 1; i >= contentStart; i--) {
-                        const char = text[i];
-                        // 遇到分隔符且不是"各"相关字符
-                        if ((char === '.' || char === '。' || char === ',' || char === '，' || char === '、') && i > contentStart) {
-                            // 检查分隔符前面是否有"各"关键词
-                            const beforeSeparator = text.substring(contentStart, i);
-                            if (!this.hasBetKeyword(beforeSeparator)) {
-                                contentStart = i + 1;
-                                break;
+                    // 检测金额和"元"
+                    if (inAmount) {
+                        amountBuffer += char;
+                        
+                        // 找到完整的金额模式: 数字 + "元"
+                        if (char === '元' && /\d/.test(amountBuffer)) {
+                            const fullItem = currentItem.trim();
+                            
+                            // 提取金额
+                            const amountMatch = amountBuffer.match(/(\d+(?:\.\d+)?)\s*元/);
+                            if (amountMatch) {
+                                const amount = parseFloat(amountMatch[1]);
+                                if (!isNaN(amount) && amount > 0) {
+                                    // 提取投注内容（移除末尾的"各号X元"）
+                                    const content = fullItem.replace(/各号\s*\d+(?:\.\d+)?\s*元$/, '').trim();
+                                    
+                                    if (content) {
+                                        items.push({
+                                            content: content,
+                                            amount: amount,
+                                            fullText: fullItem
+                                        });
+                                    }
+                                }
                             }
-                        }
-                        if (i === contentStart) {
-                            contentStart = i;
-                            break;
+                            
+                            // 重置状态，开始新项
+                            currentItem = '';
+                            inAmount = false;
+                            amountBuffer = '';
                         }
                     }
-                    
-                    const content = text.substring(contentStart, match.index).trim();
-                    
-                    if (content) {
-                        items.push({
-                            content: content,
-                            amount: amount,
-                            start: contentStart,
-                            end: amountEnd
-                        });
-                    }
-                    
-                    lastEnd = amountEnd;
                 }
                 
                 return items;
             }
             
-            /**
-             * 检查是否包含投注关键词
-             */
-            hasBetKeyword(text) {
-                return this.config.betKeywords.some(keyword => text.includes(keyword));
-            }
-            
-            /**
-             * 解析单个投注项 - 核心修正
-             */
-            parseSingleBet(content, amount) {
-                const results = [];
-                const cleanContent = content.replace(/\s+/g, '');
+            _parseBetItem(item) {
+                const bets = [];
+                const content = item.content;
+                const amount = item.amount;
                 
-                // 1. 检查是否是波色投注
-                const waveMatch = this.findWaveColorInContent(cleanContent);
-                if (waveMatch) {
-                    this.config.waveColorMap[waveMatch].forEach(num => {
-                        results.push({ number: num, amount: amount });
-                    });
-                    return results; // 波色投注直接返回
-                }
+                // 1. 统计生肖出现次数
+                const zodiacCounts = this._countZodiacs(content);
                 
-                // 2. 检查是否是生肖投注
-                const zodiacMatches = this.findZodiacsInContent(cleanContent);
-                if (zodiacMatches.length > 0) {
-                    zodiacMatches.forEach(zodiac => {
-                        this.config.zodiacMap[zodiac].forEach(num => {
-                            results.push({ number: num, amount: amount });
-                        });
-                    });
-                    return results; // 生肖投注直接返回
-                }
+                // 2. 统计波色出现次数  
+                const waveCounts = this._countWaves(content);
                 
-                // 3. 处理数字投注
-                const numbers = this.extractNumbersFromContent(cleanContent);
-                if (numbers.length > 0) {
-                    numbers.forEach(num => {
-                        results.push({ number: num, amount: amount });
-                    });
-                    return results; // 数字投注直接返回
-                }
+                // 3. 提取数字
+                const numbers = this._extractNumbers(content);
                 
-                // 4. 处理"X各号"格式
-                const gehaoMatch = cleanContent.match(/^(\d+)各号$/);
-                if (gehaoMatch) {
-                    const num = parseInt(gehaoMatch[1].replace(/^0+/, ''));
-                    if (num >= 1 && num <= 49) {
-                        results.push({ number: num, amount: amount });
-                        return results;
-                    }
-                }
-                
-                return results;
-            }
-            
-            /**
-             * 查找波色
-             */
-            findWaveColorInContent(content) {
-                for (const wave of Object.keys(this.config.waveColorMap)) {
-                    if (content.includes(wave)) {
-                        return wave;
-                    }
-                }
-                return null;
-            }
-            
-            /**
-             * 查找生肖
-             */
-            findZodiacsInContent(content) {
-                const zodiacs = [];
-                for (const zodiac of Object.keys(this.config.zodiacMap)) {
-                    // 统计出现次数
-                    const regex = new RegExp(zodiac, 'g');
-                    const matches = content.match(regex);
-                    if (matches) {
-                        // 每个出现都算一次
-                        for (let i = 0; i < matches.length; i++) {
-                            zodiacs.push(zodiac);
+                // 4. 根据次数累加金额
+                Object.entries(zodiacCounts).forEach(([zodiac, count]) => {
+                    this.config.zodiacMap[zodiac].forEach(num => {
+                        for (let i = 0; i < count; i++) {
+                            bets.push({ number: num, amount: amount });
                         }
-                    }
-                }
-                return zodiacs;
+                    });
+                });
+                
+                Object.entries(waveCounts).forEach(([wave, count]) => {
+                    this.config.waveColorMap[wave].forEach(num => {
+                        for (let i = 0; i < count; i++) {
+                            bets.push({ number: num, amount: amount });
+                        }
+                    });
+                });
+                
+                numbers.forEach(num => {
+                    bets.push({ number: num, amount: amount });
+                });
+                
+                return bets;
             }
             
-            /**
-             * 提取数字 - 修复版：正确提取01-49的所有格式
-             */
-            extractNumbersFromContent(content) {
-                const numbers = [];
+            _countZodiacs(content) {
+                const counts = {};
                 
-                // 移除已识别的波色和生肖关键词
-                let remaining = content;
-                Object.keys(this.config.waveColorMap).forEach(wave => {
-                    remaining = remaining.replace(new RegExp(wave, 'g'), '');
-                });
-                Object.keys(this.config.zodiacMap).forEach(zodiac => {
-                    remaining = remaining.replace(new RegExp(zodiac, 'g'), '');
-                });
-                
-                // 移除投注关键词
-                this.config.betKeywords.forEach(keyword => {
-                    remaining = remaining.replace(new RegExp(keyword, 'g'), '');
-                });
-                
-                if (!remaining) return numbers;
-                
-                // ==================== 修复这里 ====================
-                // 改进的数字提取逻辑：支持01-49的所有格式
-                
-                // 首先按点号或顿号分割
-                const parts = remaining.split(/[\.、]/).filter(part => part.trim());
-                
-                if (parts.length > 0) {
-                    // 处理每个部分
+                // 统计点号分隔的生肖
+                if (content.includes('.')) {
+                    const parts = content.split('.');
                     parts.forEach(part => {
                         const trimmed = part.trim();
-                        if (!trimmed) return;
-                        
-                        // 尝试提取数字（支持01, 02, ..., 49格式）
-                        if (/^\d{1,2}$/.test(trimmed)) {
-                            const num = parseInt(trimmed.replace(/^0+/, ''));
-                            if (num >= 1 && num <= 49) {
-                                numbers.push(num);
-                            }
+                        if (this.config.zodiacMap[trimmed]) {
+                            counts[trimmed] = (counts[trimmed] || 0) + 1;
                         }
                     });
                 } else {
-                    // 如果没有分隔符，尝试直接匹配所有数字
-                    // 使用更宽松的正则：匹配01-49的数字
-                    const numberPattern = /(0?[1-9]|[12][0-9]|3[0-9]|4[0-9])/g;
-                    const matches = remaining.match(numberPattern) || [];
-                    
-                    matches.forEach(numStr => {
-                        const num = parseInt(numStr.replace(/^0+/, ''));
+                    // 统计连续出现的生肖
+                    let remaining = content;
+                    while (remaining) {
+                        let found = false;
+                        for (const zodiac of Object.keys(this.config.zodiacMap)) {
+                            if (remaining.startsWith(zodiac)) {
+                                counts[zodiac] = (counts[zodiac] || 0) + 1;
+                                remaining = remaining.substring(zodiac.length);
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            remaining = remaining.substring(1);
+                        }
+                    }
+                }
+                
+                return counts;
+            }
+            
+            _countWaves(content) {
+                const counts = {};
+                
+                for (const wave of Object.keys(this.config.waveColorMap)) {
+                    const regex = new RegExp(wave, 'g');
+                    const matches = content.match(regex);
+                    if (matches) {
+                        counts[wave] = matches.length;
+                    }
+                }
+                
+                return counts;
+            }
+            
+            _extractNumbers(content) {
+                const numbers = [];
+                
+                if (content.includes('.')) {
+                    const parts = content.split('.');
+                    parts.forEach(part => {
+                        const num = this._extractSingleNumber(part);
+                        if (num !== null) {
+                            numbers.push(num);
+                        }
+                    });
+                } else {
+                    const numberPattern = /\b(0?[1-9]|[12][0-9]|3[0-9]|4[0-9])\b/g;
+                    const matches = content.match(numberPattern) || [];
+                    matches.forEach(match => {
+                        const num = parseInt(match.replace(/^0+/, ''), 10);
                         if (num >= 1 && num <= 49) {
                             numbers.push(num);
                         }
                     });
                 }
                 
-                // 去重（同一个投注项内不应该有重复号码，但为了安全）
-                return [...new Set(numbers)];
+                return numbers;
             }
             
-            /**
-             * 查找号码对应的生肖
-             */
+            _extractSingleNumber(text) {
+                const trimmed = text.trim();
+                if (!trimmed) return null;
+                
+                if (/^\d{1,2}$/.test(trimmed)) {
+                    const num = parseInt(trimmed.replace(/^0+/, ''), 10);
+                    if (num >= 1 && num <= 49) {
+                        return num;
+                    }
+                }
+                
+                return null;
+            }
+            
             findZodiac(number) {
                 for (const [zodiac, numbers] of Object.entries(this.config.zodiacMap)) {
                     if (numbers.includes(number)) {
@@ -1450,9 +1416,6 @@
                 return null;
             }
             
-            /**
-             * 查找号码对应的波色
-             */
             findWaveColor(number) {
                 for (const [wave, numbers] of Object.entries(this.config.waveColorMap)) {
                     if (numbers.includes(number)) {
@@ -1463,8 +1426,7 @@
             }
         }
 
-        // ==================== 原有代码保持不变 ====================
-        // 先加载核心功能，Firebase稍后加载
+        // ==================== 原有应用代码（保持不变） ====================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📄 页面加载完成 - 核心功能启动');
             
@@ -1503,7 +1465,6 @@
 
         // ==================== 触摸支持 ====================
         function initTouchSupport() {
-            // 防止双击缩放
             let lastTouchEnd = 0;
             document.addEventListener('touchend', function(event) {
                 const now = Date.now();
@@ -1513,7 +1474,6 @@
                 lastTouchEnd = now;
             }, false);
 
-            // 提高触摸按钮的响应性
             const buttons = document.querySelectorAll('button, .btn, .login-btn, .clear-all-btn, .history-btn, .delete-btn, .close-history-btn');
             buttons.forEach(btn => {
                 btn.addEventListener('touchstart', function() {
@@ -1527,7 +1487,6 @@
                 });
             });
 
-            // 修复iOS输入框问题
             const inputs = document.querySelectorAll('input, textarea');
             inputs.forEach(input => {
                 input.addEventListener('touchstart', function(e) {
@@ -1536,18 +1495,7 @@
             });
         }
 
-        // ==================== 修复版本 - 专为Firebase优化 ====================
-        
-        // 修复1: 确保Firebase SDK已加载
-        function checkFirebaseLoaded() {
-            console.log('Firebase状态:', typeof firebase);
-            if (typeof firebase !== 'undefined') {
-                return true;
-            }
-            return false;
-        }
-        
-        // 修复2: 简化的密码验证
+        // ==================== 密码验证 ====================
         function checkPassword() {
             const input = document.getElementById('passwordInput');
             const errorEl = document.getElementById('passwordError');
@@ -1560,13 +1508,11 @@
             if (input.value.trim() === 'Master123456') {
                 if (errorEl) errorEl.textContent = '';
                 
-                // 保存登录状态
                 localStorage.setItem('lottery_admin_auth', JSON.stringify({
                     loggedIn: true,
                     loginTime: Date.now()
                 }));
                 
-                // 显示主应用
                 document.getElementById('passwordOverlay').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
                 
@@ -1579,21 +1525,18 @@
             }
         }
         
-        // 修复3: 启动应用
+        // ==================== 启动应用 ====================
         function startApplication() {
             console.log('🚀 启动应用...');
             document.getElementById('statusBar').textContent = '🔄 初始化系统中...';
             
-            // 初始化彩票系统
             initLotterySystem();
-            
-            // 异步初始化Firebase
             setTimeout(initFirebase, 100);
         }
         
         // ==================== 彩票系统核心 ====================
         let lotterySystem = null;
-        let lotteryParser = new LotteryBetParser(); // 使用新的解析器
+        let lotteryParser = new LotteryBetParser();
         
         function initLotterySystem() {
             console.log('🎯 初始化彩票系统...');
@@ -1609,22 +1552,8 @@
                 window.lotteryData = [];
                 window.moneyMap = {};
                 for (let i = 1; i <= 49; i++) {
-                    let waveColor = "";
-                    for (const [wave, numbers] of Object.entries(LOTTERY_CONFIG.waveColorMap)) {
-                        if (numbers.includes(i)) {
-                            waveColor = wave;
-                            break;
-                        }
-                    }
-                    
-                    // 查找生肖
-                    let zodiac = "";
-                    for (const [zodiacName, numbers] of Object.entries(LOTTERY_CONFIG.zodiacMap)) {
-                        if (numbers.includes(i)) {
-                            zodiac = zodiacName;
-                            break;
-                        }
-                    }
+                    const zodiac = lotteryParser.findZodiac(i);
+                    const waveColor = lotteryParser.findWaveColor(i);
                     
                     window.lotteryData.push({
                         number: i,
@@ -1637,7 +1566,7 @@
                 }
             }
             
-            // ==================== 使用新的parseInput函数 ====================
+            // ==================== 使用修复版parseInput函数 ====================
             function parseInput(input) {
                 return lotteryParser.parseInput(input);
             }
@@ -1698,7 +1627,7 @@
                 document.getElementById('dataCount').textContent = `${activeCount}/49个号码`;
             }
             
-            // 渲染紧凑竖列表格 - 修改后的顺序：排名 | 号码 | 生肖 | 金额 | 波色
+            // 渲染表格
             function renderDataTable() {
                 const tbody = document.getElementById('tableBody');
                 const sortedData = [...window.lotteryData].sort((a, b) => {
@@ -1716,7 +1645,6 @@
                                     item.waveColor === '蓝波' ? 'wave-blue' :
                                     item.waveColor === '绿波' ? 'wave-green' : '';
                     
-                    // 确定排名样式
                     let rankClass = '';
                     let rankDisplay = '-';
                     let amountDisplay = '0元';
@@ -1726,7 +1654,6 @@
                         currentRank++;
                         rankDisplay = currentRank;
                         
-                        // 前3名特殊样式
                         if (currentRank === 1) rankClass = 'rank-1';
                         else if (currentRank === 2) rankClass = 'rank-2';
                         else if (currentRank === 3) rankClass = 'rank-3';
@@ -1735,7 +1662,6 @@
                         amountClass = 'amount-cell';
                     }
                     
-                    // 修改后的表格行结构：排名 | 号码 | 生肖 | 金额 | 波色
                     html += `
                         <tr>
                             <td class="rank-cell ${rankClass}">${rankDisplay}</td>
@@ -1798,12 +1724,10 @@
                 const index = window.historyRecords.findIndex(r => r.id === id);
                 if (index === -1) return;
                 
-                // 保存状态用于撤销
                 saveCurrentStateForUndo();
                 
                 window.historyRecords.splice(index, 1);
                 
-                // 重新计算所有金额
                 window.moneyMap = {};
                 window.historyRecords.forEach(record => {
                     const bets = parseInput(record.text);
@@ -1824,7 +1748,6 @@
                 updateUndoButton();
                 saveData();
                 
-                // 同步到云端
                 if (window.firebaseDb) {
                     saveToCloud();
                 }
@@ -1844,7 +1767,7 @@
             }
             
             function updateUndoButton() {
-                // 现在没有单独的撤销按钮，所以不更新
+                // 现在没有单独的撤销按钮
             }
             
             // 历史记录弹窗
@@ -2015,17 +1938,14 @@
             console.log('🔥 初始化Firebase...');
             updateCloudStatus('连接中...', 'connecting');
             
-            // 延迟检查Firebase是否加载
             setTimeout(() => {
                 if (typeof firebase === 'undefined') {
                     console.log('Firebase SDK未加载，重试...');
-                    // 如果Firebase未加载，尝试重新加载
                     loadFirebase();
                     return;
                 }
                 
                 try {
-                    // Firebase配置
                     const firebaseConfig = {
                         apiKey: "AIzaSyAgUU04dt1igPFNTC-zJ3WhGfWp8-wKmfo",
                         authDomain: "my-lottery-board.firebaseapp.com",
@@ -2035,7 +1955,6 @@
                         appId: "1:714450363816:web:8335befb5ed25c98f3a99d"
                     };
                     
-                    // 初始化Firebase
                     const app = firebase.initializeApp(firebaseConfig);
                     const db = firebase.firestore(app);
                     
@@ -2044,7 +1963,6 @@
                     
                     console.log('✅ Firebase初始化成功');
                     
-                    // 启动实时监听
                     startFirebaseListener();
                     
                     updateCloudStatus('实时同步', 'online');
@@ -2059,7 +1977,6 @@
         }
         
         function loadFirebase() {
-            // 动态加载Firebase脚本
             if (!document.querySelector('script[src*="firebase-app"]')) {
                 const script1 = document.createElement('script');
                 script1.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js";
@@ -2093,7 +2010,6 @@
                         const data = doc.data();
                         console.log('📥 收到云端数据更新', data);
                         
-                        // 应用云端数据到本地
                         applyCloudData(data);
                         
                         showNotification('✅ 数据已同步更新');
@@ -2109,7 +2025,6 @@
             
             console.log('🌥️ 应用云端数据...');
             
-            // 更新本地数据
             if (data.moneyMap) {
                 window.moneyMap = data.moneyMap;
             }
@@ -2117,13 +2032,11 @@
                 window.historyRecords = data.historyRecords;
             }
             
-            // 更新彩票数据
             if (window.lotteryData && window.lotteryData.length > 0) {
                 window.lotteryData.forEach(item => {
                     item.amount = window.moneyMap[item.number] || 0;
                 });
                 
-                // 更新界面
                 if (lotterySystem) {
                     lotterySystem.updateTotalAmount();
                     lotterySystem.renderDataTable();
@@ -2149,18 +2062,15 @@
                     updatedAt: new Date().toISOString()
                 };
                 
-                // 检查是否有现有数据
                 const snapshot = await window.firebaseDb.collection('lottery_data')
                     .orderBy('timestamp', 'desc')
                     .limit(1)
                     .get();
                 
                 if (!snapshot.empty) {
-                    // 更新现有文档
                     await snapshot.docs[0].ref.update(saveData);
                     console.log('✅ 云端数据已更新');
                 } else {
-                    // 创建新文档
                     await window.firebaseDb.collection('lottery_data').add(saveData);
                     console.log('✅ 云端数据已创建');
                 }
