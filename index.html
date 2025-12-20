@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -1378,7 +1379,7 @@
             }
             
             /**
-             * 提取数字
+             * 提取数字 - 修复版：正确提取01-49的所有格式
              */
             extractNumbersFromContent(content) {
                 const numbers = [];
@@ -1399,18 +1400,42 @@
                 
                 if (!remaining) return numbers;
                 
-                // 提取所有可能的数字（支持01-49格式）
-                const numberPattern = /\b(0?[1-9]|[12][0-9]|3[0-9]|4[0-9])\b/g;
-                const matches = remaining.match(numberPattern) || [];
+                // ==================== 修复这里 ====================
+                // 改进的数字提取逻辑：支持01-49的所有格式
                 
-                matches.forEach(numStr => {
-                    const num = parseInt(numStr.replace(/^0+/, ''));
-                    if (num >= 1 && num <= 49) {
-                        numbers.push(num);
-                    }
-                });
+                // 首先按点号或顿号分割
+                const parts = remaining.split(/[\.、]/).filter(part => part.trim());
                 
-                return numbers;
+                if (parts.length > 0) {
+                    // 处理每个部分
+                    parts.forEach(part => {
+                        const trimmed = part.trim();
+                        if (!trimmed) return;
+                        
+                        // 尝试提取数字（支持01, 02, ..., 49格式）
+                        if (/^\d{1,2}$/.test(trimmed)) {
+                            const num = parseInt(trimmed.replace(/^0+/, ''));
+                            if (num >= 1 && num <= 49) {
+                                numbers.push(num);
+                            }
+                        }
+                    });
+                } else {
+                    // 如果没有分隔符，尝试直接匹配所有数字
+                    // 使用更宽松的正则：匹配01-49的数字
+                    const numberPattern = /(0?[1-9]|[12][0-9]|3[0-9]|4[0-9])/g;
+                    const matches = remaining.match(numberPattern) || [];
+                    
+                    matches.forEach(numStr => {
+                        const num = parseInt(numStr.replace(/^0+/, ''));
+                        if (num >= 1 && num <= 49) {
+                            numbers.push(num);
+                        }
+                    });
+                }
+                
+                // 去重（同一个投注项内不应该有重复号码，但为了安全）
+                return [...new Set(numbers)];
             }
             
             /**
@@ -2213,3 +2238,4 @@
     </script>
 </body>
 </html>
+```
