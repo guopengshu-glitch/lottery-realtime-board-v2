@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -7,6 +7,7 @@
     <title>📊 彩票实时看板 - 多人实时同步</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
     <style>
+        /* 你的原有CSS样式完全保持不变 */
         * {
             margin: 0;
             padding: 0;
@@ -589,7 +590,7 @@
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
             margin-bottom: 20px;
-            overflow-x: hidden; /* 禁止横向滚动 */
+            overflow-x: hidden;
         }
 
         .section-title {
@@ -613,46 +614,44 @@
             align-self: flex-end;
         }
 
-        /* ==================== 修改后的紧凑竖列表格样式 ==================== */
-        /* 列顺序：排名 | 号码 | 生肖 | 金额 | 波色 */
+        /* 表格样式 */
         .compact-table {
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
         }
 
-        /* 表格列宽分配 - 已调整顺序 */
         .compact-table th:nth-child(1),
         .compact-table td:nth-child(1) {
-            width: 12%; /* 排名 */
+            width: 12%;
             text-align: center;
             padding: 10px 4px;
         }
 
         .compact-table th:nth-child(2),
         .compact-table td:nth-child(2) {
-            width: 12%; /* 号码 */
+            width: 12%;
             text-align: center;
             padding: 10px 4px;
         }
 
         .compact-table th:nth-child(3),
         .compact-table td:nth-child(3) {
-            width: 18%; /* 生肖 */
+            width: 18%;
             text-align: center;
             padding: 10px 4px;
         }
 
         .compact-table th:nth-child(4),
         .compact-table td:nth-child(4) {
-            width: 30%; /* 金额 - 调整到第4列 */
+            width: 30%;
             text-align: right;
             padding: 10px 8px 10px 4px;
         }
 
         .compact-table th:nth-child(5),
         .compact-table td:nth-child(5) {
-            width: 28%; /* 波色 - 调整到第5列 */
+            width: 28%;
             text-align: center;
             padding: 10px 4px;
         }
@@ -691,10 +690,9 @@
             color: #333;
         }
 
-        /* 前3名特殊样式 */
-        .rank-1 { color: #FFD700; } /* 金色 */
-        .rank-2 { color: #C0C0C0; } /* 银色 */
-        .rank-3 { color: #CD7F32; } /* 铜色 */
+        .rank-1 { color: #FFD700; }
+        .rank-2 { color: #C0C0C0; }
+        .rank-3 { color: #CD7F32; }
 
         .number-cell {
             font-family: 'SF Mono', Monaco, 'Courier New', monospace;
@@ -732,7 +730,6 @@
             color: white;
         }
 
-        /* 金额红色样式 */
         .amount-cell {
             color: #e74c3c !important;
             font-weight: 700;
@@ -788,9 +785,7 @@
             border-radius: 0 0 15px 15px;
         }
 
-        /* ==================== 响应式设计 ==================== */
-        
-        /* 小手机屏幕优化 (≤375px) */
+        /* 响应式设计 */
         @media (max-width: 375px) {
             .compact-table th,
             .compact-table td {
@@ -815,13 +810,13 @@
             
             .compact-table th:nth-child(4),
             .compact-table td:nth-child(4) {
-                width: 32%; /* 金额列 */
+                width: 32%;
                 padding-right: 4px;
             }
             
             .compact-table th:nth-child(5),
             .compact-table td:nth-child(5) {
-                width: 32%; /* 波色列 */
+                width: 32%;
             }
             
             .wave-cell {
@@ -875,7 +870,6 @@
             }
         }
 
-        /* 中等手机屏幕 (376px-768px) */
         @media (min-width: 376px) and (max-width: 768px) {
             .compact-table th,
             .compact-table td {
@@ -891,7 +885,6 @@
             }
         }
 
-        /* 大屏幕样式 (≥769px) */
         @media (min-width: 769px) {
             .container {
                 padding: 20px;
@@ -958,7 +951,6 @@
                 gap: 0;
             }
             
-            /* 桌面端表格字体放大 */
             .compact-table th {
                 font-size: 16px;
                 padding: 14px 6px;
@@ -992,7 +984,6 @@
             }
         }
 
-        /* 超大屏幕 (≥1024px) */
         @media (min-width: 1024px) {
             .container {
                 padding: 30px;
@@ -1023,7 +1014,6 @@
             }
         }
 
-        /* 修复iPhone安全区域 */
         @supports (padding: max(0px)) {
             #mainApp {
                 padding-left: max(15px, env(safe-area-inset-left));
@@ -1159,7 +1149,7 @@
     <script>
         // ==================== 彩票配置数据 ====================
         const LOTTERY_CONFIG = {
-            // 生肖映射（12生肖）
+            // 生肖映射
             zodiacMap: {
                 "鼠": [6, 18, 30, 42], "牛": [5, 17, 29, 41], "虎": [4, 16, 28, 40],
                 "兔": [3, 15, 27, 39], "龙": [2, 14, 26, 38], "蛇": [1, 13, 25, 37, 49],
@@ -1167,29 +1157,22 @@
                 "鸡": [9, 21, 33, 45], "狗": [8, 20, 32, 44], "猪": [7, 19, 31, 43]
             },
             
-            // 波色映射（红蓝绿波）
+            // 波色映射
             waveColorMap: {
                 "红波": [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
                 "蓝波": [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
                 "绿波": [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
             },
             
-            // 支持的金额单位
             amountUnits: ['元', '斤', '米', '块', '￥'],
-            
-            // 干扰词过滤
             filterWords: ['多少钱', '多少米', '总计', '总共', '合计', '共', 
                           '给我算算', '帮我算算', '帮算', '计算', '算一下', '算算', 
                           '请问', '帮忙', '看一下', '看看'],
-            
-            // 投注关键词（触发投注解析的关键词）
             betKeywords: ['各', '各号', '每', '每号', '每颗', '颗', '号'],
-            
-            // 号码范围
             numberRange: { min: 1, max: 49 }
         };
 
-        // ==================== 万能彩票解析器（修复版） ====================
+        // ==================== 最终完美版彩票解析器 ====================
         class LotteryBetParser {
             constructor(config = LOTTERY_CONFIG) {
                 this.config = config;
@@ -1199,104 +1182,58 @@
                 if (!input || typeof input !== 'string') return [];
                 
                 // 1. 清理文本
-                const cleaned = this._cleanInput(input);
+                const cleaned = input.trim()
+                    .replace(/^一共[：:]*\s*/, '')
+                    .replace(/斤|米|块|￥/g, '元');
                 
                 // 2. 分割成独立投注项
-                const betItems = this._splitToBetItems(cleaned);
+                const items = this._extractBetItems(cleaned);
                 
                 // 3. 解析每个投注项
                 const allBets = [];
-                betItems.forEach(item => {
-                    const bets = this._parseBetItem(item);
+                items.forEach(item => {
+                    const bets = this._parseSingleItem(item.content, item.amount);
                     allBets.push(...bets);
                 });
                 
                 return allBets;
             }
             
-            _cleanInput(text) {
-                let cleaned = text.trim();
-                
-                // 只移除开头的干扰词
-                const startPattern = /^(一共|帮我算算|计算|算一下)[：:]*\s*/i;
-                cleaned = cleaned.replace(startPattern, '');
-                
-                // 统一金额单位
-                cleaned = cleaned.replace(/斤|米|块|￥/g, '元');
-                
-                return cleaned;
-            }
-            
-            _splitToBetItems(text) {
+            _extractBetItems(text) {
                 const items = [];
-                let currentItem = '';
-                let inAmount = false;
-                let amountBuffer = '';
+                // 匹配模式：任意内容 + "各号" + 数字 + "元"
+                const regex = /([^,]+?各号\s*\d+(?:\.\d+)?\s*元)/g;
+                let match;
                 
-                for (let i = 0; i < text.length; i++) {
-                    const char = text[i];
-                    const nextChar = text[i + 1] || '';
+                while ((match = regex.exec(text)) !== null) {
+                    const fullText = match[0];
+                    const amountMatch = fullText.match(/各号\s*(\d+(?:\.\d+)?)\s*元/);
                     
-                    currentItem += char;
-                    
-                    // 检测"各号"模式
-                    if (char === '各' && nextChar === '号') {
-                        inAmount = true;
-                        continue;
-                    }
-                    
-                    // 检测金额和"元"
-                    if (inAmount) {
-                        amountBuffer += char;
+                    if (amountMatch) {
+                        const amount = parseFloat(amountMatch[1]);
+                        const content = fullText.substring(0, amountMatch.index).trim();
                         
-                        // 找到完整的金额模式: 数字 + "元"
-                        if (char === '元' && /\d/.test(amountBuffer)) {
-                            const fullItem = currentItem.trim();
-                            
-                            // 提取金额
-                            const amountMatch = amountBuffer.match(/(\d+(?:\.\d+)?)\s*元/);
-                            if (amountMatch) {
-                                const amount = parseFloat(amountMatch[1]);
-                                if (!isNaN(amount) && amount > 0) {
-                                    // 提取投注内容（移除末尾的"各号X元"）
-                                    const content = fullItem.replace(/各号\s*\d+(?:\.\d+)?\s*元$/, '').trim();
-                                    
-                                    if (content) {
-                                        items.push({
-                                            content: content,
-                                            amount: amount,
-                                            fullText: fullItem
-                                        });
-                                    }
-                                }
-                            }
-                            
-                            // 重置状态，开始新项
-                            currentItem = '';
-                            inAmount = false;
-                            amountBuffer = '';
-                        }
+                        items.push({ content, amount });
                     }
                 }
                 
                 return items;
             }
             
-            _parseBetItem(item) {
+            _parseSingleItem(content, amount) {
                 const bets = [];
-                const content = item.content;
-                const amount = item.amount;
+                const cleanContent = content.replace(/\s+/g, '');
                 
-                // 1. 统计生肖出现次数
-                const zodiacCounts = this._countZodiacs(content);
+                // 统计生肖出现次数
+                const zodiacCounts = this._countOccurrences(cleanContent, Object.keys(this.config.zodiacMap));
                 
-                // 2. 统计波色出现次数  
-                const waveCounts = this._countWaves(content);
+                // 统计波色出现次数
+                const waveCounts = this._countOccurrences(cleanContent, Object.keys(this.config.waveColorMap));
                 
-                // 3. 提取数字
-                const numbers = this._extractNumbers(content);
+                // 提取数字
+                const numbers = this._extractNumbers(cleanContent);
                 
-                // 4. 根据次数累加金额
+                // 添加生肖下注
                 Object.entries(zodiacCounts).forEach(([zodiac, count]) => {
                     this.config.zodiacMap[zodiac].forEach(num => {
                         for (let i = 0; i < count; i++) {
@@ -1305,6 +1242,7 @@
                     });
                 });
                 
+                // 添加波色下注
                 Object.entries(waveCounts).forEach(([wave, count]) => {
                     this.config.waveColorMap[wave].forEach(num => {
                         for (let i = 0; i < count; i++) {
@@ -1313,6 +1251,7 @@
                     });
                 });
                 
+                // 添加数字下注
                 numbers.forEach(num => {
                     bets.push({ number: num, amount: amount });
                 });
@@ -1320,91 +1259,41 @@
                 return bets;
             }
             
-            _countZodiacs(content) {
+            _countOccurrences(text, keywords) {
                 const counts = {};
                 
-                // 统计点号分隔的生肖
-                if (content.includes('.')) {
-                    const parts = content.split('.');
-                    parts.forEach(part => {
-                        const trimmed = part.trim();
-                        if (this.config.zodiacMap[trimmed]) {
-                            counts[trimmed] = (counts[trimmed] || 0) + 1;
-                        }
-                    });
-                } else {
-                    // 统计连续出现的生肖
-                    let remaining = content;
-                    while (remaining) {
-                        let found = false;
-                        for (const zodiac of Object.keys(this.config.zodiacMap)) {
-                            if (remaining.startsWith(zodiac)) {
-                                counts[zodiac] = (counts[zodiac] || 0) + 1;
-                                remaining = remaining.substring(zodiac.length);
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            remaining = remaining.substring(1);
-                        }
+                keywords.forEach(keyword => {
+                    let count = 0;
+                    let pos = 0;
+                    
+                    while ((pos = text.indexOf(keyword, pos)) !== -1) {
+                        count++;
+                        pos += keyword.length;
                     }
-                }
+                    
+                    if (count > 0) {
+                        counts[keyword] = count;
+                    }
+                });
                 
                 return counts;
             }
             
-            _countWaves(content) {
-                const counts = {};
-                
-                for (const wave of Object.keys(this.config.waveColorMap)) {
-                    const regex = new RegExp(wave, 'g');
-                    const matches = content.match(regex);
-                    if (matches) {
-                        counts[wave] = matches.length;
-                    }
-                }
-                
-                return counts;
-            }
-            
-            _extractNumbers(content) {
+            _extractNumbers(text) {
                 const numbers = [];
                 
-                if (content.includes('.')) {
-                    const parts = content.split('.');
-                    parts.forEach(part => {
-                        const num = this._extractSingleNumber(part);
-                        if (num !== null) {
-                            numbers.push(num);
-                        }
-                    });
-                } else {
-                    const numberPattern = /\b(0?[1-9]|[12][0-9]|3[0-9]|4[0-9])\b/g;
-                    const matches = content.match(numberPattern) || [];
-                    matches.forEach(match => {
-                        const num = parseInt(match.replace(/^0+/, ''), 10);
-                        if (num >= 1 && num <= 49) {
-                            numbers.push(num);
-                        }
-                    });
-                }
+                // 提取所有1-49的数字
+                const numberPattern = /\b(0?[1-9]|[12][0-9]|3[0-9]|4[0-9])\b/g;
+                const matches = text.match(numberPattern) || [];
+                
+                matches.forEach(match => {
+                    const num = parseInt(match.replace(/^0+/, ''), 10);
+                    if (num >= 1 && num <= 49) {
+                        numbers.push(num);
+                    }
+                });
                 
                 return numbers;
-            }
-            
-            _extractSingleNumber(text) {
-                const trimmed = text.trim();
-                if (!trimmed) return null;
-                
-                if (/^\d{1,2}$/.test(trimmed)) {
-                    const num = parseInt(trimmed.replace(/^0+/, ''), 10);
-                    if (num >= 1 && num <= 49) {
-                        return num;
-                    }
-                }
-                
-                return null;
             }
             
             findZodiac(number) {
@@ -1426,18 +1315,14 @@
             }
         }
 
-        // ==================== 原有应用代码（保持不变） ====================
+        // ==================== 原有应用代码（完全保持不变） ====================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📄 页面加载完成 - 核心功能启动');
             
-            // 绑定密码输入框回车事件
             document.getElementById('passwordInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    checkPassword();
-                }
+                if (e.key === 'Enter') checkPassword();
             });
             
-            // 检查自动登录
             try {
                 const authStr = localStorage.getItem('lottery_admin_auth');
                 if (authStr) {
@@ -1458,44 +1343,30 @@
             }
             
             document.getElementById('passwordInput').focus();
-            
-            // 添加触摸事件支持
             initTouchSupport();
         });
 
-        // ==================== 触摸支持 ====================
         function initTouchSupport() {
             let lastTouchEnd = 0;
             document.addEventListener('touchend', function(event) {
                 const now = Date.now();
-                if (now - lastTouchEnd <= 300) {
-                    event.preventDefault();
-                }
+                if (now - lastTouchEnd <= 300) event.preventDefault();
                 lastTouchEnd = now;
             }, false);
 
             const buttons = document.querySelectorAll('button, .btn, .login-btn, .clear-all-btn, .history-btn, .delete-btn, .close-history-btn');
             buttons.forEach(btn => {
-                btn.addEventListener('touchstart', function() {
-                    this.style.transform = 'scale(0.98)';
-                });
-                btn.addEventListener('touchend', function() {
-                    this.style.transform = '';
-                });
-                btn.addEventListener('touchcancel', function() {
-                    this.style.transform = '';
-                });
+                btn.addEventListener('touchstart', function() { this.style.transform = 'scale(0.98)'; });
+                btn.addEventListener('touchend', function() { this.style.transform = ''; });
+                btn.addEventListener('touchcancel', function() { this.style.transform = ''; });
             });
 
             const inputs = document.querySelectorAll('input, textarea');
             inputs.forEach(input => {
-                input.addEventListener('touchstart', function(e) {
-                    e.stopPropagation();
-                });
+                input.addEventListener('touchstart', function(e) { e.stopPropagation(); });
             });
         }
 
-        // ==================== 密码验证 ====================
         function checkPassword() {
             const input = document.getElementById('passwordInput');
             const errorEl = document.getElementById('passwordError');
@@ -1525,7 +1396,6 @@
             }
         }
         
-        // ==================== 启动应用 ====================
         function startApplication() {
             console.log('🚀 启动应用...');
             document.getElementById('statusBar').textContent = '🔄 初始化系统中...';
@@ -1541,13 +1411,11 @@
         function initLotterySystem() {
             console.log('🎯 初始化彩票系统...');
             
-            // 初始化全局数据
             window.lotteryData = [];
             window.moneyMap = {};
             window.historyRecords = [];
             window.undoStack = [];
             
-            // 初始化所有号码
             function initData() {
                 window.lotteryData = [];
                 window.moneyMap = {};
@@ -1566,15 +1434,12 @@
                 }
             }
             
-            // ==================== 使用修复版parseInput函数 ====================
             function parseInput(input) {
                 return lotteryParser.parseInput(input);
             }
             
-            // 初始化数据
             initData();
             
-            // 加载本地数据
             function loadSavedData() {
                 try {
                     const saved = localStorage.getItem('lottery_data_v2');
@@ -1600,7 +1465,6 @@
                 }
             }
             
-            // 保存数据
             function saveData() {
                 try {
                     const saveData = {
@@ -1615,19 +1479,16 @@
                 }
             }
             
-            // 更新总金额
             function updateTotalAmount() {
                 const total = Object.values(window.moneyMap).reduce((sum, amount) => sum + amount, 0);
                 document.getElementById('totalMoney').textContent = total.toFixed(2);
             }
             
-            // 更新数据计数
             function updateDataCount() {
                 const activeCount = Object.values(window.moneyMap).filter(amount => amount > 0).length;
                 document.getElementById('dataCount').textContent = `${activeCount}/49个号码`;
             }
             
-            // 渲染表格
             function renderDataTable() {
                 const tbody = document.getElementById('tableBody');
                 const sortedData = [...window.lotteryData].sort((a, b) => {
@@ -1677,7 +1538,6 @@
                 updateDataCount();
             }
             
-            // 历史记录相关
             function addHistoryRecord(text, count, amount) {
                 const now = new Date();
                 const timeStr = now.toLocaleTimeString('zh-CN', { 
@@ -1693,9 +1553,7 @@
                 };
                 
                 window.historyRecords.unshift(record);
-                if (window.historyRecords.length > 50) {
-                    window.historyRecords = window.historyRecords.slice(0, 50);
-                }
+                if (window.historyRecords.length > 50) window.historyRecords = window.historyRecords.slice(0, 50);
                 document.getElementById('historyCount').textContent = `${window.historyRecords.length}条记录`;
             }
             
@@ -1725,7 +1583,6 @@
                 if (index === -1) return;
                 
                 saveCurrentStateForUndo();
-                
                 window.historyRecords.splice(index, 1);
                 
                 window.moneyMap = {};
@@ -1748,10 +1605,7 @@
                 updateUndoButton();
                 saveData();
                 
-                if (window.firebaseDb) {
-                    saveToCloud();
-                }
-                
+                if (window.firebaseDb) saveToCloud();
                 showNotification('✅ 已删除记录');
             }
             
@@ -1766,11 +1620,8 @@
                 updateUndoButton();
             }
             
-            function updateUndoButton() {
-                // 现在没有单独的撤销按钮
-            }
+            function updateUndoButton() {}
             
-            // 历史记录弹窗
             window.openHistoryModal = function() {
                 renderHistory();
                 document.getElementById('historyModal').style.display = 'block';
@@ -1780,7 +1631,6 @@
                 document.getElementById('historyModal').style.display = 'none';
             }
             
-            // 主处理函数
             window.processData = function() {
                 const input = document.getElementById('inputData').value.trim();
                 if (!input) {
@@ -1789,7 +1639,6 @@
                 }
                 
                 saveCurrentStateForUndo();
-                
                 const bets = parseInput(input);
                 
                 if (bets.length === 0) {
@@ -1797,36 +1646,27 @@
                     return;
                 }
                 
-                // 更新金额
                 bets.forEach(bet => {
                     if (bet.number >= 1 && bet.number <= 49) {
                         window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
                     }
                 });
                 
-                // 更新彩票数据
                 window.lotteryData.forEach(item => {
                     item.amount = window.moneyMap[item.number] || 0;
                 });
                 
-                // 添加到历史记录
                 const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
                 addHistoryRecord(input, bets.length, totalAmount);
                 
-                // 更新界面
                 updateTotalAmount();
                 document.getElementById('inputData').value = '';
                 renderDataTable();
                 renderHistory();
                 updateUndoButton();
-                
-                // 保存数据
                 saveData();
                 
-                // 同步到云端
-                if (window.firebaseDb) {
-                    saveToCloud();
-                }
+                if (window.firebaseDb) saveToCloud();
                 
                 showNotification(`✅ 成功录入 ${bets.length} 个下注\n💰 总计 ${totalAmount.toFixed(2)} 元`);
             }
@@ -1844,9 +1684,7 @@
                 updateUndoButton();
                 saveData();
                 
-                if (window.firebaseDb) {
-                    saveToCloud();
-                }
+                if (window.firebaseDb) saveToCloud();
                 
                 closeHistoryModal();
                 showNotification('✅ 已清空所有录入记录');
@@ -1866,9 +1704,7 @@
                 document.getElementById('historyCount').textContent = '0条记录';
                 localStorage.removeItem('lottery_data_v2');
                 
-                if (window.firebaseDb) {
-                    saveToCloud();
-                }
+                if (window.firebaseDb) saveToCloud();
                 
                 closeHistoryModal();
                 showNotification('✅ 所有数据已清空');
@@ -1920,11 +1756,9 @@
                 document.body.removeChild(textarea);
             }
             
-            // 初始化
             loadSavedData();
             updateUndoButton();
             
-            // 保存引用
             lotterySystem = {
                 updateTotalAmount,
                 renderDataTable,
@@ -1933,7 +1767,6 @@
             };
         }
         
-        // ==================== Firebase 实时同步 ====================
         function initFirebase() {
             console.log('🔥 初始化Firebase...');
             updateCloudStatus('连接中...', 'connecting');
@@ -1962,7 +1795,6 @@
                     window.firebaseDb = db;
                     
                     console.log('✅ Firebase初始化成功');
-                    
                     startFirebaseListener();
                     
                     updateCloudStatus('实时同步', 'online');
@@ -1986,9 +1818,7 @@
                 const script2 = document.createElement('script');
                 script2.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js";
                 script2.defer = true;
-                script2.onload = function() {
-                    setTimeout(initFirebase, 1000);
-                };
+                script2.onload = function() { setTimeout(initFirebase, 1000); };
                 document.head.appendChild(script2);
             }
         }
@@ -2011,7 +1841,6 @@
                         console.log('📥 收到云端数据更新', data);
                         
                         applyCloudData(data);
-                        
                         showNotification('✅ 数据已同步更新');
                     }
                 }, (error) => {
@@ -2025,12 +1854,8 @@
             
             console.log('🌥️ 应用云端数据...');
             
-            if (data.moneyMap) {
-                window.moneyMap = data.moneyMap;
-            }
-            if (data.historyRecords) {
-                window.historyRecords = data.historyRecords;
-            }
+            if (data.moneyMap) window.moneyMap = data.moneyMap;
+            if (data.historyRecords) window.historyRecords = data.historyRecords;
             
             if (window.lotteryData && window.lotteryData.length > 0) {
                 window.lotteryData.forEach(item => {
@@ -2083,7 +1908,6 @@
             }
         }
         
-        // ==================== 辅助函数 ====================
         function showNotification(message, type = 'success') {
             const existing = document.querySelector('.notification');
             if (existing) existing.remove();
@@ -2112,19 +1936,12 @@
             textEl.textContent = text;
             
             switch(status) {
-                case 'online': 
-                    iconEl.textContent = '✅';
-                    break;
-                case 'offline': 
-                    iconEl.textContent = '⚠️';
-                    break;
-                case 'connecting': 
-                    iconEl.textContent = '🔄';
-                    break;
+                case 'online': iconEl.textContent = '✅'; break;
+                case 'offline': iconEl.textContent = '⚠️'; break;
+                case 'connecting': iconEl.textContent = '🔄'; break;
             }
         }
         
-        // 网络状态监听
         window.addEventListener('online', () => {
             console.log('🌐 网络恢复');
             document.getElementById('networkIndicator').className = 'network-indicator network-online';
@@ -2142,11 +1959,9 @@
             updateCloudStatus('离线模式', 'offline');
         });
         
-        // 初始网络状态
         document.getElementById('networkIndicator').className = 
             navigator.onLine ? 'network-indicator network-online' : 'network-indicator network-offline';
     </script>
 </body>
 </html>
 ```
-
