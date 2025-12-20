@@ -1157,6 +1157,288 @@
     </div>
 
     <script>
+        // ==================== 彩票配置数据 ====================
+        const LOTTERY_CONFIG = {
+            // 生肖映射（12生肖）
+            zodiacMap: {
+                "鼠": [6, 18, 30, 42], "牛": [5, 17, 29, 41], "虎": [4, 16, 28, 40],
+                "兔": [3, 15, 27, 39], "龙": [2, 14, 26, 38], "蛇": [1, 13, 25, 37, 49],
+                "马": [12, 24, 36, 48], "羊": [11, 23, 35, 47], "猴": [10, 22, 34, 46],
+                "鸡": [9, 21, 33, 45], "狗": [8, 20, 32, 44], "猪": [7, 19, 31, 43]
+            },
+            
+            // 波色映射（红蓝绿波）
+            waveColorMap: {
+                "红波": [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
+                "蓝波": [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
+                "绿波": [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
+            },
+            
+            // 支持的金额单位
+            amountUnits: ['元', '斤', '米', '块', '￥'],
+            
+            // 干扰词过滤
+            filterWords: ['多少钱', '多少米', '一共', '总计', '总共', '合计', '共', 
+                          '给我算算', '帮我算算', '帮算', '计算', '算一下', '算算', 
+                          '请问', '帮忙', '看一下', '看看'],
+            
+            // 投注关键词（触发投注解析的关键词）
+            betKeywords: ['各', '各号', '每', '每号', '每颗', '颗', '号'],
+            
+            // 号码范围
+            numberRange: { min: 1, max: 49 }
+        };
+
+        // ==================== 修正版彩票投注解析器 ====================
+        class LotteryBetParser {
+            constructor(config = LOTTERY_CONFIG) {
+                this.config = config;
+            }
+            
+            /**
+             * 主解析函数 - 解析任意格式的投注文本
+             */
+            parseInput(input) {
+                if (!input || typeof input !== 'string') return [];
+                
+                // 1. 预处理文本
+                const cleanedText = this.preprocessText(input);
+                
+                // 2. 提取所有投注项
+                const betItems = this.extractBetItems(cleanedText);
+                
+                // 3. 解析每个投注项
+                const allResults = [];
+                betItems.forEach((item) => {
+                    const results = this.parseSingleBet(item.content, item.amount);
+                    allResults.push(...results);
+                });
+                
+                return allResults;
+            }
+            
+            /**
+             * 预处理文本
+             */
+            preprocessText(text) {
+                let cleaned = text.trim();
+                
+                // 移除干扰词
+                this.config.filterWords.forEach(word => {
+                    const regex = new RegExp(`${word}[：:]*\\s*`, 'gi');
+                    cleaned = cleaned.replace(regex, '');
+                });
+                
+                // 统一金额单位
+                cleaned = cleaned.replace(/斤|米|块|￥/g, '元');
+                
+                return cleaned;
+            }
+            
+            /**
+             * 提取投注项 - 改进版
+             */
+            extractBetItems(text) {
+                const items = [];
+                
+                // 方法：找到所有"金额元"的模式，然后向前提取内容
+                const amountRegex = /(\d+(?:\.\d+)?)\s*元/g;
+                let lastEnd = 0;
+                let match;
+                
+                while ((match = amountRegex.exec(text)) !== null) {
+                    const amount = parseFloat(match[1]);
+                    const amountEnd = match.index + match[0].length;
+                    
+                    if (isNaN(amount) || amount <= 0) continue;
+                    
+                    // 向前查找投注内容开始位置
+                    let contentStart = lastEnd;
+                    
+                    // 从金额位置向前找，直到遇到分隔符或开头
+                    for (let i = match.index - 1; i >= contentStart; i--) {
+                        const char = text[i];
+                        // 遇到分隔符且不是"各"相关字符
+                        if ((char === '.' || char === '。' || char === ',' || char === '，' || char === '、') && i > contentStart) {
+                            // 检查分隔符前面是否有"各"关键词
+                            const beforeSeparator = text.substring(contentStart, i);
+                            if (!this.hasBetKeyword(beforeSeparator)) {
+                                contentStart = i + 1;
+                                break;
+                            }
+                        }
+                        if (i === contentStart) {
+                            contentStart = i;
+                            break;
+                        }
+                    }
+                    
+                    const content = text.substring(contentStart, match.index).trim();
+                    
+                    if (content) {
+                        items.push({
+                            content: content,
+                            amount: amount,
+                            start: contentStart,
+                            end: amountEnd
+                        });
+                    }
+                    
+                    lastEnd = amountEnd;
+                }
+                
+                return items;
+            }
+            
+            /**
+             * 检查是否包含投注关键词
+             */
+            hasBetKeyword(text) {
+                return this.config.betKeywords.some(keyword => text.includes(keyword));
+            }
+            
+            /**
+             * 解析单个投注项 - 核心修正
+             */
+            parseSingleBet(content, amount) {
+                const results = [];
+                const cleanContent = content.replace(/\s+/g, '');
+                
+                // 1. 检查是否是波色投注
+                const waveMatch = this.findWaveColorInContent(cleanContent);
+                if (waveMatch) {
+                    this.config.waveColorMap[waveMatch].forEach(num => {
+                        results.push({ number: num, amount: amount });
+                    });
+                    return results; // 波色投注直接返回
+                }
+                
+                // 2. 检查是否是生肖投注
+                const zodiacMatches = this.findZodiacsInContent(cleanContent);
+                if (zodiacMatches.length > 0) {
+                    zodiacMatches.forEach(zodiac => {
+                        this.config.zodiacMap[zodiac].forEach(num => {
+                            results.push({ number: num, amount: amount });
+                        });
+                    });
+                    return results; // 生肖投注直接返回
+                }
+                
+                // 3. 处理数字投注
+                const numbers = this.extractNumbersFromContent(cleanContent);
+                if (numbers.length > 0) {
+                    numbers.forEach(num => {
+                        results.push({ number: num, amount: amount });
+                    });
+                    return results; // 数字投注直接返回
+                }
+                
+                // 4. 处理"X各号"格式
+                const gehaoMatch = cleanContent.match(/^(\d+)各号$/);
+                if (gehaoMatch) {
+                    const num = parseInt(gehaoMatch[1].replace(/^0+/, ''));
+                    if (num >= 1 && num <= 49) {
+                        results.push({ number: num, amount: amount });
+                        return results;
+                    }
+                }
+                
+                return results;
+            }
+            
+            /**
+             * 查找波色
+             */
+            findWaveColorInContent(content) {
+                for (const wave of Object.keys(this.config.waveColorMap)) {
+                    if (content.includes(wave)) {
+                        return wave;
+                    }
+                }
+                return null;
+            }
+            
+            /**
+             * 查找生肖
+             */
+            findZodiacsInContent(content) {
+                const zodiacs = [];
+                for (const zodiac of Object.keys(this.config.zodiacMap)) {
+                    // 统计出现次数
+                    const regex = new RegExp(zodiac, 'g');
+                    const matches = content.match(regex);
+                    if (matches) {
+                        // 每个出现都算一次
+                        for (let i = 0; i < matches.length; i++) {
+                            zodiacs.push(zodiac);
+                        }
+                    }
+                }
+                return zodiacs;
+            }
+            
+            /**
+             * 提取数字
+             */
+            extractNumbersFromContent(content) {
+                const numbers = [];
+                
+                // 移除已识别的波色和生肖关键词
+                let remaining = content;
+                Object.keys(this.config.waveColorMap).forEach(wave => {
+                    remaining = remaining.replace(new RegExp(wave, 'g'), '');
+                });
+                Object.keys(this.config.zodiacMap).forEach(zodiac => {
+                    remaining = remaining.replace(new RegExp(zodiac, 'g'), '');
+                });
+                
+                // 移除投注关键词
+                this.config.betKeywords.forEach(keyword => {
+                    remaining = remaining.replace(new RegExp(keyword, 'g'), '');
+                });
+                
+                if (!remaining) return numbers;
+                
+                // 提取所有可能的数字（支持01-49格式）
+                const numberPattern = /\b(0?[1-9]|[12][0-9]|3[0-9]|4[0-9])\b/g;
+                const matches = remaining.match(numberPattern) || [];
+                
+                matches.forEach(numStr => {
+                    const num = parseInt(numStr.replace(/^0+/, ''));
+                    if (num >= 1 && num <= 49) {
+                        numbers.push(num);
+                    }
+                });
+                
+                return numbers;
+            }
+            
+            /**
+             * 查找号码对应的生肖
+             */
+            findZodiac(number) {
+                for (const [zodiac, numbers] of Object.entries(this.config.zodiacMap)) {
+                    if (numbers.includes(number)) {
+                        return zodiac;
+                    }
+                }
+                return null;
+            }
+            
+            /**
+             * 查找号码对应的波色
+             */
+            findWaveColor(number) {
+                for (const [wave, numbers] of Object.entries(this.config.waveColorMap)) {
+                    if (numbers.includes(number)) {
+                        return wave;
+                    }
+                }
+                return null;
+            }
+        }
+
+        // ==================== 原有代码保持不变 ====================
         // 先加载核心功能，Firebase稍后加载
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📄 页面加载完成 - 核心功能启动');
@@ -1286,23 +1568,10 @@
         
         // ==================== 彩票系统核心 ====================
         let lotterySystem = null;
+        let lotteryParser = new LotteryBetParser(); // 使用新的解析器
         
         function initLotterySystem() {
             console.log('🎯 初始化彩票系统...');
-            
-            // 数据配置
-            const zodiacMap = {
-                "鼠": [6, 18, 30, 42], "牛": [5, 17, 29, 41], "虎": [4, 16, 28, 40],
-                "兔": [3, 15, 27, 39], "龙": [2, 14, 26, 38], "蛇": [1, 13, 25, 37, 49],
-                "马": [12, 24, 36, 48], "羊": [11, 23, 35, 47], "猴": [10, 22, 34, 46],
-                "鸡": [9, 21, 33, 45], "狗": [8, 20, 32, 44], "猪": [7, 19, 31, 43]
-            };
-            
-            const waveColorMap = {
-                "红波": [1, 2, 7, 8, 12,13,18,19,23,24,29,30,34,35,40,45,46],
-                "蓝波": [3, 4, 9,10,14,15,20,25,26,31,36,37,41,42,47,48],
-                "绿波": [5, 6,11,16,17,21,22,27,28,32,33,38,39,43,44,49]
-            };
             
             // 初始化全局数据
             window.lotteryData = [];
@@ -1310,28 +1579,31 @@
             window.historyRecords = [];
             window.undoStack = [];
             
-            // 构建映射
-            const numberToZodiac = {};
-            for (const [zodiac, numbers] of Object.entries(zodiacMap)) {
-                numbers.forEach(num => numberToZodiac[num] = zodiac);
-            }
-            
             // 初始化所有号码
             function initData() {
                 window.lotteryData = [];
                 window.moneyMap = {};
                 for (let i = 1; i <= 49; i++) {
                     let waveColor = "";
-                    for (const [wave, numbers] of Object.entries(waveColorMap)) {
+                    for (const [wave, numbers] of Object.entries(LOTTERY_CONFIG.waveColorMap)) {
                         if (numbers.includes(i)) {
                             waveColor = wave;
                             break;
                         }
                     }
                     
+                    // 查找生肖
+                    let zodiac = "";
+                    for (const [zodiacName, numbers] of Object.entries(LOTTERY_CONFIG.zodiacMap)) {
+                        if (numbers.includes(i)) {
+                            zodiac = zodiacName;
+                            break;
+                        }
+                    }
+                    
                     window.lotteryData.push({
                         number: i,
-                        zodiac: numberToZodiac[i] || "未知",
+                        zodiac: zodiac || "未知",
                         waveColor: waveColor,
                         amount: 0,
                         rank: 0
@@ -1340,107 +1612,10 @@
                 }
             }
             
-            // ==================== 修复的parseInput函数 ====================
+            // ==================== 使用新的parseInput函数 ====================
             function parseInput(input) {
-                const results = [];
-                if (!input.trim()) return results;
-                
-                console.log('开始解析输入:', input.substring(0, 100) + (input.length > 100 ? '...' : ''));
-                
-                // 按逗号分割不同的投注项
-                const entries = input.split(/[，,]/).map(e => e.trim()).filter(e => e && !e.includes('期特'));
-                
-                console.log('分割为', entries.length, '个条目');
-                
-                entries.forEach(entry => {
-                    // 匹配格式：内容 各号 金额 元
-                    const match = entry.match(/(.+?)(?:各|各号|每号|每颗|每)\s*(\d+(?:\.\d+)?)\s*(?:元|斤|米|块|$)/);
-                    
-                    if (!match) {
-                        // 尝试匹配无"各"字的格式：内容 金额元
-                        const altMatch = entry.match(/(.+?)\s+(\d+(?:\.\d+)?)\s*(?:元|斤|米|块|$)/);
-                        if (altMatch) {
-                            const [, content, amountStr] = altMatch;
-                            const amount = parseFloat(amountStr);
-                            if (!isNaN(amount) && amount > 0) {
-                                parseEntryContent(content, amount, results);
-                            }
-                        }
-                        return;
-                    }
-                    
-                    const [, content, amountStr] = match;
-                    const amount = parseFloat(amountStr);
-                    if (isNaN(amount) || amount <= 0) return;
-                    
-                    parseEntryContent(content, amount, results);
-                });
-                
-                console.log('解析完成，找到', results.length, '个号码投注');
-                return results;
+                return lotteryParser.parseInput(input);
             }
-            
-            function parseEntryContent(content, amount, results) {
-                // 清理内容
-                const cleanContent = content.replace(/\s+/g, '');
-                
-                // 先检查是否包含生肖
-                const zodiacNames = Object.keys(zodiacMap);
-                let foundZodiacs = [];
-                
-                zodiacNames.forEach(zodiac => {
-                    if (cleanContent.includes(zodiac)) {
-                        // 统计生肖出现的次数
-                        const regex = new RegExp(zodiac, 'g');
-                        const matches = cleanContent.match(regex);
-                        if (matches) {
-                            for (let i = 0; i < matches.length; i++) {
-                                foundZodiacs.push(zodiac);
-                            }
-                        }
-                    }
-                });
-                
-                // 处理生肖
-                foundZodiacs.forEach(zodiac => {
-                    zodiacMap[zodiac].forEach(num => {
-                        results.push({ number: num, amount: amount });
-                    });
-                });
-                
-                // 提取数字（排除已经被生肖处理的部分）
-                let remainingContent = cleanContent;
-                foundZodiacs.forEach(zodiac => {
-                    remainingContent = remainingContent.replace(new RegExp(zodiac, 'g'), '');
-                });
-                
-                // 提取数字（支持.、,、、等分隔符）
-                const numberParts = remainingContent.split(/[\.、,，]/).filter(part => part.trim());
-                
-                numberParts.forEach(part => {
-                    // 处理数字（可能带有前导0，如07）
-                    const numStr = part.replace(/^0+/, ''); // 去掉前导0
-                    const num = parseInt(numStr);
-                    if (!isNaN(num) && num >= 1 && num <= 49) {
-                        results.push({ number: num, amount: amount });
-                    }
-                });
-                
-                // 如果没有分隔符，尝试提取所有数字
-                if (numberParts.length === 0) {
-                    const numberMatches = remainingContent.match(/\d+/g);
-                    if (numberMatches) {
-                        numberMatches.forEach(match => {
-                            const numStr = match.replace(/^0+/, '');
-                            const num = parseInt(numStr);
-                            if (!isNaN(num) && num >= 1 && num <= 49) {
-                                results.push({ number: num, amount: amount });
-                            }
-                        });
-                    }
-                }
-            }
-            // ==================== parseInput函数结束 ====================
             
             // 初始化数据
             initData();
