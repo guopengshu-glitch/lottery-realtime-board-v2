@@ -1,52 +1,2018 @@
-/* ==================== 新增：自适应放大号码和金额字体 ==================== */
-/* 平板端：中等放大（769px-1023px） */
-@media (min-width: 769px) and (max-width: 1023px) {
-    .number-cell {
-        font-size: 24px !important;
-        font-weight: 900 !important;
-    }
-    
-    .amount-cell {
-        font-size: 20px !important;
-        font-weight: 900 !important;
-    }
-    
-    .amount-cell-zero {
-        font-size: 18px !important;
-    }
-}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>📊 彩票实时看板 - 多人实时同步</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <style>
+        /* 你的原有CSS样式完全保持不变 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-/* 电脑端：大幅放大（1024px-1439px） */
-@media (min-width: 1024px) and (max-width: 1439px) {
-    .number-cell {
-        font-size: 32px !important;
-        font-weight: 900 !important;
-    }
-    
-    .amount-cell {
-        font-size: 28px !important;
-        font-weight: 900 !important;
-    }
-    
-    .amount-cell-zero {
-        font-size: 24px !important;
-    }
-}
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
 
-/* 大屏/电视端：超大放大（1440px+） */
-@media (min-width: 1440px) {
-    .number-cell {
-        font-size: 48px !important;
-        font-weight: 900 !important;
-    }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* 网络状态指示器 */
+        .network-indicator {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            z-index: 9999;
+            transition: all 0.3s ease;
+        }
+
+        .network-online {
+            background: #2ecc71;
+            box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.3);
+        }
+
+        .network-offline {
+            background: #e74c3c;
+            box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.3);
+        }
+
+        /* 云同步状态 */
+        .cloud-status {
+            position: fixed;
+            top: 30px;
+            right: 15px;
+            background: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 9998;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #eee;
+            backdrop-filter: blur(5px);
+        }
+
+        .cloud-status.online {
+            color: #2ecc71;
+            border-color: #2ecc71;
+        }
+
+        .cloud-status.offline {
+            color: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .cloud-status.connecting {
+            color: #f39c12;
+            border-color: #f39c12;
+        }
+
+        /* 密码验证覆盖层 */
+        #passwordOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+            padding: 20px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-box h1 {
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        #passwordInput {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: white;
+            -webkit-appearance: none;
+            min-height: 50px;
+        }
+
+        #passwordInput:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            min-height: 50px;
+            touch-action: manipulation;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .password-error {
+            color: #e74c3c;
+            margin-top: 15px;
+            font-size: 14px;
+            min-height: 20px;
+        }
+
+        .password-hint {
+            margin-top: 20px;
+            color: #95a5a6;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* 历史记录弹窗 */
+        .history-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10001;
+            animation: fadeIn 0.3s ease;
+            touch-action: none;
+        }
+
+        .history-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            background: white;
+            border-bottom: 1px solid #eee;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .history-modal-header h2 {
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .close-history-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #95a5a6;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+            touch-action: manipulation;
+        }
+
+        .close-history-btn:hover {
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .history-modal-content {
+            background: white;
+            margin: 5vh auto;
+            width: 95%;
+            max-width: 600px;
+            height: 90vh;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .history-item {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #667eea;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .history-item:hover {
+            transform: translateX(5px);
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ffebee;
+            color: #e74c3c;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            touch-action: manipulation;
+        }
+
+        .delete-btn:hover {
+            background: #ffcdd2;
+        }
+
+        .history-time {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .history-text {
+            color: #333;
+            font-size: 15px;
+            margin-bottom: 5px;
+            word-break: break-all;
+            line-height: 1.4;
+        }
+
+        .history-amount {
+            color: #2ecc71;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .history-actions-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background: white;
+            border-top: 1px solid #eee;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .history-count {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .history-btn {
+            padding: 12px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            touch-action: manipulation;
+            min-height: 40px;
+        }
+
+        .history-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* 主应用 */
+        #mainApp {
+            min-height: 100vh;
+            background: #f5f7fa;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 25px 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 15px;
+            opacity: 0.8;
+        }
+
+        .status-bar {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #667eea;
+            font-weight: 500;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+        }
+
+        .total-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .total-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 20px;
+            border-radius: 15px;
+            font-size: 24px;
+            font-weight: 700;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            text-align: center;
+            order: 1;
+        }
+
+        .total-box span {
+            font-size: 36px;
+            margin: 0 8px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: inline-block;
+        }
+
+        .clear-all-btn {
+            padding: 16px 20px;
+            background: white;
+            color: #e74c3c;
+            border: 2px solid #ffebee;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 50px;
+            touch-action: manipulation;
+            order: 2;
+        }
+
+        .clear-all-btn:hover {
+            background: #ffebee;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.2);
+        }
+
+        .input-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .paste-label {
+            display: block;
+            color: #667eea;
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        #inputData {
+            width: 100%;
+            min-height: 120px;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            resize: vertical;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            -webkit-touch-callout: default !important;
+            -webkit-appearance: none;
+        }
+
+        #inputData:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        #inputData::placeholder {
+            color: #bbb;
+            font-size: 16px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 50px;
+            touch-action: manipulation;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            order: 1;
+        }
+
+        .btn-history {
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #e0e0e0;
+            order: 2;
+        }
+
+        .btn-success {
+            background: #2ecc71;
+            color: white;
+            order: 3;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .data-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            overflow-x: hidden;
+        }
+
+        .section-title {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f5f7fa;
+        }
+
+        .section-title span:first-child {
+            color: #333;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .section-title span:last-child {
+            font-size: 14px;
+            color: #7f8c8d;
+            align-self: flex-end;
+        }
+
+        /* 表格样式 */
+        .compact-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .compact-table th:nth-child(1),
+        .compact-table td:nth-child(1) {
+            width: 12%;
+            text-align: center;
+            padding: 10px 4px;
+        }
+
+        .compact-table th:nth-child(2),
+        .compact-table td:nth-child(2) {
+            width: 12%;
+            text-align: center;
+            padding: 10px 4px;
+        }
+
+        .compact-table th:nth-child(3),
+        .compact-table td:nth-child(3) {
+            width: 18%;
+            text-align: center;
+            padding: 10px 4px;
+        }
+
+        .compact-table th:nth-child(4),
+        .compact-table td:nth-child(4) {
+            width: 30%;
+            text-align: right;
+            padding: 10px 8px 10px 4px;
+        }
+
+        .compact-table th:nth-child(5),
+        .compact-table td:nth-child(5) {
+            width: 28%;
+            text-align: center;
+            padding: 10px 4px;
+        }
+
+        .compact-table th {
+            background: #f8f9fa;
+            color: #666;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 2px solid #eee;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .compact-table td {
+            border-bottom: 1px solid #f5f7fa;
+            transition: background 0.3s;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .compact-table tr:hover td {
+            background: #f8f9fa;
+        }
+
+        .compact-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rank-cell {
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .rank-1 { color: #FFD700; }
+        .rank-2 { color: #C0C0C0; }
+        .rank-3 { color: #CD7F32; }
+
+        .number-cell {
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .zodiac-cell {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .wave-cell {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            min-width: 50px;
+        }
+
+        .wave-red {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+
+        .wave-blue {
+            background: linear-gradient(135deg, #4ecdc4, #45b7af);
+            color: white;
+        }
+
+        .wave-green {
+            background: linear-gradient(135deg, #1dd1a1, #10ac84);
+            color: white;
+        }
+
+        .amount-cell {
+            color: #e74c3c !important;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .amount-cell-zero {
+            color: #bbb;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        /* 通知样式 */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            left: 20px;
+            background: #2ecc71;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 9997;
+            animation: slideIn 0.3s ease;
+            max-width: 100%;
+            font-weight: 500;
+            line-height: 1.5;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 底部信息 */
+        .footer-info {
+            text-align: center;
+            padding: 15px;
+            color: #7f8c8d;
+            font-size: 12px;
+            border-top: 1px solid #eee;
+            background: #f8f9fa;
+            margin-top: 20px;
+            border-radius: 0 0 15px 15px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 375px) {
+            .compact-table th,
+            .compact-table td {
+                font-size: 13px;
+                padding: 8px 2px;
+            }
+            
+            .compact-table th:nth-child(1),
+            .compact-table td:nth-child(1) {
+                width: 10%;
+            }
+            
+            .compact-table th:nth-child(2),
+            .compact-table td:nth-child(2) {
+                width: 10%;
+            }
+            
+            .compact-table th:nth-child(3),
+            .compact-table td:nth-child(3) {
+                width: 16%;
+            }
+            
+            .compact-table th:nth-child(4),
+            .compact-table td:nth-child(4) {
+                width: 32%;
+                padding-right: 4px;
+            }
+            
+            .compact-table th:nth-child(5),
+            .compact-table td:nth-child(5) {
+                width: 32%;
+            }
+            
+            .wave-cell {
+                padding: 3px 6px;
+                font-size: 11px;
+                min-width: 45px;
+            }
+            
+            .amount-cell {
+                font-size: 13px;
+            }
+            
+            .header h1 {
+                font-size: 22px;
+            }
+            
+            .header p {
+                font-size: 14px;
+            }
+            
+            .status-bar {
+                font-size: 15px;
+                padding: 12px 15px;
+            }
+            
+            .total-box {
+                font-size: 20px;
+                padding: 20px;
+            }
+            
+            .total-box span {
+                font-size: 28px;
+            }
+            
+            .clear-all-btn {
+                font-size: 15px;
+                padding: 14px;
+            }
+            
+            .section-title span:first-child {
+                font-size: 18px;
+            }
+            
+            .btn {
+                font-size: 15px;
+                padding: 14px;
+            }
+            
+            .notification {
+                font-size: 15px;
+            }
+        }
+
+        @media (min-width: 376px) and (max-width: 768px) {
+            .compact-table th,
+            .compact-table td {
+                font-size: 14px;
+            }
+            
+            .wave-cell {
+                font-size: 12px;
+            }
+            
+            .amount-cell {
+                font-size: 14px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header {
+                padding: 30px;
+                margin-bottom: 30px;
+            }
+            
+            .status-bar {
+                padding: 15px 25px;
+                margin-bottom: 20px;
+            }
+            
+            .total-section {
+                flex-direction: row;
+                align-items: stretch;
+                gap: 20px;
+            }
+            
+            .total-box {
+                flex: 1;
+                padding: 25px 30px;
+                order: 1;
+            }
+            
+            .clear-all-btn {
+                width: auto;
+                min-width: 180px;
+                padding: 0 30px;
+                order: 2;
+            }
+            
+            .input-section {
+                padding: 30px;
+                margin-bottom: 25px;
+            }
+            
+            #inputData {
+                min-height: 150px;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .btn-group {
+                flex-direction: row;
+                gap: 15px;
+            }
+            
+            .btn {
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .data-section {
+                padding: 25px;
+                margin-bottom: 30px;
+            }
+            
+            .section-title {
+                flex-direction: row;
+                align-items: center;
+                gap: 0;
+            }
+            
+            .compact-table th {
+                font-size: 16px;
+                padding: 14px 6px;
+            }
+            
+            .compact-table td {
+                font-size: 16px;
+                padding: 14px 6px;
+            }
+            
+            .wave-cell {
+                font-size: 14px;
+                padding: 6px 10px;
+                min-width: 60px;
+            }
+            
+            .amount-cell {
+                font-size: 16px;
+            }
+            
+            .history-modal-content {
+                margin: 10vh auto;
+                height: 70vh;
+            }
+            
+            .notification {
+                right: 30px;
+                left: auto;
+                max-width: 350px;
+                text-align: left;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                padding: 30px;
+            }
+            
+            .btn-group {
+                gap: 20px;
+            }
+            
+            .compact-table th {
+                font-size: 17px;
+                padding: 16px 8px;
+            }
+            
+            .compact-table td {
+                font-size: 17px;
+                padding: 16px 8px;
+            }
+            
+            .wave-cell {
+                font-size: 15px;
+                padding: 8px 12px;
+                min-width: 70px;
+            }
+            
+            .amount-cell {
+                font-size: 18px;
+            }
+        }
+
+        @supports (padding: max(0px)) {
+            #mainApp {
+                padding-left: max(15px, env(safe-area-inset-left));
+                padding-right: max(15px, env(safe-area-inset-right));
+                padding-bottom: max(15px, env(safe-area-inset-bottom));
+            }
+            
+            .notification {
+                bottom: max(20px, env(safe-area-inset-bottom));
+            }
+        }
+        
+        /* ==================== 新增：自适应放大号码和金额字体 ==================== */
+        /* 平板端：中等放大（769px-1023px） */
+        @media (min-width: 769px) and (max-width: 1023px) {
+            .number-cell {
+                font-size: 24px !important;
+                font-weight: 900 !important;
+            }
+            
+            .amount-cell {
+                font-size: 20px !important;
+                font-weight: 900 !important;
+            }
+            
+            .amount-cell-zero {
+                font-size: 18px !important;
+            }
+        }
+
+        /* 电脑端：大幅放大（1024px-1439px） */
+        @media (min-width: 1024px) and (max-width: 1439px) {
+            .number-cell {
+                font-size: 32px !important;
+                font-weight: 900 !important;
+            }
+            
+            .amount-cell {
+                font-size: 28px !important;
+                font-weight: 900 !important;
+            }
+            
+            .amount-cell-zero {
+                font-size: 24px !important;
+            }
+        }
+
+        /* 大屏/电视端：超大放大（1440px+） */
+        @media (min-width: 1440px) {
+            .number-cell {
+                font-size: 48px !important;
+                font-weight: 900 !important;
+            }
+            
+            .amount-cell {
+                font-size: 40px !important;
+                font-weight: 900 !important;
+            }
+            
+            .amount-cell-zero {
+                font-size: 32px !important;
+            }
+        }
+        /* ==================== 新增内容结束 ==================== */
+    </style>
     
-    .amount-cell {
-        font-size: 40px !important;
-        font-weight: 900 !important;
-    }
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" defer></script>
+</head>
+<body>
+    <!-- 网络状态指示器 -->
+    <div class="network-indicator network-online" id="networkIndicator"></div>
     
-    .amount-cell-zero {
-        font-size: 32px !important;
-    }
-}
-/* ==================== 新增内容结束 ==================== */
+    <!-- 云同步状态显示 -->
+    <div class="cloud-status connecting" id="cloudStatus">
+        <span id="cloudIcon">🔄</span>
+        <span id="cloudText">初始化中...</span>
+    </div>
+
+    <!-- 密码验证覆盖层 -->
+    <div id="passwordOverlay">
+        <div class="login-box">
+            <h1>🔐 管理员验证</h1>
+            <div class="input-group">
+                <label for="passwordInput">请输入管理员密码</label>
+                <input type="password" id="passwordInput" placeholder="输入密码后按回车或点击进入" autocomplete="current-password">
+            </div>
+            <button class="login-btn" onclick="checkPassword()">🚪 进入实时看板</button>
+            <div id="passwordError" class="password-error"></div>
+            <div class="password-hint">提示：验证通过后，3天内无需重复输入密码。</div>
+        </div>
+    </div>
+
+    <!-- 历史记录弹窗 -->
+    <div class="history-modal" id="historyModal">
+        <div class="history-modal-content">
+            <div class="history-modal-header">
+                <h2>📝 录入记录</h2>
+                <button class="close-history-btn" onclick="closeHistoryModal()">×</button>
+            </div>
+            <div class="history-list" id="historyList">
+                <div style="text-align: center; color: #95a5a6; padding: 20px;">
+                    暂无录入记录
+                </div>
+            </div>
+            <div class="history-actions-bar">
+                <div class="history-count" id="historyCount">0条记录</div>
+                <button class="history-btn" onclick="clearHistory()" style="background: #ffebee; color: #e74c3c;">
+                    🗑️ 清空记录
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主看板页面 -->
+    <div id="mainApp" style="display: none;">
+        <div class="container">
+            <div class="header">
+                <h1>📊 彩票实时看板 - 多人实时同步</h1>
+                <p>支持任意格式 • 实时多人同步 • 国内优化</p>
+            </div>
+            
+            <div class="status-bar" id="statusBar">
+                🚀 系统启动中...
+            </div>
+            
+            <!-- 总计金额和清空按钮 -->
+            <div class="total-section">
+                <div class="total-box">
+                    总计: <span id="totalMoney">0</span> 元
+                </div>
+                <button class="clear-all-btn" onclick="clearAll()">
+                    🗑️ 清空数据
+                </button>
+            </div>
+            
+            <div class="input-section">
+                <label class="paste-label">&lt;粘贴输入框&gt;</label>
+                <textarea 
+                    id="inputData" 
+                    placeholder="粘贴彩票数据（支持任意格式）"
+                ></textarea>
+                
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="processData()">
+                        📤 发布数据
+                    </button>
+                    <button class="btn btn-history" onclick="openHistoryModal()">
+                        📋 查看记录
+                    </button>
+                    <button class="btn btn-success" onclick="copyLink()">
+                        🔗 分享链接
+                    </button>
+                </div>
+            </div>
+            
+            <div class="data-section">
+                <div class="section-title">
+                    <span>📈 号码数据（按金额排序）</span>
+                    <span id="dataCount">0/49个号码</span>
+                </div>
+                
+                <table class="compact-table" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>号码</th>
+                            <th>生肖</th>
+                            <th>金额</th>
+                            <th>波色</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- 表格数据动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="footer-info">
+                📱 支持手机访问 • 🔄 实时同步 • 💾 离线保存
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 彩票配置数据 ====================
+        const LOTTERY_CONFIG = {
+            // 生肖映射
+            zodiacMap: {
+                "鼠": [6, 18, 30, 42], "牛": [5, 17, 29, 41], "虎": [4, 16, 28, 40],
+                "兔": [3, 15, 27, 39], "龙": [2, 14, 26, 38], "蛇": [1, 13, 25, 37, 49],
+                "马": [12, 24, 36, 48], "羊": [11, 23, 35, 47], "猴": [10, 22, 34, 46],
+                "鸡": [9, 21, 33, 45], "狗": [8, 20, 32, 44], "猪": [7, 19, 31, 43]
+            },
+            
+            // 波色映射
+            waveColorMap: {
+                "红波": [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
+                "蓝波": [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
+                "绿波": [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
+            },
+            
+            amountUnits: ['元', '斤', '米', '块', '￥'],
+            filterWords: ['多少钱', '多少米', '总计', '总共', '合计', '共', 
+                          '给我算算', '帮我算算', '帮算', '计算', '算一下', '算算', 
+                          '请问', '帮忙', '看一下', '看看'],
+            betKeywords: ['各', '各号', '每', '每号', '每颗', '颗', '号'],
+            numberRange: { min: 1, max: 49 }
+        };
+
+        // ==================== 最终完美版彩票解析器 ====================
+        class LotteryBetParser {
+            constructor(config = LOTTERY_CONFIG) {
+                this.config = config;
+            }
+            
+            parseInput(input) {
+                if (!input || typeof input !== 'string') return [];
+                
+                // 1. 清理文本
+                const cleaned = input.trim()
+                    .replace(/^一共[：:]*\s*/, '')
+                    .replace(/斤|米|块|￥/g, '元');
+                
+                // 2. 分割成独立投注项
+                const items = this._extractBetItems(cleaned);
+                
+                // 3. 解析每个投注项
+                const allBets = [];
+                items.forEach(item => {
+                    const bets = this._parseSingleItem(item.content, item.amount);
+                    allBets.push(...bets);
+                });
+                
+                return allBets;
+            }
+            
+            _extractBetItems(text) {
+                const items = [];
+                // 匹配模式：任意内容 + "各号" + 数字 + "元"
+                const regex = /([^,]+?各号\s*\d+(?:\.\d+)?\s*元)/g;
+                let match;
+                
+                while ((match = regex.exec(text)) !== null) {
+                    const fullText = match[0];
+                    const amountMatch = fullText.match(/各号\s*(\d+(?:\.\d+)?)\s*元/);
+                    
+                    if (amountMatch) {
+                        const amount = parseFloat(amountMatch[1]);
+                        const content = fullText.substring(0, amountMatch.index).trim();
+                        
+                        items.push({ content, amount });
+                    }
+                }
+                
+                return items;
+            }
+            
+            _parseSingleItem(content, amount) {
+                const bets = [];
+                const cleanContent = content.replace(/\s+/g, '');
+                
+                // 统计生肖出现次数
+                const zodiacCounts = this._countOccurrences(cleanContent, Object.keys(this.config.zodiacMap));
+                
+                // 统计波色出现次数
+                const waveCounts = this._countOccurrences(cleanContent, Object.keys(this.config.waveColorMap));
+                
+                // 提取数字
+                const numbers = this._extractNumbers(cleanContent);
+                
+                // 添加生肖下注
+                Object.entries(zodiacCounts).forEach(([zodiac, count]) => {
+                    this.config.zodiacMap[zodiac].forEach(num => {
+                        for (let i = 0; i < count; i++) {
+                            bets.push({ number: num, amount: amount });
+                        }
+                    });
+                });
+                
+                // 添加波色下注
+                Object.entries(waveCounts).forEach(([wave, count]) => {
+                    this.config.waveColorMap[wave].forEach(num => {
+                        for (let i = 0; i < count; i++) {
+                            bets.push({ number: num, amount: amount });
+                        }
+                    });
+                });
+                
+                // 添加数字下注
+                numbers.forEach(num => {
+                    bets.push({ number: num, amount: amount });
+                });
+                
+                return bets;
+            }
+            
+            _countOccurrences(text, keywords) {
+                const counts = {};
+                
+                keywords.forEach(keyword => {
+                    let count = 0;
+                    let pos = 0;
+                    
+                    while ((pos = text.indexOf(keyword, pos)) !== -1) {
+                        count++;
+                        pos += keyword.length;
+                    }
+                    
+                    if (count > 0) {
+                        counts[keyword] = count;
+                    }
+                });
+                
+                return counts;
+            }
+            
+            _extractNumbers(text) {
+                const numbers = [];
+                
+                // 提取所有1-49的数字
+                const numberPattern = /\b(0?[1-9]|[12][0-9]|3[0-9]|4[0-9])\b/g;
+                const matches = text.match(numberPattern) || [];
+                
+                matches.forEach(match => {
+                    const num = parseInt(match.replace(/^0+/, ''), 10);
+                    if (num >= 1 && num <= 49) {
+                        numbers.push(num);
+                    }
+                });
+                
+                return numbers;
+            }
+            
+            findZodiac(number) {
+                for (const [zodiac, numbers] of Object.entries(this.config.zodiacMap)) {
+                    if (numbers.includes(number)) {
+                        return zodiac;
+                    }
+                }
+                return null;
+            }
+            
+            findWaveColor(number) {
+                for (const [wave, numbers] of Object.entries(this.config.waveColorMap)) {
+                    if (numbers.includes(number)) {
+                        return wave;
+                    }
+                }
+                return null;
+            }
+        }
+
+        // ==================== 原有应用代码（完全保持不变） ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 页面加载完成 - 核心功能启动');
+            
+            document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') checkPassword();
+            });
+            
+            try {
+                const authStr = localStorage.getItem('lottery_admin_auth');
+                if (authStr) {
+                    const authData = JSON.parse(authStr);
+                    const now = Date.now();
+                    const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+                    
+                    if (authData.loggedIn && authData.loginTime && (now - authData.loginTime) < THREE_DAYS_MS) {
+                        document.getElementById('passwordOverlay').style.display = 'none';
+                        document.getElementById('mainApp').style.display = 'block';
+                        startApplication();
+                        console.log('✅ 自动登录成功');
+                        return;
+                    }
+                }
+            } catch(e) {
+                console.log('自动登录检查失败');
+            }
+            
+            document.getElementById('passwordInput').focus();
+            initTouchSupport();
+        });
+
+        function initTouchSupport() {
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = Date.now();
+                if (now - lastTouchEnd <= 300) event.preventDefault();
+                lastTouchEnd = now;
+            }, false);
+
+            const buttons = document.querySelectorAll('button, .btn, .login-btn, .clear-all-btn, .history-btn, .delete-btn, .close-history-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('touchstart', function() { this.style.transform = 'scale(0.98)'; });
+                btn.addEventListener('touchend', function() { this.style.transform = ''; });
+                btn.addEventListener('touchcancel', function() { this.style.transform = ''; });
+            });
+
+            const inputs = document.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('touchstart', function(e) { e.stopPropagation(); });
+            });
+        }
+
+        function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const errorEl = document.getElementById('passwordError');
+            
+            if (!input || !input.value) {
+                if (errorEl) errorEl.textContent = '请输入密码';
+                return;
+            }
+            
+            if (input.value.trim() === '829218') {
+                if (errorEl) errorEl.textContent = '';
+                
+                localStorage.setItem('lottery_admin_auth', JSON.stringify({
+                    loggedIn: true,
+                    loginTime: Date.now()
+                }));
+                
+                document.getElementById('passwordOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                
+                console.log('✅ 密码验证成功');
+                startApplication();
+            } else {
+                if (errorEl) errorEl.textContent = '❌ 密码错误，请重试';
+                input.value = '';
+                input.focus();
+            }
+        }
+        
+        function startApplication() {
+            console.log('🚀 启动应用...');
+            document.getElementById('statusBar').textContent = '🔄 初始化系统中...';
+            
+            initLotterySystem();
+            setTimeout(initFirebase, 100);
+        }
+        
+        // ==================== 彩票系统核心 ====================
+        let lotterySystem = null;
+        let lotteryParser = new LotteryBetParser();
+        
+        function initLotterySystem() {
+            console.log('🎯 初始化彩票系统...');
+            
+            window.lotteryData = [];
+            window.moneyMap = {};
+            window.historyRecords = [];
+            window.undoStack = [];
+            
+            function initData() {
+                window.lotteryData = [];
+                window.moneyMap = {};
+                for (let i = 1; i <= 49; i++) {
+                    const zodiac = lotteryParser.findZodiac(i);
+                    const waveColor = lotteryParser.findWaveColor(i);
+                    
+                    window.lotteryData.push({
+                        number: i,
+                        zodiac: zodiac || "未知",
+                        waveColor: waveColor,
+                        amount: 0,
+                        rank: 0
+                    });
+                    window.moneyMap[i] = 0;
+                }
+            }
+            
+            function parseInput(input) {
+                return lotteryParser.parseInput(input);
+            }
+            
+            initData();
+            
+            function loadSavedData() {
+                try {
+                    const saved = localStorage.getItem('lottery_data_v2');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        
+                        if (data.moneyMap) window.moneyMap = data.moneyMap;
+                        if (data.historyRecords) window.historyRecords = data.historyRecords;
+                        if (data.undoStack) window.undoStack = data.undoStack;
+                        
+                        window.lotteryData.forEach(item => {
+                            item.amount = window.moneyMap[item.number] || 0;
+                        });
+                        
+                        updateTotalAmount();
+                        updateDataCount();
+                        updateUndoButton();
+                        renderHistory();
+                        renderDataTable();
+                    }
+                } catch(e) {
+                    console.log('加载本地数据失败');
+                }
+            }
+            
+            function saveData() {
+                try {
+                    const saveData = {
+                        moneyMap: window.moneyMap,
+                        historyRecords: window.historyRecords,
+                        undoStack: window.undoStack,
+                        timestamp: Date.now()
+                    };
+                    localStorage.setItem('lottery_data_v2', JSON.stringify(saveData));
+                } catch(e) {
+                    console.log('保存本地数据失败');
+                }
+            }
+            
+            function updateTotalAmount() {
+                const total = Object.values(window.moneyMap).reduce((sum, amount) => sum + amount, 0);
+                document.getElementById('totalMoney').textContent = total.toFixed(2);
+            }
+            
+            function updateDataCount() {
+                const activeCount = Object.values(window.moneyMap).filter(amount => amount > 0).length;
+                document.getElementById('dataCount').textContent = `${activeCount}/49个号码`;
+            }
+            
+            function renderDataTable() {
+                const tbody = document.getElementById('tableBody');
+                const sortedData = [...window.lotteryData].sort((a, b) => {
+                    if (a.amount > 0 && b.amount === 0) return -1;
+                    if (a.amount === 0 && b.amount > 0) return 1;
+                    if (a.amount > 0 && b.amount > 0) return b.amount - a.amount;
+                    return a.number - b.number;
+                });
+                
+                let html = '';
+                let currentRank = 0;
+                
+                sortedData.forEach((item) => {
+                    const waveClass = item.waveColor === '红波' ? 'wave-red' :
+                                    item.waveColor === '蓝波' ? 'wave-blue' :
+                                    item.waveColor === '绿波' ? 'wave-green' : '';
+                    
+                    let rankClass = '';
+                    let rankDisplay = '-';
+                    let amountDisplay = '0元';
+                    let amountClass = 'amount-cell-zero';
+                    
+                    if (item.amount > 0) {
+                        currentRank++;
+                        rankDisplay = currentRank;
+                        
+                        if (currentRank === 1) rankClass = 'rank-1';
+                        else if (currentRank === 2) rankClass = 'rank-2';
+                        else if (currentRank === 3) rankClass = 'rank-3';
+                        
+                        amountDisplay = `${item.amount.toFixed(2)}元`;
+                        amountClass = 'amount-cell';
+                    }
+                    
+                    html += `
+                        <tr>
+                            <td class="rank-cell ${rankClass}">${rankDisplay}</td>
+                            <td class="number-cell">${item.number}</td>
+                            <td class="zodiac-cell">${item.zodiac}</td>
+                            <td class="${amountClass}">${amountDisplay}</td>
+                            <td><span class="wave-cell ${waveClass}">${item.waveColor}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                tbody.innerHTML = html;
+                updateDataCount();
+            }
+            
+            function addHistoryRecord(text, count, amount) {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('zh-CN', { 
+                    hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
+                
+                const record = {
+                    id: Date.now(),
+                    text: text,
+                    time: timeStr,
+                    count: count,
+                    amount: amount
+                };
+                
+                window.historyRecords.unshift(record);
+                if (window.historyRecords.length > 50) window.historyRecords = window.historyRecords.slice(0, 50);
+                document.getElementById('historyCount').textContent = `${window.historyRecords.length}条记录`;
+            }
+            
+            function renderHistory() {
+                const container = document.getElementById('historyList');
+                if (window.historyRecords.length === 0) {
+                    container.innerHTML = `<div style="text-align: center; color: #95a5a6; padding: 20px;">暂无录入记录</div>`;
+                    return;
+                }
+                
+                let html = '';
+                window.historyRecords.forEach(record => {
+                    html += `
+                        <div class="history-item">
+                            <button class="delete-btn" onclick="deleteHistoryRecord(${record.id})">×</button>
+                            <span class="history-time">${record.time}</span>
+                            <div class="history-text">${record.text}</div>
+                            <div class="history-amount">${record.amount.toFixed(2)}元 (${record.count}个)</div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+            
+            window.deleteHistoryRecord = function(id) {
+                const index = window.historyRecords.findIndex(r => r.id === id);
+                if (index === -1) return;
+                
+                saveCurrentStateForUndo();
+                window.historyRecords.splice(index, 1);
+                
+                window.moneyMap = {};
+                window.historyRecords.forEach(record => {
+                    const bets = parseInput(record.text);
+                    bets.forEach(bet => {
+                        if (bet.number >= 1 && bet.number <= 49) {
+                            window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
+                        }
+                    });
+                });
+                
+                window.lotteryData.forEach(item => {
+                    item.amount = window.moneyMap[item.number] || 0;
+                });
+                
+                renderHistory();
+                renderDataTable();
+                updateTotalAmount();
+                updateUndoButton();
+                saveData();
+                
+                if (window.firebaseDb) saveToCloud();
+                showNotification('✅ 已删除记录');
+            }
+            
+            function saveCurrentStateForUndo() {
+                const state = {
+                    moneyMap: {...window.moneyMap},
+                    historyRecords: JSON.parse(JSON.stringify(window.historyRecords)),
+                    timestamp: Date.now()
+                };
+                window.undoStack.push(state);
+                if (window.undoStack.length > 20) window.undoStack.shift();
+                updateUndoButton();
+            }
+            
+            function updateUndoButton() {}
+            
+            window.openHistoryModal = function() {
+                renderHistory();
+                document.getElementById('historyModal').style.display = 'block';
+            }
+            
+            window.closeHistoryModal = function() {
+                document.getElementById('historyModal').style.display = 'none';
+            }
+            
+            window.processData = function() {
+                const input = document.getElementById('inputData').value.trim();
+                if (!input) {
+                    showNotification('请输入数据', 'warning');
+                    return;
+                }
+                
+                saveCurrentStateForUndo();
+                const bets = parseInput(input);
+                
+                if (bets.length === 0) {
+                    showNotification('未识别到有效数据格式', 'warning');
+                    return;
+                }
+                
+                bets.forEach(bet => {
+                    if (bet.number >= 1 && bet.number <= 49) {
+                        window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
+                    }
+                });
+                
+                window.lotteryData.forEach(item => {
+                    item.amount = window.moneyMap[item.number] || 0;
+                });
+                
+                const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
+                addHistoryRecord(input, bets.length, totalAmount);
+                
+                updateTotalAmount();
+                document.getElementById('inputData').value = '';
+                renderDataTable();
+                renderHistory();
+                updateUndoButton();
+                saveData();
+                
+                if (window.firebaseDb) saveToCloud();
+                
+                showNotification(`✅ 成功录入 ${bets.length} 个下注\n💰 总计 ${totalAmount.toFixed(2)} 元`);
+            }
+            
+            window.clearHistory = function() {
+                if (!confirm('确定要清空所有录入记录吗？\n此操作不可恢复！')) return;
+                
+                saveCurrentStateForUndo();
+                window.historyRecords = [];
+                window.undoStack = [];
+                initData();
+                renderHistory();
+                renderDataTable();
+                updateTotalAmount();
+                updateUndoButton();
+                saveData();
+                
+                if (window.firebaseDb) saveToCloud();
+                
+                closeHistoryModal();
+                showNotification('✅ 已清空所有录入记录');
+            }
+            
+            window.clearAll = function() {
+                if (!confirm('⚠️ 确定要清空所有数据吗？\n包括所有录入记录和统计！')) return;
+                
+                initData();
+                window.historyRecords = [];
+                window.undoStack = [];
+                renderDataTable();
+                renderHistory();
+                updateUndoButton();
+                document.getElementById('totalMoney').textContent = '0';
+                document.getElementById('dataCount').textContent = '0/49个号码';
+                document.getElementById('historyCount').textContent = '0条记录';
+                localStorage.removeItem('lottery_data_v2');
+                
+                if (window.firebaseDb) saveToCloud();
+                
+                closeHistoryModal();
+                showNotification('✅ 所有数据已清空');
+            }
+            
+            window.copyLink = function() {
+                const saveData = {
+                    moneyMap: window.moneyMap,
+                    historyRecords: window.historyRecords.slice(0, 10),
+                    timestamp: Date.now()
+                };
+                
+                const dataStr = JSON.stringify(saveData);
+                const encoded = btoa(encodeURIComponent(dataStr));
+                const currentUrl = window.location.origin + window.location.pathname + '?data=' + encoded;
+                
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(currentUrl).then(() => {
+                        showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
+                    }).catch(err => {
+                        fallbackCopyToClipboard(currentUrl);
+                    });
+                } else {
+                    fallbackCopyToClipboard(currentUrl);
+                }
+            }
+            
+            function fallbackCopyToClipboard(text) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
+                    } else {
+                        showNotification('❌ 复制失败，请手动复制链接');
+                    }
+                } catch (err) {
+                    console.error('复制失败:', err);
+                    showNotification('❌ 复制失败，请手动复制链接');
+                }
+                
+                document.body.removeChild(textarea);
+            }
+            
+            loadSavedData();
+            updateUndoButton();
+            
+            lotterySystem = {
+                updateTotalAmount,
+                renderDataTable,
+                renderHistory,
+                saveData
+            };
+        }
+        
+        function initFirebase() {
+            console.log('🔥 初始化Firebase...');
+            updateCloudStatus('连接中...', 'connecting');
+            
+            setTimeout(() => {
+                if (typeof firebase === 'undefined') {
+                    console.log('Firebase SDK未加载，重试...');
+                    loadFirebase();
+                    return;
+                }
+                
+                try {
+                    const firebaseConfig = {
+                        apiKey: "AIzaSyAgUU04dt1igPFNTC-zJ3WhGfWp8-wKmfo",
+                        authDomain: "my-lottery-board.firebaseapp.com",
+                        projectId: "my-lottery-board",
+                        storageBucket: "my-lottery-board.firebasestorage.app",
+                        messagingSenderId: "714450363816",
+                        appId: "1:714450363816:web:8335befb5ed25c98f3a99d"
+                    };
+                    
+                    const app = firebase.initializeApp(firebaseConfig);
+                    const db = firebase.firestore(app);
+                    
+                    window.firebaseApp = app;
+                    window.firebaseDb = db;
+                    
+                    console.log('✅ Firebase初始化成功');
+                    startFirebaseListener();
+                    
+                    updateCloudStatus('实时同步', 'online');
+                    document.getElementById('statusBar').textContent = '✅ 系统就绪 | 实时同步中';
+                    
+                } catch (error) {
+                    console.error('❌ Firebase初始化失败:', error.message);
+                    updateCloudStatus('连接失败', 'offline');
+                    document.getElementById('statusBar').textContent = '⚠️ 系统就绪 | 离线模式';
+                }
+            }, 500);
+        }
+        
+        function loadFirebase() {
+            if (!document.querySelector('script[src*="firebase-app"]')) {
+                const script1 = document.createElement('script');
+                script1.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js";
+                script1.defer = true;
+                document.head.appendChild(script1);
+                
+                const script2 = document.createElement('script');
+                script2.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js";
+                script2.defer = true;
+                script2.onload = function() { setTimeout(initFirebase, 1000); };
+                document.head.appendChild(script2);
+            }
+        }
+        
+        function startFirebaseListener() {
+            if (!window.firebaseDb) {
+                console.log('Firebase数据库未初始化');
+                return;
+            }
+            
+            console.log('👂 启动实时监听...');
+            
+            window.firebaseDb.collection('lottery_data')
+                .orderBy('timestamp', 'desc')
+                .limit(1)
+                .onSnapshot((snapshot) => {
+                    if (!snapshot.empty) {
+                        const doc = snapshot.docs[0];
+                        const data = doc.data();
+                        console.log('📥 收到云端数据更新', data);
+                        
+                        applyCloudData(data);
+                        showNotification('✅ 数据已同步更新');
+                    }
+                }, (error) => {
+                    console.error('❌ 实时监听错误:', error);
+                    updateCloudStatus('同步错误', 'offline');
+                });
+        }
+        
+        function applyCloudData(data) {
+            if (!data) return;
+            
+            console.log('🌥️ 应用云端数据...');
+            
+            if (data.moneyMap) window.moneyMap = data.moneyMap;
+            if (data.historyRecords) window.historyRecords = data.historyRecords;
+            
+            if (window.lotteryData && window.lotteryData.length > 0) {
+                window.lotteryData.forEach(item => {
+                    item.amount = window.moneyMap[item.number] || 0;
+                });
+                
+                if (lotterySystem) {
+                    lotterySystem.updateTotalAmount();
+                    lotterySystem.renderDataTable();
+                    lotterySystem.renderHistory();
+                }
+            }
+        }
+        
+        async function saveToCloud() {
+            if (!window.firebaseDb) {
+                console.log('Firebase未连接，跳过云端保存');
+                return;
+            }
+            
+            try {
+                console.log('☁️ 保存到云端...');
+                
+                const saveData = {
+                    moneyMap: window.moneyMap || {},
+                    historyRecords: window.historyRecords || [],
+                    timestamp: Date.now(),
+                    deviceId: 'web_' + Math.random().toString(36).substr(2, 9),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                const snapshot = await window.firebaseDb.collection('lottery_data')
+                    .orderBy('timestamp', 'desc')
+                    .limit(1)
+                    .get();
+                
+                if (!snapshot.empty) {
+                    await snapshot.docs[0].ref.update(saveData);
+                    console.log('✅ 云端数据已更新');
+                } else {
+                    await window.firebaseDb.collection('lottery_data').add(saveData);
+                    console.log('✅ 云端数据已创建');
+                }
+                
+                updateCloudStatus('实时同步', 'online');
+                
+            } catch (error) {
+                console.error('❌ 保存到云端失败:', error);
+                updateCloudStatus('同步失败', 'offline');
+            }
+        }
+        
+        function showNotification(message, type = 'success') {
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+            
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.background = type === 'warning' ? '#ff9f43' : '#2ecc71';
+            notification.innerHTML = message.replace(/\n/g, '<br>');
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        function updateCloudStatus(text, status = 'connecting') {
+            const statusEl = document.getElementById('cloudStatus');
+            const iconEl = document.getElementById('cloudIcon');
+            const textEl = document.getElementById('cloudText');
+            
+            if (!statusEl || !iconEl || !textEl) return;
+            
+            statusEl.className = `cloud-status ${status}`;
+            textEl.textContent = text;
+            
+            switch(status) {
+                case 'online': iconEl.textContent = '✅'; break;
+                case 'offline': iconEl.textContent = '⚠️'; break;
+                case 'connecting': iconEl.textContent = '🔄'; break;
+            }
+        }
+        
+        window.addEventListener('online', () => {
+            console.log('🌐 网络恢复');
+            document.getElementById('networkIndicator').className = 'network-indicator network-online';
+            showNotification('✅ 网络已恢复');
+            
+            if (!window.firebaseDb && typeof firebase !== 'undefined') {
+                setTimeout(initFirebase, 1000);
+            }
+        });
+        
+        window.addEventListener('offline', () => {
+            console.log('🌐 网络断开');
+            document.getElementById('networkIndicator').className = 'network-indicator network-offline';
+            showNotification('⚠️ 网络已断开，切换到离线模式');
+            updateCloudStatus('离线模式', 'offline');
+        });
+        
+        document.getElementById('networkIndicator').className = 
+            navigator.onLine ? 'network-indicator network-online' : 'network-indicator network-offline';
+    </script>
+</body>
+</html>
