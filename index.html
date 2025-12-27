@@ -1032,7 +1032,243 @@
                 bottom: max(20px, env(safe-area-inset-bottom));
             }
         }
-    </style>
+    /* ====== 49号码弹窗 - 7cm×5cm卡片 ====== */
+.number-popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    height: 570px;
+    background: white;
+    border: 3px solid #2c3e50;
+    border-radius: 10px;
+    z-index: 10010;
+    overflow: hidden;
+    resize: both;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    min-width: 380px;
+    min-height: 550px;
+}
+
+.number-popup.fullscreen {
+    width: 100vw !important;
+    height: 100vh !important;
+    top: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+    border-radius: 0;
+    border: none;
+    resize: none;
+}
+
+.popup-header {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 80px;
+    box-sizing: border-box;
+    border-bottom: 3px solid #e74c3c;
+    cursor: move;
+}
+
+.popup-title {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.popup-title h3 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 900;
+    color: #FFD700;
+}
+
+.popup-total {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.popup-total span {
+    color: #FFD700;
+    font-weight: 900;
+    font-size: 22px;
+}
+
+.popup-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.popup-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.popup-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.fullscreen-btn {
+    font-size: 20px;
+}
+
+.close-popup {
+    background: #e74c3c;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    transition: all 0.3s;
+}
+
+.close-popup:hover {
+    background: #c0392b;
+    transform: scale(1.1);
+}
+
+/* 7cm高 × 5cm宽网格 */
+.popup-grid-container {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(7, 70px);
+    gap: 2px;
+    height: calc(100% - 80px);
+    padding: 5px;
+    box-sizing: border-box;
+    background: #f8f9fa;
+    overflow: auto;
+}
+
+.popup-number-card {
+    background: white;
+    border: 2px solid #bdc3c7;
+    width: 100%;
+    height: 70px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    overflow: hidden;
+    padding: 1px;
+}
+
+.popup-number-card.has-money {
+    border-color: #e74c3c;
+    border-width: 3px;
+    background: #fff9f9;
+}
+
+/* 7cm卡片内的字体 */
+.popup-card-number {
+    font-size: 18px;
+    font-weight: 900;
+    color: #2c3e50;
+    margin: 0;
+    line-height: 1;
+    height: 18px;
+}
+
+.popup-card-zodiac {
+    font-size: 14px;
+    color: #2c3e50;
+    margin: 1px 0;
+    font-weight: 700;
+    line-height: 1;
+    height: 14px;
+}
+
+.popup-card-amount {
+    font-size: 16px;
+    font-weight: 900;
+    color: #e74c3c;
+    margin: 1px 0;
+    line-height: 1;
+    height: 16px;
+}
+
+.popup-card-amount.zero {
+    font-size: 13px;
+    color: #7f8c8d;
+    height: 13px;
+}
+
+.popup-card-wave {
+    font-size: 12px;
+    font-weight: bold;
+    padding: 1px 3px;
+    border-radius: 3px;
+    margin-top: 1px;
+    line-height: 1;
+    height: 12px;
+}
+
+.wave-red { background: #e74c3c; color: white; }
+.wave-blue { background: #3498db; color: white; }
+.wave-green { background: #27ae60; color: white; }
+
+/* 全屏模式放大字体 */
+.number-popup.fullscreen .popup-number-card {
+    height: calc((100vh - 100px) / 7);
+}
+
+.number-popup.fullscreen .popup-card-number { font-size: 28px; }
+.number-popup.fullscreen .popup-card-zodiac { font-size: 22px; }
+.number-popup.fullscreen .popup-card-amount { font-size: 26px; }
+.number-popup.fullscreen .popup-card-wave { font-size: 20px; }
+
+/* 打开按钮 */
+.open-popup-btn {
+    position: fixed;
+    bottom: 100px;
+    right: 30px;
+    background: #2c3e50;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 9999;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.open-popup-btn:hover {
+    background: #e74c3c;
+    transform: scale(1.1);
+}
+
+/* 手机隐藏 */
+@media (max-width: 768px) {
+    .open-popup-btn { display: none; }
+}</style>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" defer></script>
@@ -2240,9 +2476,107 @@ function renderTvGrid() {
         
         document.getElementById('networkIndicator').className = 
             navigator.onLine ? 'network-indicator network-online' : 'network-indicator network-offline';
-    </script>
-</body>
+    // ====== 49号码弹窗功能 ======
+function openPopup49() {
+    const popup = document.getElementById('popup49');
+    popup.style.display = 'block';
+    renderPopupGrid();
+    updatePopupTotal();
+}
+
+function closePopup49() {
+    document.getElementById('popup49').style.display = 'none';
+    document.getElementById('popup49').classList.remove('fullscreen');
+}
+
+function toggleFullscreen() {
+    const popup = document.getElementById('popup49');
+    popup.classList.toggle('fullscreen');
+    
+    if (popup.classList.contains('fullscreen')) {
+        renderPopupGrid();
+    }
+}
+
+function renderPopupGrid() {
+    const container = document.getElementById('popupGridContainer');
+    const isFullscreen = document.getElementById('popup49').classList.contains('fullscreen');
+    
+    if (!window.lotteryData) return;
+    
+    // 排序数据（有金额在前）
+    const sortedData = [...window.lotteryData].sort((a, b) => {
+        if (a.amount > 0 && b.amount === 0) return -1;
+        if (a.amount === 0 && b.amount > 0) return 1;
+        if (a.amount > 0 && b.amount > 0) return b.amount - a.amount;
+        return a.number - b.number;
+    });
+    
+    let html = '';
+    sortedData.forEach(item => {
+        const hasMoney = item.amount > 0;
+        const waveClass = item.waveColor === '红波' ? 'wave-red' :
+                         item.waveColor === '蓝波' ? 'wave-blue' : 'wave-green';
+        
+        html += `
+            <div class="popup-number-card ${hasMoney ? 'has-money' : ''}">
+                <div class="popup-card-number">${item.number.toString().padStart(2, '0')}</div>
+                <div class="popup-card-zodiac">${item.zodiac}</div>
+                <div class="popup-card-amount ${item.amount === 0 ? 'zero' : ''}">
+                    ${item.amount.toFixed(2)}
+                </div>
+                <div class="popup-card-wave ${waveClass}">${item.waveColor}</div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function updatePopupTotal() {
+    const total = Object.values(window.moneyMap || {}).reduce((sum, amount) => sum + amount, 0);
+    document.getElementById('popupTotalMoney').textContent = total.toFixed(2);
+}
+
+// 数据更新时同步弹窗
+const originalProcessData = window.processData;
+window.processData = function() {
+    originalProcessData();
+    if (document.getElementById('popup49').style.display === 'block') {
+        renderPopupGrid();
+        updatePopupTotal();
+    }
+};
+
+const originalClearAll = window.clearAll;
+window.clearAll = function() {
+    originalClearAll();
+    if (document.getElementById('popup49').style.display === 'block') {
+        renderPopupGrid();
+        updatePopupTotal();
+    }
+};</script>
+<!-- 49号码弹窗 -->
+<div id="popup49" class="number-popup">
+    <div class="popup-header">
+        <div class="popup-title">
+            <h3>📊 49个号码</h3>
+            <div class="popup-total">总计: <span id="popupTotalMoney">0</span>元</div>
+        </div>
+        <div class="popup-controls">
+            <button class="popup-btn fullscreen-btn" onclick="toggleFullscreen()" title="全屏">⛶</button>
+            <button class="close-popup" onclick="closePopup49()">×</button>
+        </div>
+    </div>
+    <div class="popup-grid-container" id="popupGridContainer">
+        <!-- 号码动态生成 -->
+    </div>
+</div>
+
+<!-- 打开按钮 -->
+<button class="open-popup-btn" onclick="openPopup49()" title="49个号码">49格</button></body>
 </html>
+
 
 
 
