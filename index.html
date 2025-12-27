@@ -1832,36 +1832,47 @@
             }
             
             // 渲染电视网格
-            function renderTvGrid() {
-                const tvGrid = document.getElementById('tvGridContainer');
-                if (!tvGrid) return;
-                
-                let html = '';
-                
-                window.lotteryData.forEach(item => {
-                    const hasMoney = item.amount > 0;
-                    const amountClass = item.amount === 0 ? 'zero' : '';
-                    const waveClass = item.waveColor === '红波' ? 'wave-red' :
-                                    item.waveColor === '蓝波' ? 'wave-blue' :
-                                    item.waveColor === '绿波' ? 'wave-green' : '';
-                    
-                    html += `
-                        <div class="tv-number-card ${hasMoney ? 'has-money' : ''}" data-number="${item.number}">
-                            <div class="tv-card-number">[${item.number.toString().padStart(2, '0')}]</div>
-                            <div class="tv-card-zodiac">${item.zodiac}</div>
-                            <div class="tv-card-amount ${amountClass}">${item.amount.toFixed(2)}元</div>
-                            <div class="tv-card-wave ${waveClass}">
-                                ${item.waveColor === '红波' ? '🔴' : 
-                                  item.waveColor === '蓝波' ? '🔵' : 
-                                  item.waveColor === '绿波' ? '🟢' : ''}
-                                ${item.waveColor}
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                tvGrid.innerHTML = html;
-            }
+function renderTvGrid() {
+    const tvGrid = document.getElementById('tvGridContainer');
+    if (!tvGrid) return;
+    
+    // 按金额排序
+    const sortedData = [...window.lotteryData].sort((a, b) => {
+        if (a.amount > 0 && b.amount === 0) return -1;
+        if (a.amount === 0 && b.amount > 0) return 1;
+        if (a.amount > 0 && b.amount > 0) {
+            if (b.amount !== a.amount) return b.amount - a.amount;
+            return a.number - b.number;
+        }
+        return a.number - b.number;
+    });
+    
+    let html = '';
+    
+    sortedData.forEach(item => {  // 这里改成 sortedData
+        const hasMoney = item.amount > 0;
+        const amountClass = item.amount === 0 ? 'zero' : '';
+        const waveClass = item.waveColor === '红波' ? 'wave-red' :
+                        item.waveColor === '蓝波' ? 'wave-blue' :
+                        item.waveColor === '绿波' ? 'wave-green' : '';
+        
+        html += `
+            <div class="tv-number-card ${hasMoney ? 'has-money' : ''}" data-number="${item.number}">
+                <div class="tv-card-number">[${item.number.toString().padStart(2, '0')}]</div>
+                <div class="tv-card-zodiac">${item.zodiac}</div>
+                <div class="tv-card-amount ${amountClass}">${item.amount.toFixed(2)}元</div>
+                <div class="tv-card-wave ${waveClass}">
+                    ${item.waveColor === '红波' ? '🔴' : 
+                      item.waveColor === '蓝波' ? '🔵' : 
+                      item.waveColor === '绿波' ? '🟢' : ''}
+                    ${item.waveColor}
+                </div>
+            </div>
+        `;
+    });
+    
+    tvGrid.innerHTML = html;
+}
             
             // 更新排名
             function updateRanking() {
@@ -2484,5 +2495,6 @@
     </script>
 </body>
 </html>
+
 
 
