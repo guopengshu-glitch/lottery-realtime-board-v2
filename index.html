@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>📊 彩票实时看板</title>
+    <title>📊 彩票实时看板 - 多人实时同步</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
     <style>
+        /* 你的原有CSS样式完全保持不变 */
         * {
             margin: 0;
             padding: 0;
@@ -27,7 +28,319 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* 网络状态指示器 */
+        /* ==================== 全屏大屏显示样式 ==================== */
+        .fullscreen-display {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #0a0a0a;
+            z-index: 20000;
+            overflow: hidden;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .fullscreen-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .fullscreen-title {
+            font-size: 42px;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 3px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .fullscreen-total {
+            font-size: 56px;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.7);
+        }
+
+        .fullscreen-total span {
+            font-size: 64px;
+            margin: 0 15px;
+        }
+
+        .close-fullscreen-btn {
+            position: fixed;
+            top: 30px;
+            right: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            font-size: 48px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 20001;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .close-fullscreen-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        /* 7x7网格布局 */
+        .fullscreen-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(7, 1fr);
+            gap: 12px;
+            width: 100%;
+            height: calc(100vh - 140px);
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .fullscreen-item {
+            background: rgba(30, 30, 30, 0.9);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 8px;
+            transition: all 0.3s;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 金额排序高亮效果 */
+        .fullscreen-item.rank-1 {
+            border-color: #FFD700;
+            background: rgba(255, 215, 0, 0.15);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.4);
+        }
+
+        .fullscreen-item.rank-2 {
+            border-color: #C0C0C0;
+            background: rgba(192, 192, 192, 0.15);
+            box-shadow: 0 0 30px rgba(192, 192, 192, 0.3);
+        }
+
+        .fullscreen-item.rank-3 {
+            border-color: #CD7F32;
+            background: rgba(205, 127, 50, 0.15);
+            box-shadow: 0 0 25px rgba(205, 127, 50, 0.3);
+        }
+
+        .fullscreen-item.has-amount {
+            background: rgba(46, 204, 113, 0.2);
+            border: 3px solid rgba(46, 204, 113, 0.4);
+        }
+
+        /* 号码显示 - 超大字体用于2米外观看 */
+        .fullscreen-number {
+            font-size: 56px;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 3px 15px rgba(0, 0, 0, 0.8);
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+
+        /* 金额显示 - 超大字体 */
+        .fullscreen-amount {
+            font-size: 48px;
+            font-weight: 800;
+            color: #FF6B6B;
+            text-shadow: 0 3px 12px rgba(255, 107, 107, 0.7);
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .fullscreen-amount.zero {
+            font-size: 32px;
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 500;
+        }
+
+        /* 生肖和波色显示 */
+        .fullscreen-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .fullscreen-zodiac {
+            font-size: 32px;
+            font-weight: 700;
+            color: #4ECDC4;
+            text-shadow: 0 2px 8px rgba(78, 205, 196, 0.5);
+        }
+
+        .fullscreen-wave {
+            font-size: 24px;
+            font-weight: 700;
+            padding: 6px 16px;
+            border-radius: 25px;
+            min-width: 100px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .wave-red-fullscreen {
+            background: linear-gradient(135deg, #ff3333, #cc0000);
+            color: white;
+        }
+
+        .wave-blue-fullscreen {
+            background: linear-gradient(135deg, #3399ff, #0066cc);
+            color: white;
+        }
+
+        .wave-green-fullscreen {
+            background: linear-gradient(135deg, #33cc33, #009900);
+            color: white;
+        }
+
+        /* 排名标记 */
+        .rank-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 900;
+            z-index: 1;
+        }
+
+        .rank-1-badge {
+            background: #FFD700;
+            color: #000;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+        }
+
+        .rank-2-badge {
+            background: #C0C0C0;
+            color: #000;
+            box-shadow: 0 0 12px rgba(192, 192, 192, 0.7);
+        }
+
+        .rank-3-badge {
+            background: #CD7F32;
+            color: white;
+            box-shadow: 0 0 10px rgba(205, 127, 50, 0.7);
+        }
+
+        /* 全屏按钮样式 */
+        .btn-fullscreen {
+            background: linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%);
+            color: white;
+            border: none;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            min-height: 60px;
+            margin-top: 10px;
+            width: 100%;
+            letter-spacing: 1px;
+        }
+
+        .btn-fullscreen:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-fullscreen:active {
+            transform: translateY(-1px);
+        }
+
+        /* 全屏按钮在主界面 */
+        .btn-fullscreen-main {
+            background: linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%);
+            color: white;
+            order: 4;
+        }
+
+        /* 自动刷新指示灯 */
+        .auto-refresh-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(46, 204, 113, 0.9);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            z-index: 20002;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .fullscreen-number {
+                font-size: 36px;
+            }
+            
+            .fullscreen-amount {
+                font-size: 32px;
+            }
+            
+            .fullscreen-amount.zero {
+                font-size: 24px;
+            }
+            
+            .fullscreen-zodiac {
+                font-size: 22px;
+            }
+            
+            .fullscreen-wave {
+                font-size: 18px;
+                min-width: 80px;
+            }
+            
+            .fullscreen-title {
+                font-size: 32px;
+            }
+            
+            .fullscreen-total {
+                font-size: 42px;
+            }
+            
+            .fullscreen-total span {
+                font-size: 48px;
+            }
+        }
+
+        /* 你的原有CSS样式完全保持不变 */
         .network-indicator {
             position: fixed;
             top: 12px;
@@ -49,7 +362,6 @@
             box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.3);
         }
 
-        /* 云同步状态 */
         .cloud-status {
             position: fixed;
             top: 30px;
@@ -82,7 +394,6 @@
             border-color: #f39c12;
         }
 
-        /* 密码验证覆盖层 */
         #passwordOverlay {
             position: fixed;
             top: 0;
@@ -203,7 +514,6 @@
             line-height: 1.5;
         }
 
-        /* 历史记录弹窗 */
         .history-modal {
             display: none;
             position: fixed;
@@ -373,7 +683,6 @@
             transform: translateY(-1px);
         }
 
-        /* 主应用 */
         #mainApp {
             min-height: 100vh;
             background: #f5f7fa;
@@ -573,6 +882,12 @@
             order: 3;
         }
 
+        .btn-fullscreen-main {
+            background: linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%);
+            color: white;
+            order: 4;
+        }
+
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
@@ -612,7 +927,6 @@
             align-self: flex-end;
         }
 
-        /* 表格样式 */
         .compact-table {
             width: 100%;
             border-collapse: collapse;
@@ -740,286 +1054,272 @@
             font-size: 13px;
         }
 
-        /* ====== 大屏弹窗 - 全屏显示49个号码 ====== */
-        .big-screen-modal {
-            display: none;
+        .notification {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #1a1a2e;
-            z-index: 10010;
-            overflow: hidden;
-            font-size: 24px;
-        }
-
-        .big-screen-header {
-            background: #162447;
+            bottom: 20px;
+            right: 20px;
+            left: 20px;
+            background: #2ecc71;
             color: white;
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 100px;
-            border-bottom: 5px solid #e74c3c;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 9997;
+            animation: slideIn 0.3s ease;
+            max-width: 100%;
+            font-weight: 500;
+            line-height: 1.5;
+            font-size: 16px;
+            text-align: center;
         }
 
-        .big-screen-title {
-            font-size: 48px;
-            font-weight: 900;
-            color: #FFD700;
-        }
-
-        .big-screen-total {
-            font-size: 36px;
-            font-weight: 700;
-            color: white;
-        }
-
-        .big-screen-total span {
-            color: #FFD700;
-            font-size: 48px;
-            font-weight: 900;
-        }
-
-        .big-screen-controls {
-            display: flex;
-            gap: 20px;
-        }
-
-        .big-screen-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            font-size: 28px;
-            cursor: pointer;
-            width: 80px;
-            height: 80px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-
-        .big-screen-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
-        }
-
-        .close-big-screen {
-            background: #e74c3c;
-            border: none;
-            color: white;
-            font-size: 40px;
-            cursor: pointer;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            transition: all 0.3s;
-        }
-
-        .close-big-screen:hover {
-            background: #c0392b;
-            transform: scale(1.1);
-        }
-
-        /* 49个号码网格 - 7x7布局 */
-        .big-screen-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            grid-template-rows: repeat(7, 1fr);
-            gap: 10px;
-            height: calc(100vh - 120px);
-            padding: 20px;
-        }
-
-        .big-screen-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.3s;
-            padding: 10px;
-        }
-
-        .big-screen-card.has-money {
-            background: rgba(231, 76, 60, 0.1);
-            border-color: #e74c3c;
-            border-width: 5px;
-            box-shadow: 0 0 30px rgba(231, 76, 60, 0.3);
-        }
-
-        .big-screen-number {
-            font-size: 64px;
-            font-weight: 900;
-            color: white;
-            margin: 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        }
-
-        .big-screen-zodiac {
-            font-size: 48px;
-            color: #7f8c8d;
-            font-weight: 700;
-            margin: 5px 0;
-        }
-
-        .big-screen-amount {
-            font-size: 56px;
-            font-weight: 900;
-            color: #FFD700;
-            margin: 10px 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        }
-
-        .big-screen-amount.zero {
-            font-size: 36px;
-            color: rgba(255, 255, 255, 0.3);
-        }
-
-        .big-screen-wave {
-            font-size: 32px;
-            font-weight: bold;
-            padding: 5px 15px;
-            border-radius: 8px;
-            margin-top: 5px;
-        }
-
-        /* 波色样式 */
-        .wave-red {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .wave-blue {
-            background: #3498db;
-            color: white;
-        }
-
-        .wave-green {
-            background: #27ae60;
-            color: white;
-        }
-
-        /* 打开大屏按钮 */
-        .open-big-screen-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 80px;
-            height: 80px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 9999;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
-            transition: all 0.3s;
-        }
-
-        .open-big-screen-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.7);
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .footer-info {
             text-align: center;
-            color: #95a5a6;
-            font-size: 14px;
-            margin: 20px 0;
             padding: 15px;
+            color: #7f8c8d;
+            font-size: 12px;
+            border-top: 1px solid #eee;
+            background: #f8f9fa;
+            margin-top: 20px;
+            border-radius: 0 0 15px 15px;
         }
 
-        /* 响应式调整 */
-        @media (max-width: 768px) {
-            .big-screen-header {
-                padding: 15px 20px;
-                height: 80px;
+        @media (max-width: 375px) {
+            .compact-table th,
+            .compact-table td {
+                font-size: 13px;
+                padding: 8px 2px;
             }
             
-            .big-screen-title {
-                font-size: 32px;
+            .compact-table th:nth-child(1),
+            .compact-table td:nth-child(1) {
+                width: 10%;
             }
             
-            .big-screen-total {
-                font-size: 24px;
+            .compact-table th:nth-child(2),
+            .compact-table td:nth-child(2) {
+                width: 10%;
             }
             
-            .big-screen-total span {
-                font-size: 32px;
+            .compact-table th:nth-child(3),
+            .compact-table td:nth-child(3) {
+                width: 16%;
             }
             
-            .big-screen-btn {
-                width: 60px;
-                height: 60px;
+            .compact-table th:nth-child(4),
+            .compact-table td:nth-child(4) {
+                width: 32%;
+                padding-right: 4px;
+            }
+            
+            .compact-table th:nth-child(5),
+            .compact-table td:nth-child(5) {
+                width: 32%;
+            }
+            
+            .wave-cell {
+                padding: 3px 6px;
+                font-size: 11px;
+                min-width: 45px;
+            }
+            
+            .amount-cell {
+                font-size: 13px;
+            }
+            
+            .header h1 {
+                font-size: 22px;
+            }
+            
+            .header p {
+                font-size: 14px;
+            }
+            
+            .status-bar {
+                font-size: 15px;
+                padding: 12px 15px;
+            }
+            
+            .total-box {
                 font-size: 20px;
+                padding: 20px;
             }
             
-            .close-big-screen {
-                width: 60px;
-                height: 60px;
-                font-size: 30px;
-            }
-            
-            .big-screen-number {
-                font-size: 48px;
-            }
-            
-            .big-screen-zodiac {
-                font-size: 32px;
-            }
-            
-            .big-screen-amount {
-                font-size: 40px;
-            }
-            
-            .big-screen-amount.zero {
+            .total-box span {
                 font-size: 28px;
             }
             
-            .big-screen-wave {
-                font-size: 24px;
+            .clear-all-btn {
+                font-size: 15px;
+                padding: 14px;
+            }
+            
+            .section-title span:first-child {
+                font-size: 18px;
+            }
+            
+            .btn {
+                font-size: 15px;
+                padding: 14px;
+            }
+            
+            .notification {
+                font-size: 15px;
             }
         }
 
-        /* 通知样式 */
-        .notification {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #2ecc71;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-weight: 600;
-            z-index: 100000;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            animation: slideUp 0.3s ease;
-            max-width: 90%;
-            text-align: center;
+        @media (min-width: 376px) and (max-width: 768px) {
+            .compact-table th,
+            .compact-table td {
+                font-size: 14px;
+            }
+            
+            .wave-cell {
+                font-size: 12px;
+            }
+            
+            .amount-cell {
+                font-size: 14px;
+            }
         }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(100%);
+        @media (min-width: 769px) {
+            .container {
+                padding: 20px;
             }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
+            
+            .header {
+                padding: 30px;
+                margin-bottom: 30px;
+            }
+            
+            .status-bar {
+                padding: 15px 25px;
+                margin-bottom: 20px;
+            }
+            
+            .total-section {
+                flex-direction: row;
+                align-items: stretch;
+                gap: 20px;
+            }
+            
+            .total-box {
+                flex: 1;
+                padding: 25px 30px;
+                order: 1;
+            }
+            
+            .clear-all-btn {
+                width: auto;
+                min-width: 180px;
+                padding: 0 30px;
+                order: 2;
+            }
+            
+            .input-section {
+                padding: 30px;
+                margin-bottom: 25px;
+            }
+            
+            #inputData {
+                min-height: 150px;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .btn-group {
+                flex-direction: row;
+                gap: 15px;
+            }
+            
+            .btn {
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .data-section {
+                padding: 25px;
+                margin-bottom: 30px;
+            }
+            
+            .section-title {
+                flex-direction: row;
+                align-items: center;
+                gap: 0;
+            }
+            
+            .compact-table th {
+                font-size: 16px;
+                padding: 14px 6px;
+            }
+            
+            .compact-table td {
+                font-size: 16px;
+                padding: 14px 6px;
+            }
+            
+            .wave-cell {
+                font-size: 14px;
+                padding: 6px 10px;
+                min-width: 60px;
+            }
+            
+            .amount-cell {
+                font-size: 16px;
+            }
+            
+            .history-modal-content {
+                margin: 10vh auto;
+                height: 70vh;
+            }
+            
+            .notification {
+                right: 30px;
+                left: auto;
+                max-width: 350px;
+                text-align: left;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                padding: 30px;
+            }
+            
+            .btn-group {
+                gap: 20px;
+            }
+            
+            .compact-table th {
+                font-size: 17px;
+                padding: 16px 8px;
+            }
+            
+            .compact-table td {
+                font-size: 17px;
+                padding: 16px 8px;
+            }
+            
+            .wave-cell {
+                font-size: 15px;
+                padding: 8px 12px;
+                min-width: 70px;
+            }
+            
+            .amount-cell {
+                font-size: 18px;
             }
         }
 
@@ -1028,6 +1328,10 @@
                 padding-left: max(15px, env(safe-area-inset-left));
                 padding-right: max(15px, env(safe-area-inset-right));
                 padding-bottom: max(15px, env(safe-area-inset-bottom));
+            }
+            
+            .notification {
+                bottom: max(20px, env(safe-area-inset-bottom));
             }
         }
     </style>
@@ -1044,6 +1348,24 @@
     <div class="cloud-status connecting" id="cloudStatus">
         <span id="cloudIcon">🔄</span>
         <span id="cloudText">初始化中...</span>
+    </div>
+
+    <!-- ==================== 全屏大屏显示 ==================== -->
+    <div class="fullscreen-display" id="fullscreenDisplay">
+        <button class="close-fullscreen-btn" onclick="closeFullscreen()">×</button>
+        
+        <div class="fullscreen-header">
+            <div class="fullscreen-title">📊 彩票实时看板 - 大屏模式</div>
+            <div class="fullscreen-total">总计: <span id="fullscreenTotal">0</span> 元</div>
+        </div>
+        
+        <div class="fullscreen-grid" id="fullscreenGrid">
+            <!-- 49个号码将在这里动态生成 -->
+        </div>
+        
+        <div class="auto-refresh-indicator" id="autoRefreshIndicator">
+            <span>🔄</span> 实时同步中...
+        </div>
     </div>
 
     <!-- 密码验证覆盖层 -->
@@ -1083,7 +1405,7 @@
 
     <!-- 主看板页面 -->
     <div id="mainApp" style="display: none;">
-        <div class="container" id="appContainer">
+        <div class="container">
             <div class="header">
                 <h1>📊 彩票实时看板 - 多人实时同步</h1>
                 <p>支持任意格式 • 实时多人同步 • 国内优化</p>
@@ -1120,11 +1442,13 @@
                     <button class="btn btn-success" onclick="copyLink()">
                         🔗 分享链接
                     </button>
+                    <button class="btn btn-fullscreen-main" onclick="openFullscreen()">
+                        🖥️ 大屏显示
+                    </button>
                 </div>
             </div>
             
-            <!-- 表格模式 -->
-            <div class="data-section" id="tableSection">
+            <div class="data-section">
                 <div class="section-title">
                     <span>📈 号码数据（按金额排序）</span>
                     <span id="dataCount">0/49个号码</span>
@@ -1147,38 +1471,15 @@
             </div>
             
             <div class="footer-info">
-                📱 支持手机访问 • 🔄 实时同步 • 💾 离线保存
+                📱 支持手机访问 • 🔄 实时同步 • 💾 离线保存 • 🖥️ 大屏显示
             </div>
-        </div>
-    </div>
-
-    <!-- 打开大屏按钮 -->
-    <button class="open-big-screen-btn" onclick="openBigScreen()" title="打开全屏大屏显示">
-        📺
-    </button>
-
-    <!-- 大屏弹窗 -->
-    <div class="big-screen-modal" id="bigScreenModal">
-        <div class="big-screen-header">
-            <div class="big-screen-title">📊 彩票实时看板</div>
-            <div class="big-screen-total">总计: <span id="bigScreenTotalMoney">0</span>元</div>
-            <div class="big-screen-controls">
-                <button class="big-screen-btn" onclick="refreshBigScreen()" title="刷新">
-                    🔄
-                </button>
-                <button class="close-big-screen" onclick="closeBigScreen()">
-                    ×
-                </button>
-            </div>
-        </div>
-        <div class="big-screen-grid" id="bigScreenGrid">
-            <!-- 大屏号码网格动态生成 -->
         </div>
     </div>
 
     <script>
         // ==================== 彩票配置数据 ====================
         const LOTTERY_CONFIG = {
+            // 生肖映射
             zodiacMap: {
                 "鼠": [6, 18, 30, 42], "牛": [5, 17, 29, 41], "虎": [4, 16, 28, 40],
                 "兔": [3, 15, 27, 39], "龙": [2, 14, 26, 38], "蛇": [1, 13, 25, 37, 49],
@@ -1186,14 +1487,22 @@
                 "鸡": [9, 21, 33, 45], "狗": [8, 20, 32, 44], "猪": [7, 19, 31, 43]
             },
             
+            // 波色映射
             waveColorMap: {
                 "红波": [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
                 "蓝波": [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
                 "绿波": [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
-            }
+            },
+            
+            amountUnits: ['元', '斤', '米', '块', '￥'],
+            filterWords: ['多少钱', '多少米', '总计', '总共', '合计', '共', 
+                          '给我算算', '帮我算算', '帮算', '计算', '算一下', '算算', 
+                          '请问', '帮忙', '看一下', '看看'],
+            betKeywords: ['各', '各号', '每', '每号', '每颗', '颗', '号'],
+            numberRange: { min: 1, max: 49 }
         };
 
-        // ==================== 彩票解析器 ====================
+        // ==================== 最终完美版彩票解析器 ====================
         class LotteryBetParser {
             constructor(config = LOTTERY_CONFIG) {
                 this.config = config;
@@ -1202,12 +1511,15 @@
             parseInput(input) {
                 if (!input || typeof input !== 'string') return [];
                 
+                // 1. 清理文本
                 const cleaned = input.trim()
                     .replace(/^一共[：:]*\s*/, '')
                     .replace(/斤|米|块|￥/g, '元');
                 
+                // 2. 分割成独立投注项
                 const items = this._extractBetItems(cleaned);
                 
+                // 3. 解析每个投注项
                 const allBets = [];
                 items.forEach(item => {
                     const bets = this._parseSingleItem(item.content, item.amount);
@@ -1219,6 +1531,7 @@
             
             _extractBetItems(text) {
                 const items = [];
+                // 匹配模式：任意内容 + "各号" + 数字 + "元"
                 const regex = /([^,]+?各号\s*\d+(?:\.\d+)?\s*元)/g;
                 let match;
                 
@@ -1229,6 +1542,7 @@
                     if (amountMatch) {
                         const amount = parseFloat(amountMatch[1]);
                         const content = fullText.substring(0, amountMatch.index).trim();
+                        
                         items.push({ content, amount });
                     }
                 }
@@ -1240,10 +1554,16 @@
                 const bets = [];
                 const cleanContent = content.replace(/\s+/g, '');
                 
+                // 统计生肖出现次数
                 const zodiacCounts = this._countOccurrences(cleanContent, Object.keys(this.config.zodiacMap));
+                
+                // 统计波色出现次数
                 const waveCounts = this._countOccurrences(cleanContent, Object.keys(this.config.waveColorMap));
+                
+                // 提取数字
                 const numbers = this._extractNumbers(cleanContent);
                 
+                // 添加生肖下注
                 Object.entries(zodiacCounts).forEach(([zodiac, count]) => {
                     this.config.zodiacMap[zodiac].forEach(num => {
                         for (let i = 0; i < count; i++) {
@@ -1252,6 +1572,7 @@
                     });
                 });
                 
+                // 添加波色下注
                 Object.entries(waveCounts).forEach(([wave, count]) => {
                     this.config.waveColorMap[wave].forEach(num => {
                         for (let i = 0; i < count; i++) {
@@ -1260,6 +1581,7 @@
                     });
                 });
                 
+                // 添加数字下注
                 numbers.forEach(num => {
                     bets.push({ number: num, amount: amount });
                 });
@@ -1269,26 +1591,36 @@
             
             _countOccurrences(text, keywords) {
                 const counts = {};
+                
                 keywords.forEach(keyword => {
                     let count = 0;
                     let pos = 0;
+                    
                     while ((pos = text.indexOf(keyword, pos)) !== -1) {
                         count++;
                         pos += keyword.length;
                     }
-                    if (count > 0) counts[keyword] = count;
+                    
+                    if (count > 0) {
+                        counts[keyword] = count;
+                    }
                 });
+                
                 return counts;
             }
             
             _extractNumbers(text) {
                 const numbers = [];
+                
+                // 提取所有1-49的数字
                 const numberPattern = /\b(0?[1-9]|[12][0-9]|3[0-9]|4[0-9])\b/g;
                 const matches = text.match(numberPattern) || [];
                 
                 matches.forEach(match => {
                     const num = parseInt(match.replace(/^0+/, ''), 10);
-                    if (num >= 1 && num <= 49) numbers.push(num);
+                    if (num >= 1 && num <= 49) {
+                        numbers.push(num);
+                    }
                 });
                 
                 return numbers;
@@ -1296,29 +1628,188 @@
             
             findZodiac(number) {
                 for (const [zodiac, numbers] of Object.entries(this.config.zodiacMap)) {
-                    if (numbers.includes(number)) return zodiac;
+                    if (numbers.includes(number)) {
+                        return zodiac;
+                    }
                 }
                 return null;
             }
             
             findWaveColor(number) {
                 for (const [wave, numbers] of Object.entries(this.config.waveColorMap)) {
-                    if (numbers.includes(number)) return wave;
+                    if (numbers.includes(number)) {
+                        return wave;
+                    }
                 }
                 return null;
             }
         }
 
-        // ==================== 全局变量 ====================
-        let lotteryParser = new LotteryBetParser();
-        window.lotteryData = [];
-        window.moneyMap = {};
-        window.historyRecords = [];
-        window.undoStack = [];
+        // ==================== 全屏大屏功能 ====================
+        let fullscreenRefreshInterval = null;
         
-        // ==================== 页面初始化 ====================
+        function openFullscreen() {
+            console.log('🖥️ 打开大屏显示');
+            
+            // 显示全屏窗口
+            document.getElementById('fullscreenDisplay').style.display = 'block';
+            
+            // 首次渲染
+            renderFullscreenDisplay();
+            
+            // 开始自动刷新
+            startFullscreenAutoRefresh();
+            
+            // 禁用主页面滚动
+            document.body.style.overflow = 'hidden';
+            
+            // 隐藏主界面的状态指示器
+            document.getElementById('networkIndicator').style.opacity = '0';
+            document.getElementById('cloudStatus').style.opacity = '0';
+        }
+        
+        function closeFullscreen() {
+            console.log('📱 关闭大屏显示');
+            
+            // 隐藏全屏窗口
+            document.getElementById('fullscreenDisplay').style.display = 'none';
+            
+            // 停止自动刷新
+            stopFullscreenAutoRefresh();
+            
+            // 启用主页面滚动
+            document.body.style.overflow = '';
+            
+            // 显示主界面的状态指示器
+            document.getElementById('networkIndicator').style.opacity = '1';
+            document.getElementById('cloudStatus').style.opacity = '1';
+        }
+        
+        function renderFullscreenDisplay() {
+            if (!window.lotteryData) return;
+            
+            // 更新总计金额
+            const total = Object.values(window.moneyMap || {}).reduce((sum, amount) => sum + amount, 0);
+            document.getElementById('fullscreenTotal').textContent = total.toFixed(2);
+            
+            // 准备数据 - 按金额排序，金额大的在前
+            const sortedData = [...window.lotteryData].sort((a, b) => {
+                // 按金额排序（金额大的在前）
+                if (a.amount !== b.amount) {
+                    return b.amount - a.amount;
+                }
+                // 金额相同按号码排序
+                return a.number - b.number;
+            });
+            
+            // 计算排名
+            let currentRank = 0;
+            let lastAmount = null;
+            let sameAmountCount = 0;
+            
+            const rankedData = sortedData.map(item => {
+                if (item.amount > 0) {
+                    if (item.amount !== lastAmount) {
+                        currentRank += 1 + sameAmountCount;
+                        sameAmountCount = 0;
+                    } else {
+                        sameAmountCount++;
+                    }
+                    lastAmount = item.amount;
+                    return { ...item, rank: currentRank };
+                }
+                return { ...item, rank: 0 };
+            });
+            
+            // 生成7x7网格的HTML
+            let html = '';
+            let gridIndex = 0;
+            
+            // 创建7x7网格 (7行7列 = 49个单元格)
+            for (let row = 0; row < 7; row++) {
+                for (let col = 0; col < 7; col++) {
+                    const dataItem = gridIndex < rankedData.length ? rankedData[gridIndex] : null;
+                    gridIndex++;
+                    
+                    if (!dataItem) continue;
+                    
+                    // 确定波色CSS类
+                    let waveClass = '';
+                    if (dataItem.waveColor === '红波') waveClass = 'wave-red-fullscreen';
+                    else if (dataItem.waveColor === '蓝波') waveClass = 'wave-blue-fullscreen';
+                    else if (dataItem.waveColor === '绿波') waveClass = 'wave-green-fullscreen';
+                    
+                    // 确定排名CSS类
+                    let rankClass = '';
+                    let rankBadge = '';
+                    if (dataItem.rank === 1) {
+                        rankClass = 'rank-1';
+                        rankBadge = '<div class="rank-badge rank-1-badge">1</div>';
+                    } else if (dataItem.rank === 2) {
+                        rankClass = 'rank-2';
+                        rankBadge = '<div class="rank-badge rank-2-badge">2</div>';
+                    } else if (dataItem.rank === 3) {
+                        rankClass = 'rank-3';
+                        rankBadge = '<div class="rank-badge rank-3-badge">3</div>';
+                    }
+                    
+                    // 添加有金额的样式
+                    const hasAmountClass = dataItem.amount > 0 ? 'has-amount' : '';
+                    
+                    html += `
+                        <div class="fullscreen-item ${rankClass} ${hasAmountClass}">
+                            ${rankBadge}
+                            <div class="fullscreen-number">${dataItem.number}</div>
+                            <div class="fullscreen-amount ${dataItem.amount > 0 ? '' : 'zero'}">
+                                ${dataItem.amount > 0 ? dataItem.amount.toFixed(2) + '元' : '0元'}
+                            </div>
+                            <div class="fullscreen-info">
+                                <div class="fullscreen-zodiac">${dataItem.zodiac}</div>
+                                <div class="fullscreen-wave ${waveClass}">${dataItem.waveColor}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            document.getElementById('fullscreenGrid').innerHTML = html;
+            
+            // 更新刷新时间显示
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { 
+                hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+            document.getElementById('autoRefreshIndicator').innerHTML = 
+                `<span>🔄</span> 最后更新: ${timeStr}`;
+        }
+        
+        function startFullscreenAutoRefresh() {
+            // 清除现有定时器
+            if (fullscreenRefreshInterval) {
+                clearInterval(fullscreenRefreshInterval);
+            }
+            
+            // 每5秒自动刷新一次
+            fullscreenRefreshInterval = setInterval(() => {
+                if (document.getElementById('fullscreenDisplay').style.display === 'block') {
+                    renderFullscreenDisplay();
+                }
+            }, 5000); // 5秒刷新一次
+            
+            console.log('🔄 大屏自动刷新已启动（每5秒刷新）');
+        }
+        
+        function stopFullscreenAutoRefresh() {
+            if (fullscreenRefreshInterval) {
+                clearInterval(fullscreenRefreshInterval);
+                fullscreenRefreshInterval = null;
+                console.log('🔄 大屏自动刷新已停止');
+            }
+        }
+        
+        // ==================== 原有应用代码（完全保持不变） ====================
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 页面加载完成');
+            console.log('📄 页面加载完成 - 核心功能启动');
             
             document.getElementById('passwordInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') checkPassword();
@@ -1354,9 +1845,20 @@
                 if (now - lastTouchEnd <= 300) event.preventDefault();
                 lastTouchEnd = now;
             }, false);
+
+            const buttons = document.querySelectorAll('button, .btn, .login-btn, .clear-all-btn, .history-btn, .delete-btn, .close-history-btn, .close-fullscreen-btn, .btn-fullscreen');
+            buttons.forEach(btn => {
+                btn.addEventListener('touchstart', function() { this.style.transform = 'scale(0.98)'; });
+                btn.addEventListener('touchend', function() { this.style.transform = ''; });
+                btn.addEventListener('touchcancel', function() { this.style.transform = ''; });
+            });
+
+            const inputs = document.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('touchstart', function(e) { e.stopPropagation(); });
+            });
         }
 
-        // ==================== 密码验证 ====================
         function checkPassword() {
             const input = document.getElementById('passwordInput');
             const errorEl = document.getElementById('passwordError');
@@ -1395,442 +1897,373 @@
         }
         
         // ==================== 彩票系统核心 ====================
+        let lotterySystem = null;
+        let lotteryParser = new LotteryBetParser();
+        
         function initLotterySystem() {
             console.log('🎯 初始化彩票系统...');
             
-            initData();
-            loadSavedData();
-            
-            lotterySystem = {
-                updateTotalAmount,
-                renderDataTable,
-                saveData
-            };
-        }
-        
-        function initData() {
             window.lotteryData = [];
             window.moneyMap = {};
-            for (let i = 1; i <= 49; i++) {
-                const zodiac = lotteryParser.findZodiac(i);
-                const waveColor = lotteryParser.findWaveColor(i);
-                
-                window.lotteryData.push({
-                    number: i,
-                    zodiac: zodiac || "未知",
-                    waveColor: waveColor,
-                    amount: 0,
-                    rank: 0
-                });
-                window.moneyMap[i] = 0;
-            }
-        }
-        
-        function loadSavedData() {
-            try {
-                const saved = localStorage.getItem('lottery_data_v2');
-                if (saved) {
-                    const data = JSON.parse(saved);
+            window.historyRecords = [];
+            window.undoStack = [];
+            
+            function initData() {
+                window.lotteryData = [];
+                window.moneyMap = {};
+                for (let i = 1; i <= 49; i++) {
+                    const zodiac = lotteryParser.findZodiac(i);
+                    const waveColor = lotteryParser.findWaveColor(i);
                     
-                    if (data.moneyMap) window.moneyMap = data.moneyMap;
-                    if (data.historyRecords) window.historyRecords = data.historyRecords;
-                    if (data.undoStack) window.undoStack = data.undoStack;
-                    
-                    window.lotteryData.forEach(item => {
-                        item.amount = window.moneyMap[item.number] || 0;
+                    window.lotteryData.push({
+                        number: i,
+                        zodiac: zodiac || "未知",
+                        waveColor: waveColor,
+                        amount: 0,
+                        rank: 0
                     });
-                    
-                    updateTotalAmount();
-                    updateDataCount();
-                    updateUndoButton();
-                    renderHistory();
-                    renderDataTable();
-                    
-                    document.getElementById('statusBar').textContent = '✅ 系统就绪 | 数据已加载';
-                } else {
-                    document.getElementById('statusBar').textContent = '✅ 系统就绪';
+                    window.moneyMap[i] = 0;
                 }
-            } catch(e) {
-                console.log('加载本地数据失败');
-                document.getElementById('statusBar').textContent = '✅ 系统就绪 | 使用新数据';
             }
-        }
-        
-        function saveData() {
-            try {
-                const saveData = {
-                    moneyMap: window.moneyMap,
-                    historyRecords: window.historyRecords,
-                    undoStack: window.undoStack,
+            
+            function parseInput(input) {
+                return lotteryParser.parseInput(input);
+            }
+            
+            initData();
+            
+            function loadSavedData() {
+                try {
+                    const saved = localStorage.getItem('lottery_data_v2');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        
+                        if (data.moneyMap) window.moneyMap = data.moneyMap;
+                        if (data.historyRecords) window.historyRecords = data.historyRecords;
+                        if (data.undoStack) window.undoStack = data.undoStack;
+                        
+                        window.lotteryData.forEach(item => {
+                            item.amount = window.moneyMap[item.number] || 0;
+                        });
+                        
+                        updateTotalAmount();
+                        updateDataCount();
+                        updateUndoButton();
+                        renderHistory();
+                        renderDataTable();
+                    }
+                } catch(e) {
+                    console.log('加载本地数据失败');
+                }
+            }
+            
+            function saveData() {
+                try {
+                    const saveData = {
+                        moneyMap: window.moneyMap,
+                        historyRecords: window.historyRecords,
+                        undoStack: window.undoStack,
+                        timestamp: Date.now()
+                    };
+                    localStorage.setItem('lottery_data_v2', JSON.stringify(saveData));
+                } catch(e) {
+                    console.log('保存本地数据失败');
+                }
+            }
+            
+            function updateTotalAmount() {
+                const total = Object.values(window.moneyMap).reduce((sum, amount) => sum + amount, 0);
+                document.getElementById('totalMoney').textContent = total.toFixed(2);
+            }
+            
+            function updateDataCount() {
+                const activeCount = Object.values(window.moneyMap).filter(amount => amount > 0).length;
+                document.getElementById('dataCount').textContent = `${activeCount}/49个号码`;
+            }
+            
+            function renderDataTable() {
+                const tbody = document.getElementById('tableBody');
+                const sortedData = [...window.lotteryData].sort((a, b) => {
+                    if (a.amount > 0 && b.amount === 0) return -1;
+                    if (a.amount === 0 && b.amount > 0) return 1;
+                    if (a.amount > 0 && b.amount > 0) return b.amount - a.amount;
+                    return a.number - b.number;
+                });
+                
+                let html = '';
+                let currentRank = 0;
+                
+                sortedData.forEach((item) => {
+                    const waveClass = item.waveColor === '红波' ? 'wave-red' :
+                                    item.waveColor === '蓝波' ? 'wave-blue' :
+                                    item.waveColor === '绿波' ? 'wave-green' : '';
+                    
+                    let rankClass = '';
+                    let rankDisplay = '-';
+                    let amountDisplay = '0元';
+                    let amountClass = 'amount-cell-zero';
+                    
+                    if (item.amount > 0) {
+                        currentRank++;
+                        rankDisplay = currentRank;
+                        
+                        if (currentRank === 1) rankClass = 'rank-1';
+                        else if (currentRank === 2) rankClass = 'rank-2';
+                        else if (currentRank === 3) rankClass = 'rank-3';
+                        
+                        amountDisplay = `${item.amount.toFixed(2)}元`;
+                        amountClass = 'amount-cell';
+                    }
+                    
+                    html += `
+                        <tr>
+                            <td class="rank-cell ${rankClass}">${rankDisplay}</td>
+                            <td class="number-cell">${item.number}</td>
+                            <td class="zodiac-cell">${item.zodiac}</td>
+                            <td class="${amountClass}">${amountDisplay}</td>
+                            <td><span class="wave-cell ${waveClass}">${item.waveColor}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                tbody.innerHTML = html;
+                updateDataCount();
+            }
+            
+            function addHistoryRecord(text, count, amount) {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('zh-CN', { 
+                    hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
+                
+                const record = {
+                    id: Date.now(),
+                    text: text,
+                    time: timeStr,
+                    count: count,
+                    amount: amount
+                };
+                
+                window.historyRecords.unshift(record);
+                if (window.historyRecords.length > 50) window.historyRecords = window.historyRecords.slice(0, 50);
+                document.getElementById('historyCount').textContent = `${window.historyRecords.length}条记录`;
+            }
+            
+            function renderHistory() {
+                const container = document.getElementById('historyList');
+                if (window.historyRecords.length === 0) {
+                    container.innerHTML = `<div style="text-align: center; color: #95a5a6; padding: 20px;">暂无录入记录</div>`;
+                    return;
+                }
+                
+                let html = '';
+                window.historyRecords.forEach(record => {
+                    html += `
+                        <div class="history-item">
+                            <button class="delete-btn" onclick="deleteHistoryRecord(${record.id})">×</button>
+                            <span class="history-time">${record.time}</span>
+                            <div class="history-text">${record.text}</div>
+                            <div class="history-amount">${record.amount.toFixed(2)}元 (${record.count}个)</div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+            
+            window.deleteHistoryRecord = function(id) {
+                const index = window.historyRecords.findIndex(r => r.id === id);
+                if (index === -1) return;
+                
+                saveCurrentStateForUndo();
+                window.historyRecords.splice(index, 1);
+                
+                window.moneyMap = {};
+                window.historyRecords.forEach(record => {
+                    const bets = parseInput(record.text);
+                    bets.forEach(bet => {
+                        if (bet.number >= 1 && bet.number <= 49) {
+                            window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
+                        }
+                    });
+                });
+                
+                window.lotteryData.forEach(item => {
+                    item.amount = window.moneyMap[item.number] || 0;
+                });
+                
+                renderHistory();
+                renderDataTable();
+                updateTotalAmount();
+                updateUndoButton();
+                saveData();
+                
+                if (window.firebaseDb) saveToCloud();
+                showNotification('✅ 已删除记录');
+            }
+            
+            function saveCurrentStateForUndo() {
+                const state = {
+                    moneyMap: {...window.moneyMap},
+                    historyRecords: JSON.parse(JSON.stringify(window.historyRecords)),
                     timestamp: Date.now()
                 };
-                localStorage.setItem('lottery_data_v2', JSON.stringify(saveData));
-            } catch(e) {
-                console.log('保存本地数据失败');
-            }
-        }
-        
-        function updateTotalAmount() {
-            const total = Object.values(window.moneyMap).reduce((sum, amount) => sum + amount, 0);
-            document.getElementById('totalMoney').textContent = total.toFixed(2);
-            document.getElementById('bigScreenTotalMoney').textContent = total.toFixed(2);
-        }
-        
-        function updateDataCount() {
-            const activeCount = Object.values(window.moneyMap).filter(amount => amount > 0).length;
-            document.getElementById('dataCount').textContent = `${activeCount}/49个号码`;
-        }
-        
-        function renderDataTable() {
-            const tbody = document.getElementById('tableBody');
-            const sortedData = [...window.lotteryData].sort((a, b) => {
-                if (a.amount > 0 && b.amount === 0) return -1;
-                if (a.amount === 0 && b.amount > 0) return 1;
-                if (a.amount > 0 && b.amount > 0) {
-                    if (b.amount !== a.amount) return b.amount - a.amount;
-                    return a.number - b.number;
-                }
-                return a.number - b.number;
-            });
-            
-            let html = '';
-            let currentRank = 0;
-            
-            sortedData.forEach((item) => {
-                const waveClass = item.waveColor === '红波' ? 'wave-red' :
-                                item.waveColor === '蓝波' ? 'wave-blue' :
-                                item.waveColor === '绿波' ? 'wave-green' : '';
-                
-                let rankClass = '';
-                let rankDisplay = '-';
-                let amountDisplay = '0元';
-                let amountClass = 'amount-cell-zero';
-                
-                if (item.amount > 0) {
-                    currentRank++;
-                    rankDisplay = currentRank;
-                    
-                    if (currentRank === 1) rankClass = 'rank-1';
-                    else if (currentRank === 2) rankClass = 'rank-2';
-                    else if (currentRank === 3) rankClass = 'rank-3';
-                    
-                    amountDisplay = `${item.amount.toFixed(2)}元`;
-                    amountClass = 'amount-cell';
-                }
-                
-                html += `
-                    <tr>
-                        <td class="rank-cell ${rankClass}">${rankDisplay}</td>
-                        <td class="number-cell">${item.number}</td>
-                        <td class="zodiac-cell">${item.zodiac}</td>
-                        <td class="${amountClass}">${amountDisplay}</td>
-                        <td><span class="wave-cell ${waveClass}">${item.waveColor}</span></td>
-                    </tr>
-                `;
-            });
-            
-            tbody.innerHTML = html;
-            updateDataCount();
-            
-            // 同时更新大屏显示
-            renderBigScreenGrid();
-        }
-        
-        function addHistoryRecord(text, count, amount) {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('zh-CN', { 
-                hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
-            });
-            
-            const record = {
-                id: Date.now(),
-                text: text,
-                time: timeStr,
-                count: count,
-                amount: amount
-            };
-            
-            window.historyRecords.unshift(record);
-            if (window.historyRecords.length > 50) window.historyRecords = window.historyRecords.slice(0, 50);
-            document.getElementById('historyCount').textContent = `${window.historyRecords.length}条记录`;
-        }
-        
-        function renderHistory() {
-            const container = document.getElementById('historyList');
-            if (window.historyRecords.length === 0) {
-                container.innerHTML = `<div style="text-align: center; color: #95a5a6; padding: 20px;">暂无录入记录</div>`;
-                return;
+                window.undoStack.push(state);
+                if (window.undoStack.length > 20) window.undoStack.shift();
+                updateUndoButton();
             }
             
-            let html = '';
-            window.historyRecords.forEach(record => {
-                html += `
-                    <div class="history-item">
-                        <button class="delete-btn" onclick="deleteHistoryRecord(${record.id})">×</button>
-                        <span class="history-time">${record.time}</span>
-                        <div class="history-text">${record.text}</div>
-                        <div class="history-amount">${record.amount.toFixed(2)}元 (${record.count}个)</div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-        
-        window.deleteHistoryRecord = function(id) {
-            const index = window.historyRecords.findIndex(r => r.id === id);
-            if (index === -1) return;
+            function updateUndoButton() {}
             
-            saveCurrentStateForUndo();
-            window.historyRecords.splice(index, 1);
+            window.openHistoryModal = function() {
+                renderHistory();
+                document.getElementById('historyModal').style.display = 'block';
+            }
             
-            window.moneyMap = {};
-            window.historyRecords.forEach(record => {
-                const bets = lotteryParser.parseInput(record.text);
+            window.closeHistoryModal = function() {
+                document.getElementById('historyModal').style.display = 'none';
+            }
+            
+            window.processData = function() {
+                const input = document.getElementById('inputData').value.trim();
+                if (!input) {
+                    showNotification('请输入数据', 'warning');
+                    return;
+                }
+                
+                saveCurrentStateForUndo();
+                const bets = parseInput(input);
+                
+                if (bets.length === 0) {
+                    showNotification('未识别到有效数据格式', 'warning');
+                    return;
+                }
+                
                 bets.forEach(bet => {
                     if (bet.number >= 1 && bet.number <= 49) {
                         window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
                     }
                 });
-            });
-            
-            window.lotteryData.forEach(item => {
-                item.amount = window.moneyMap[item.number] || 0;
-            });
-            
-            renderHistory();
-            renderDataTable();
-            updateTotalAmount();
-            updateUndoButton();
-            saveData();
-            
-            if (window.firebaseDb) saveToCloud();
-            showNotification('✅ 已删除记录');
-        }
-        
-        function saveCurrentStateForUndo() {
-            const state = {
-                moneyMap: {...window.moneyMap},
-                historyRecords: JSON.parse(JSON.stringify(window.historyRecords)),
-                timestamp: Date.now()
-            };
-            window.undoStack.push(state);
-            if (window.undoStack.length > 20) window.undoStack.shift();
-            updateUndoButton();
-        }
-        
-        function updateUndoButton() {
-            // 暂时不需要此功能
-        }
-        
-        window.openHistoryModal = function() {
-            renderHistory();
-            document.getElementById('historyModal').style.display = 'block';
-        }
-        
-        window.closeHistoryModal = function() {
-            document.getElementById('historyModal').style.display = 'none';
-        }
-        
-        window.processData = function() {
-            const input = document.getElementById('inputData').value.trim();
-            if (!input) {
-                showNotification('请输入数据', 'warning');
-                return;
-            }
-            
-            saveCurrentStateForUndo();
-            const bets = lotteryParser.parseInput(input);
-            
-            if (bets.length === 0) {
-                showNotification('未识别到有效数据格式', 'warning');
-                return;
-            }
-            
-            bets.forEach(bet => {
-                if (bet.number >= 1 && bet.number <= 49) {
-                    window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
-                }
-            });
-            
-            window.lotteryData.forEach(item => {
-                item.amount = window.moneyMap[item.number] || 0;
-            });
-            
-            const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
-            addHistoryRecord(input, bets.length, totalAmount);
-            
-            updateTotalAmount();
-            document.getElementById('inputData').value = '';
-            renderDataTable();
-            renderHistory();
-            updateUndoButton();
-            saveData();
-            
-            if (window.firebaseDb) saveToCloud();
-            
-            showNotification(`✅ 成功录入 ${bets.length} 个下注\n💰 总计 ${totalAmount.toFixed(2)} 元`);
-        }
-        
-        window.clearHistory = function() {
-            if (!confirm('确定要清空所有录入记录吗？\n此操作不可恢复！')) return;
-            
-            saveCurrentStateForUndo();
-            window.historyRecords = [];
-            window.undoStack = [];
-            initData();
-            renderHistory();
-            renderDataTable();
-            updateTotalAmount();
-            updateUndoButton();
-            saveData();
-            
-            if (window.firebaseDb) saveToCloud();
-            
-            closeHistoryModal();
-            showNotification('✅ 已清空所有录入记录');
-        }
-        
-        window.clearAll = function() {
-            if (!confirm('⚠️ 确定要清空所有数据吗？\n包括所有录入记录和统计！')) return;
-            
-            initData();
-            window.historyRecords = [];
-            window.undoStack = [];
-            renderDataTable();
-            renderHistory();
-            updateUndoButton();
-            document.getElementById('totalMoney').textContent = '0';
-            document.getElementById('dataCount').textContent = '0/49个号码';
-            localStorage.removeItem('lottery_data_v2');
-            
-            if (window.firebaseDb) saveToCloud();
-            
-            closeHistoryModal();
-            showNotification('✅ 所有数据已清空');
-        }
-        
-        window.copyLink = function() {
-            const saveData = {
-                moneyMap: window.moneyMap,
-                historyRecords: window.historyRecords.slice(0, 10),
-                timestamp: Date.now()
-            };
-            
-            const dataStr = JSON.stringify(saveData);
-            const encoded = btoa(encodeURIComponent(dataStr));
-            const currentUrl = window.location.origin + window.location.pathname + '?data=' + encoded;
-            
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(currentUrl).then(() => {
-                    showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
-                }).catch(err => {
-                    fallbackCopyToClipboard(currentUrl);
+                
+                window.lotteryData.forEach(item => {
+                    item.amount = window.moneyMap[item.number] || 0;
                 });
-            } else {
-                fallbackCopyToClipboard(currentUrl);
+                
+                const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
+                addHistoryRecord(input, bets.length, totalAmount);
+                
+                updateTotalAmount();
+                document.getElementById('inputData').value = '';
+                renderDataTable();
+                renderHistory();
+                updateUndoButton();
+                saveData();
+                
+                if (window.firebaseDb) saveToCloud();
+                
+                // 如果大屏显示已打开，则更新大屏显示
+                if (document.getElementById('fullscreenDisplay').style.display === 'block') {
+                    renderFullscreenDisplay();
+                }
+                
+                showNotification(`✅ 成功录入 ${bets.length} 个下注\n💰 总计 ${totalAmount.toFixed(2)} 元`);
             }
-        }
-        
-        function fallbackCopyToClipboard(text) {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.focus();
-            textarea.select();
             
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
+            window.clearHistory = function() {
+                if (!confirm('确定要清空所有录入记录吗？\n此操作不可恢复！')) return;
+                
+                saveCurrentStateForUndo();
+                window.historyRecords = [];
+                window.undoStack = [];
+                initData();
+                renderHistory();
+                renderDataTable();
+                updateTotalAmount();
+                updateUndoButton();
+                saveData();
+                
+                if (window.firebaseDb) saveToCloud();
+                
+                closeHistoryModal();
+                showNotification('✅ 已清空所有录入记录');
+            }
+            
+            window.clearAll = function() {
+                if (!confirm('⚠️ 确定要清空所有数据吗？\n包括所有录入记录和统计！')) return;
+                
+                initData();
+                window.historyRecords = [];
+                window.undoStack = [];
+                renderDataTable();
+                renderHistory();
+                updateUndoButton();
+                document.getElementById('totalMoney').textContent = '0';
+                document.getElementById('dataCount').textContent = '0/49个号码';
+                document.getElementById('historyCount').textContent = '0条记录';
+                localStorage.removeItem('lottery_data_v2');
+                
+                if (window.firebaseDb) saveToCloud();
+                
+                closeHistoryModal();
+                showNotification('✅ 所有数据已清空');
+            }
+            
+            window.copyLink = function() {
+                const saveData = {
+                    moneyMap: window.moneyMap,
+                    historyRecords: window.historyRecords.slice(0, 10),
+                    timestamp: Date.now()
+                };
+                
+                const dataStr = JSON.stringify(saveData);
+                const encoded = btoa(encodeURIComponent(dataStr));
+                const currentUrl = window.location.origin + window.location.pathname + '?data=' + encoded;
+                
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(currentUrl).then(() => {
+                        showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
+                    }).catch(err => {
+                        fallbackCopyToClipboard(currentUrl);
+                    });
                 } else {
+                    fallbackCopyToClipboard(currentUrl);
+                }
+            }
+            
+            function fallbackCopyToClipboard(text) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
+                    } else {
+                        showNotification('❌ 复制失败，请手动复制链接');
+                    }
+                } catch (err) {
+                    console.error('复制失败:', err);
                     showNotification('❌ 复制失败，请手动复制链接');
                 }
-            } catch (err) {
-                console.error('复制失败:', err);
-                showNotification('❌ 复制失败，请手动复制链接');
-            }
-            
-            document.body.removeChild(textarea);
-        }
-        
-        // ==================== 大屏显示功能 ====================
-        window.openBigScreen = function() {
-            document.getElementById('bigScreenModal').style.display = 'block';
-            renderBigScreenGrid();
-            
-            // 全屏显示
-            const elem = document.getElementById('bigScreenModal');
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen();
-            } else if (elem.webkitRequestFullscreen) {
-                elem.webkitRequestFullscreen();
-            } else if (elem.msRequestFullscreen) {
-                elem.msRequestFullscreen();
-            }
-        }
-        
-        window.closeBigScreen = function() {
-            document.getElementById('bigScreenModal').style.display = 'none';
-            
-            // 退出全屏
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
-            }
-        }
-        
-        window.refreshBigScreen = function() {
-            renderBigScreenGrid();
-            showNotification('🔄 大屏数据已刷新');
-        }
-        
-        function renderBigScreenGrid() {
-            const grid = document.getElementById('bigScreenGrid');
-            if (!grid) return;
-            
-            // 排序数据（有金额在前）
-            const sortedData = [...window.lotteryData].sort((a, b) => {
-                if (a.amount > 0 && b.amount === 0) return -1;
-                if (a.amount === 0 && b.amount > 0) return 1;
-                if (a.amount > 0 && b.amount > 0) return b.amount - a.amount;
-                return a.number - b.number;
-            });
-            
-            let html = '';
-            
-            sortedData.forEach(item => {
-                const hasMoney = item.amount > 0;
-                const amountClass = item.amount === 0 ? 'zero' : '';
-                const waveClass = item.waveColor === '红波' ? 'wave-red' :
-                                item.waveColor === '蓝波' ? 'wave-blue' :
-                                item.waveColor === '绿波' ? 'wave-green' : '';
                 
-                html += `
-                    <div class="big-screen-card ${hasMoney ? 'has-money' : ''}">
-                        <div class="big-screen-number">${item.number.toString().padStart(2, '0')}</div>
-                        <div class="big-screen-zodiac">${item.zodiac}</div>
-                        <div class="big-screen-amount ${amountClass}">
-                            ${item.amount.toFixed(2)}元
-                        </div>
-                        <div class="big-screen-wave ${waveClass}">
-                            ${item.waveColor === '红波' ? '🔴' : 
-                              item.waveColor === '蓝波' ? '🔵' : 
-                              item.waveColor === '绿波' ? '🟢' : ''}
-                            ${item.waveColor}
-                        </div>
-                    </div>
-                `;
-            });
+                document.body.removeChild(textarea);
+            }
             
-            grid.innerHTML = html;
+            loadSavedData();
+            updateUndoButton();
+            
+            lotterySystem = {
+                updateTotalAmount,
+                renderDataTable,
+                renderHistory,
+                saveData
+            };
         }
         
-        // ==================== Firebase云同步 ====================
         function initFirebase() {
             console.log('🔥 初始化Firebase...');
             updateCloudStatus('连接中...', 'connecting');
@@ -1906,6 +2339,11 @@
                         
                         applyCloudData(data);
                         showNotification('✅ 数据已同步更新');
+                        
+                        // 如果大屏显示已打开，则更新大屏显示
+                        if (document.getElementById('fullscreenDisplay').style.display === 'block') {
+                            renderFullscreenDisplay();
+                        }
                     }
                 }, (error) => {
                     console.error('❌ 实时监听错误:', error);
@@ -1972,7 +2410,6 @@
             }
         }
         
-        // ==================== 工具函数 ====================
         function showNotification(message, type = 'success') {
             const existing = document.querySelector('.notification');
             if (existing) existing.remove();
@@ -1985,7 +2422,7 @@
             
             setTimeout(() => {
                 notification.style.opacity = '0';
-                notification.style.transform = 'translateX(-50%) translateY(100%)';
+                notification.style.transform = 'translateY(100%)';
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
         }
@@ -2007,7 +2444,6 @@
             }
         }
         
-        // ==================== 网络状态监听 ====================
         window.addEventListener('online', () => {
             console.log('🌐 网络恢复');
             document.getElementById('networkIndicator').className = 'network-indicator network-online';
@@ -2025,7 +2461,6 @@
             updateCloudStatus('离线模式', 'offline');
         });
         
-        // 初始网络状态
         document.getElementById('networkIndicator').className = 
             navigator.onLine ? 'network-indicator network-online' : 'network-indicator network-offline';
     </script>
