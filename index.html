@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>📊 彩票实时看板 - 电视大屏模式</title>
+    <title>📊 彩票实时看板</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
     <style>
-        /* 你的原有CSS样式完全保持不变，只添加电视模式 */
-        
-        /* 原有样式全部保留... */
         * {
             margin: 0;
             padding: 0;
@@ -615,7 +612,7 @@
             align-self: flex-end;
         }
 
-        /* 表格样式 - 修改为电视大屏模式 */
+        /* 表格样式 */
         .compact-table {
             width: 100%;
             border-collapse: collapse;
@@ -743,281 +740,286 @@
             font-size: 13px;
         }
 
-       /* ====== 电视大屏模式专用样式 ====== */
-.tv-mode .data-section {
-    background: white;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 15px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-}
+        /* ====== 大屏弹窗 - 全屏显示49个号码 ====== */
+        .big-screen-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #1a1a2e;
+            z-index: 10010;
+            overflow: hidden;
+            font-size: 24px;
+        }
 
-/* ====== 极致紧凑电视模式 - 一页显示49个号码 ====== */
-.tv-mode .data-section {
-    background: white;
-    padding: 0;
-    margin: 0 0 10px 0;
-    width: 100%;
-    height: 75vh;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    box-sizing: border-box;
-}
+        .big-screen-header {
+            background: #162447;
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 100px;
+            border-bottom: 5px solid #e74c3c;
+        }
 
-.tv-mode .tv-grid-container {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    grid-template-rows: repeat(7, 1fr);
-    gap: 0;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    box-sizing: border-box;
-}
+        .big-screen-title {
+            font-size: 48px;
+            font-weight: 900;
+            color: #FFD700;
+        }
 
-.tv-mode .tv-number-card {
-    background: white;
-    border: 0.5px solid #ddd;
-    margin: 0;
-    padding: 0;
-    text-align: center;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    box-sizing: border-box;
-    overflow: hidden;
-}
+        .big-screen-total {
+            font-size: 36px;
+            font-weight: 700;
+            color: white;
+        }
 
-.tv-mode .tv-number-card.has-money {
-    border-color: #e74c3c;
-    background: #fff9f9;
-}
+        .big-screen-total span {
+            color: #FFD700;
+            font-size: 48px;
+            font-weight: 900;
+        }
 
-.tv-mode .tv-card-number {
-    font-size: calc(1.8vh + 0.5vw);
-    font-weight: 900;
-    color: #2c3e50;
-    margin: 0;
-    padding: 0;
-    line-height: 1;
-}
+        .big-screen-controls {
+            display: flex;
+            gap: 20px;
+        }
 
-.tv-mode .tv-card-zodiac {
-    font-size: calc(1.4vh + 0.4vw);
-    color: #666;
-    margin: 0;
-    padding: 0;
-    line-height: 1;
-    font-weight: 600;
-}
+        .big-screen-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
 
-.tv-mode .tv-card-amount {
-    font-size: calc(1.6vh + 0.45vw);
-    font-weight: 900;
-    color: #e74c3c;
-    margin: 0;
-    padding: 0;
-    line-height: 1;
-}
+        .big-screen-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
 
-.tv-mode .tv-card-amount.zero {
-    font-size: calc(1.3vh + 0.35vw);
-    color: #95a5a6;
-}
+        .close-big-screen {
+            background: #e74c3c;
+            border: none;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            transition: all 0.3s;
+        }
 
-.tv-mode .tv-card-wave {
-    font-size: calc(1.1vh + 0.3vw);
-    font-weight: bold;
-    padding: 1px 3px;
-    border-radius: 2px;
-    margin-top: 1px;
-    line-height: 1;
-}
+        .close-big-screen:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
 
-.tv-mode .wave-red {
-    background: #e74c3c;
-    color: white;
-}
+        /* 49个号码网格 - 7x7布局 */
+        .big-screen-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(7, 1fr);
+            gap: 10px;
+            height: calc(100vh - 120px);
+            padding: 20px;
+        }
 
-.tv-mode .wave-blue {
-    background: #3498db;
-    color: white;
-}
+        .big-screen-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s;
+            padding: 10px;
+        }
 
-.tv-mode .wave-green {
-    background: #2ecc71;
-    color: white;
-}
+        .big-screen-card.has-money {
+            background: rgba(231, 76, 60, 0.1);
+            border-color: #e74c3c;
+            border-width: 5px;
+            box-shadow: 0 0 30px rgba(231, 76, 60, 0.3);
+        }
 
-.tv-mode .ranking-section {
-    background: white;
-    border-radius: 5px;
-    padding: 8px;
-    margin: 10px 0 0 0;
-    border: 1px solid #e0e0e0;
-    height: 15vh;
-    box-sizing: border-box;
-}
+        .big-screen-number {
+            font-size: 64px;
+            font-weight: 900;
+            color: white;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
 
-.tv-mode .ranking-title {
-    font-size: calc(1.5vh + 0.3vw);
-    color: #2c3e50;
-    margin-bottom: 5px;
-    text-align: center;
-    font-weight: bold;
-}
+        .big-screen-zodiac {
+            font-size: 48px;
+            color: #7f8c8d;
+            font-weight: 700;
+            margin: 5px 0;
+        }
 
-.tv-mode .ranking-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    justify-content: center;
-}
+        .big-screen-amount {
+            font-size: 56px;
+            font-weight: 900;
+            color: #FFD700;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
 
-.tv-mode .ranking-item {
-    background: #f8f9fa;
-    padding: 4px 8px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid #e0e0e0;
-}
+        .big-screen-amount.zero {
+            font-size: 36px;
+            color: rgba(255, 255, 255, 0.3);
+        }
 
-.tv-mode .rank-badge {
-    font-size: calc(1.2vh + 0.2vw);
-    font-weight: 900;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
+        .big-screen-wave {
+            font-size: 32px;
+            font-weight: bold;
+            padding: 5px 15px;
+            border-radius: 8px;
+            margin-top: 5px;
+        }
 
-.tv-mode .rank-1 { background: #FFD700; color: #000; }
-.tv-mode .rank-2 { background: #C0C0C0; color: #000; }
-.tv-mode .rank-3 { background: #CD7F32; color: #000; }
-.tv-mode .rank-other { background: #95a5a6; color: white; }
+        /* 波色样式 */
+        .wave-red {
+            background: #e74c3c;
+            color: white;
+        }
 
-.tv-mode .rank-text {
-    font-size: calc(1.3vh + 0.25vw);
-    color: #2c3e50;
-    font-weight: bold;
-}
+        .wave-blue {
+            background: #3498db;
+            color: white;
+        }
 
-/* 电视机全屏优化 */
-.tv-mode body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
+        .wave-green {
+            background: #27ae60;
+            color: white;
+        }
 
-.tv-mode .container {
-    padding: 10px !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    height: 100vh !important;
-    box-sizing: border-box;
-}
+        /* 打开大屏按钮 */
+        .open-big-screen-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 9999;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+            transition: all 0.3s;
+        }
 
-.tv-mode .section-title {
-    padding: 5px 0;
-    margin: 0 0 8px 0;
-}
+        .open-big-screen-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.7);
+        }
 
-/* 覆盖原有的响应式媒体查询 */
-@media (max-width: 1600px) {
-    .tv-mode .tv-grid-container {
-        grid-template-columns: repeat(7, 1fr) !important;
-        grid-template-rows: repeat(7, 1fr) !important;
-    }
-}
+        .footer-info {
+            text-align: center;
+            color: #95a5a6;
+            font-size: 14px;
+            margin: 20px 0;
+            padding: 15px;
+        }
 
-@media (max-width: 1400px) {
-    .tv-mode .tv-grid-container {
-        grid-template-columns: repeat(7, 1fr) !important;
-        grid-template-rows: repeat(7, 1fr) !important;
-    }
-}
-
-@media (max-width: 1200px) {
-    .tv-mode .tv-grid-container {
-        grid-template-columns: repeat(7, 1fr) !important;
-        grid-template-rows: repeat(7, 1fr) !important;
-    }
-}
-
-@media (max-width: 375px) {
-    .tv-mode .tv-grid-container {
-        grid-template-columns: repeat(7, 1fr) !important;
-        grid-template-rows: repeat(7, 1fr) !important;
-        gap: 0 !important;
-    }
-    
-    .tv-mode .tv-number-card {
-        padding: 0 !important;
-        min-height: auto !important;
-    }
-}
-
-@media (min-width: 376px) and (max-width: 768px) {
-    .tv-mode .tv-grid-container {
-        grid-template-columns: repeat(7, 1fr) !important;
-        grid-template-rows: repeat(7, 1fr) !important;
-        gap: 0 !important;
-    }
-}
-
-@media (min-width: 769px) {
-    .tv-mode .tv-grid-container {
-        grid-template-columns: repeat(7, 1fr) !important;
-        grid-template-rows: repeat(7, 1fr) !important;
-        gap: 0 !important;
-    }
-}
-
-@media (min-width: 1024px) {
-    .tv-mode .tv-grid-container {
-        grid-template-columns: repeat(7, 1fr) !important;
-        grid-template-rows: repeat(7, 1fr) !important;
-        gap: 0 !important;
-    }
-}
-
-        @media (min-width: 1440px) {
-            /* 电视模式超大屏 */
-            .tv-mode .tv-grid-container {
-                gap: 20px;
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .big-screen-header {
+                padding: 15px 20px;
+                height: 80px;
             }
             
-            .tv-mode .tv-number-card {
-                min-height: 200px;
-                padding: 20px 15px;
+            .big-screen-title {
+                font-size: 32px;
             }
             
-            .tv-mode .tv-card-number {
-                font-size: 40px;
+            .big-screen-total {
+                font-size: 24px;
             }
             
-            .tv-mode .tv-card-zodiac {
-                font-size: 28px;
+            .big-screen-total span {
+                font-size: 32px;
             }
             
-            .tv-mode .tv-card-amount {
+            .big-screen-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
+            }
+            
+            .close-big-screen {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
+            }
+            
+            .big-screen-number {
                 font-size: 48px;
             }
             
-            .tv-mode .tv-card-amount.zero {
-                font-size: 36px;
+            .big-screen-zodiac {
+                font-size: 32px;
             }
             
-            .tv-mode .tv-card-wave {
-                font-size: 22px;
-                padding: 8px 14px;
+            .big-screen-amount {
+                font-size: 40px;
+            }
+            
+            .big-screen-amount.zero {
+                font-size: 28px;
+            }
+            
+            .big-screen-wave {
+                font-size: 24px;
+            }
+        }
+
+        /* 通知样式 */
+        .notification {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2ecc71;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            z-index: 100000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
             }
         }
 
@@ -1027,248 +1029,8 @@
                 padding-right: max(15px, env(safe-area-inset-right));
                 padding-bottom: max(15px, env(safe-area-inset-bottom));
             }
-            
-            .notification {
-                bottom: max(20px, env(safe-area-inset-bottom));
-            }
         }
-    /* ====== 49号码弹窗 - 7cm×5cm卡片 ====== */
-.number-popup {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 400px;
-    height: 570px;
-    background: white;
-    border: 3px solid #2c3e50;
-    border-radius: 10px;
-    z-index: 10010;
-    overflow: hidden;
-    resize: both;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    min-width: 380px;
-    min-height: 550px;
-}
-
-.number-popup.fullscreen {
-    width: 100vw !important;
-    height: 100vh !important;
-    top: 0 !important;
-    left: 0 !important;
-    transform: none !important;
-    border-radius: 0;
-    border: none;
-    resize: none;
-}
-
-.popup-header {
-    background: linear-gradient(135deg, #2c3e50, #34495e);
-    color: white;
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 80px;
-    box-sizing: border-box;
-    border-bottom: 3px solid #e74c3c;
-    cursor: move;
-}
-
-.popup-title {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.popup-title h3 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 900;
-    color: #FFD700;
-}
-
-.popup-total {
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.popup-total span {
-    color: #FFD700;
-    font-weight: 900;
-    font-size: 22px;
-}
-
-.popup-controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.popup-btn {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.3);
-    color: white;
-    font-size: 18px;
-    cursor: pointer;
-    width: 40px;
-    height: 40px;
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-}
-
-.popup-btn:hover {
-    background: rgba(255,255,255,0.2);
-}
-
-.fullscreen-btn {
-    font-size: 20px;
-}
-
-.close-popup {
-    background: #e74c3c;
-    border: none;
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-    transition: all 0.3s;
-}
-
-.close-popup:hover {
-    background: #c0392b;
-    transform: scale(1.1);
-}
-
-/* 7cm高 × 5cm宽网格 */
-.popup-grid-container {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    grid-template-rows: repeat(7, 70px);
-    gap: 2px;
-    height: calc(100% - 80px);
-    padding: 5px;
-    box-sizing: border-box;
-    background: #f8f9fa;
-    overflow: auto;
-}
-
-.popup-number-card {
-    background: white;
-    border: 2px solid #bdc3c7;
-    width: 100%;
-    height: 70px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    box-sizing: border-box;
-    overflow: hidden;
-    padding: 1px;
-}
-
-.popup-number-card.has-money {
-    border-color: #e74c3c;
-    border-width: 3px;
-    background: #fff9f9;
-}
-
-/* 7cm卡片内的字体 */
-.popup-card-number {
-    font-size: 18px;
-    font-weight: 900;
-    color: #2c3e50;
-    margin: 0;
-    line-height: 1;
-    height: 18px;
-}
-
-.popup-card-zodiac {
-    font-size: 14px;
-    color: #2c3e50;
-    margin: 1px 0;
-    font-weight: 700;
-    line-height: 1;
-    height: 14px;
-}
-
-.popup-card-amount {
-    font-size: 16px;
-    font-weight: 900;
-    color: #e74c3c;
-    margin: 1px 0;
-    line-height: 1;
-    height: 16px;
-}
-
-.popup-card-amount.zero {
-    font-size: 13px;
-    color: #7f8c8d;
-    height: 13px;
-}
-
-.popup-card-wave {
-    font-size: 12px;
-    font-weight: bold;
-    padding: 1px 3px;
-    border-radius: 3px;
-    margin-top: 1px;
-    line-height: 1;
-    height: 12px;
-}
-
-.wave-red { background: #e74c3c; color: white; }
-.wave-blue { background: #3498db; color: white; }
-.wave-green { background: #27ae60; color: white; }
-
-/* 全屏模式放大字体 */
-.number-popup.fullscreen .popup-number-card {
-    height: calc((100vh - 100px) / 7);
-}
-
-.number-popup.fullscreen .popup-card-number { font-size: 28px; }
-.number-popup.fullscreen .popup-card-zodiac { font-size: 22px; }
-.number-popup.fullscreen .popup-card-amount { font-size: 26px; }
-.number-popup.fullscreen .popup-card-wave { font-size: 20px; }
-
-/* 打开按钮 */
-.open-popup-btn {
-    position: fixed;
-    bottom: 100px;
-    right: 30px;
-    background: #2c3e50;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 9999;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
-
-.open-popup-btn:hover {
-    background: #e74c3c;
-    transform: scale(1.1);
-}
-
-/* 手机隐藏 */
-@media (max-width: 768px) {
-    .open-popup-btn { display: none; }
-}</style>
+    </style>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" defer></script>
@@ -1283,9 +1045,6 @@
         <span id="cloudIcon">🔄</span>
         <span id="cloudText">初始化中...</span>
     </div>
-
-    <!-- 模式切换按钮 -->
-    <button class="mode-toggle" id="modeToggle" onclick="toggleTvMode()" title="切换显示模式">📺</button>
 
     <!-- 密码验证覆盖层 -->
     <div id="passwordOverlay">
@@ -1364,7 +1123,7 @@
                 </div>
             </div>
             
-            <!-- 普通表格模式 -->
+            <!-- 表格模式 -->
             <div class="data-section" id="tableSection">
                 <div class="section-title">
                     <span>📈 号码数据（按金额排序）</span>
@@ -1387,36 +1146,39 @@
                 </table>
             </div>
             
-            <!-- 电视网格模式（默认隐藏） -->
-            <div class="data-section" id="tvSection" style="display: none;">
-                <div class="section-title">
-                    <span>📊 电视大屏模式 - 49个号码全显</span>
-                    <span id="tvDataCount">0/49个号码</span>
-                </div>
-                
-                <div class="tv-grid-container" id="tvGridContainer">
-                    <!-- 电视网格由JavaScript动态生成 -->
-                </div>
-                
-                <!-- 排名显示 -->
-                <div class="ranking-section" id="rankingSection">
-                    <div class="ranking-title">🏆 金额排名 TOP 10</div>
-                    <div class="ranking-list" id="rankingList">
-                        <!-- 排名由JavaScript动态生成 -->
-                    </div>
-                </div>
-            </div>
-            
             <div class="footer-info">
                 📱 支持手机访问 • 🔄 实时同步 • 💾 离线保存
             </div>
         </div>
     </div>
 
+    <!-- 打开大屏按钮 -->
+    <button class="open-big-screen-btn" onclick="openBigScreen()" title="打开全屏大屏显示">
+        📺
+    </button>
+
+    <!-- 大屏弹窗 -->
+    <div class="big-screen-modal" id="bigScreenModal">
+        <div class="big-screen-header">
+            <div class="big-screen-title">📊 彩票实时看板</div>
+            <div class="big-screen-total">总计: <span id="bigScreenTotalMoney">0</span>元</div>
+            <div class="big-screen-controls">
+                <button class="big-screen-btn" onclick="refreshBigScreen()" title="刷新">
+                    🔄
+                </button>
+                <button class="close-big-screen" onclick="closeBigScreen()">
+                    ×
+                </button>
+            </div>
+        </div>
+        <div class="big-screen-grid" id="bigScreenGrid">
+            <!-- 大屏号码网格动态生成 -->
+        </div>
+    </div>
+
     <script>
         // ==================== 彩票配置数据 ====================
         const LOTTERY_CONFIG = {
-            // 生肖映射
             zodiacMap: {
                 "鼠": [6, 18, 30, 42], "牛": [5, 17, 29, 41], "虎": [4, 16, 28, 40],
                 "兔": [3, 15, 27, 39], "龙": [2, 14, 26, 38], "蛇": [1, 13, 25, 37, 49],
@@ -1424,22 +1186,14 @@
                 "鸡": [9, 21, 33, 45], "狗": [8, 20, 32, 44], "猪": [7, 19, 31, 43]
             },
             
-            // 波色映射
             waveColorMap: {
                 "红波": [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
                 "蓝波": [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
                 "绿波": [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
-            },
-            
-            amountUnits: ['元', '斤', '米', '块', '￥'],
-            filterWords: ['多少钱', '多少米', '总计', '总共', '合计', '共', 
-                          '给我算算', '帮我算算', '帮算', '计算', '算一下', '算算', 
-                          '请问', '帮忙', '看一下', '看看'],
-            betKeywords: ['各', '各号', '每', '每号', '每颗', '颗', '号'],
-            numberRange: { min: 1, max: 49 }
+            }
         };
 
-        // ==================== 最终完美版彩票解析器 ====================
+        // ==================== 彩票解析器 ====================
         class LotteryBetParser {
             constructor(config = LOTTERY_CONFIG) {
                 this.config = config;
@@ -1448,15 +1202,12 @@
             parseInput(input) {
                 if (!input || typeof input !== 'string') return [];
                 
-                // 1. 清理文本
                 const cleaned = input.trim()
                     .replace(/^一共[：:]*\s*/, '')
                     .replace(/斤|米|块|￥/g, '元');
                 
-                // 2. 分割成独立投注项
                 const items = this._extractBetItems(cleaned);
                 
-                // 3. 解析每个投注项
                 const allBets = [];
                 items.forEach(item => {
                     const bets = this._parseSingleItem(item.content, item.amount);
@@ -1468,7 +1219,6 @@
             
             _extractBetItems(text) {
                 const items = [];
-                // 匹配模式：任意内容 + "各号" + 数字 + "元"
                 const regex = /([^,]+?各号\s*\d+(?:\.\d+)?\s*元)/g;
                 let match;
                 
@@ -1479,7 +1229,6 @@
                     if (amountMatch) {
                         const amount = parseFloat(amountMatch[1]);
                         const content = fullText.substring(0, amountMatch.index).trim();
-                        
                         items.push({ content, amount });
                     }
                 }
@@ -1491,16 +1240,10 @@
                 const bets = [];
                 const cleanContent = content.replace(/\s+/g, '');
                 
-                // 统计生肖出现次数
                 const zodiacCounts = this._countOccurrences(cleanContent, Object.keys(this.config.zodiacMap));
-                
-                // 统计波色出现次数
                 const waveCounts = this._countOccurrences(cleanContent, Object.keys(this.config.waveColorMap));
-                
-                // 提取数字
                 const numbers = this._extractNumbers(cleanContent);
                 
-                // 添加生肖下注
                 Object.entries(zodiacCounts).forEach(([zodiac, count]) => {
                     this.config.zodiacMap[zodiac].forEach(num => {
                         for (let i = 0; i < count; i++) {
@@ -1509,7 +1252,6 @@
                     });
                 });
                 
-                // 添加波色下注
                 Object.entries(waveCounts).forEach(([wave, count]) => {
                     this.config.waveColorMap[wave].forEach(num => {
                         for (let i = 0; i < count; i++) {
@@ -1518,7 +1260,6 @@
                     });
                 });
                 
-                // 添加数字下注
                 numbers.forEach(num => {
                     bets.push({ number: num, amount: amount });
                 });
@@ -1528,36 +1269,26 @@
             
             _countOccurrences(text, keywords) {
                 const counts = {};
-                
                 keywords.forEach(keyword => {
                     let count = 0;
                     let pos = 0;
-                    
                     while ((pos = text.indexOf(keyword, pos)) !== -1) {
                         count++;
                         pos += keyword.length;
                     }
-                    
-                    if (count > 0) {
-                        counts[keyword] = count;
-                    }
+                    if (count > 0) counts[keyword] = count;
                 });
-                
                 return counts;
             }
             
             _extractNumbers(text) {
                 const numbers = [];
-                
-                // 提取所有1-49的数字
                 const numberPattern = /\b(0?[1-9]|[12][0-9]|3[0-9]|4[0-9])\b/g;
                 const matches = text.match(numberPattern) || [];
                 
                 matches.forEach(match => {
                     const num = parseInt(match.replace(/^0+/, ''), 10);
-                    if (num >= 1 && num <= 49) {
-                        numbers.push(num);
-                    }
+                    if (num >= 1 && num <= 49) numbers.push(num);
                 });
                 
                 return numbers;
@@ -1565,33 +1296,33 @@
             
             findZodiac(number) {
                 for (const [zodiac, numbers] of Object.entries(this.config.zodiacMap)) {
-                    if (numbers.includes(number)) {
-                        return zodiac;
-                    }
+                    if (numbers.includes(number)) return zodiac;
                 }
                 return null;
             }
             
             findWaveColor(number) {
                 for (const [wave, numbers] of Object.entries(this.config.waveColorMap)) {
-                    if (numbers.includes(number)) {
-                        return wave;
-                    }
+                    if (numbers.includes(number)) return wave;
                 }
                 return null;
             }
         }
 
-        // ==================== 原有应用代码（完全保持不变） ====================
+        // ==================== 全局变量 ====================
+        let lotteryParser = new LotteryBetParser();
+        window.lotteryData = [];
+        window.moneyMap = {};
+        window.historyRecords = [];
+        window.undoStack = [];
+        
+        // ==================== 页面初始化 ====================
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 页面加载完成 - 核心功能启动');
+            console.log('📄 页面加载完成');
             
             document.getElementById('passwordInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') checkPassword();
             });
-            
-            // 模式切换按钮事件
-            document.getElementById('modeToggle').addEventListener('click', toggleTvMode);
             
             try {
                 const authStr = localStorage.getItem('lottery_admin_auth');
@@ -1623,20 +1354,9 @@
                 if (now - lastTouchEnd <= 300) event.preventDefault();
                 lastTouchEnd = now;
             }, false);
-
-            const buttons = document.querySelectorAll('button, .btn, .login-btn, .clear-all-btn, .history-btn, .delete-btn, .close-history-btn');
-            buttons.forEach(btn => {
-                btn.addEventListener('touchstart', function() { this.style.transform = 'scale(0.98)'; });
-                btn.addEventListener('touchend', function() { this.style.transform = ''; });
-                btn.addEventListener('touchcancel', function() { this.style.transform = ''; });
-            });
-
-            const inputs = document.querySelectorAll('input, textarea');
-            inputs.forEach(input => {
-                input.addEventListener('touchstart', function(e) { e.stopPropagation(); });
-            });
         }
 
+        // ==================== 密码验证 ====================
         function checkPassword() {
             const input = document.getElementById('passwordInput');
             const errorEl = document.getElementById('passwordError');
@@ -1675,496 +1395,442 @@
         }
         
         // ==================== 彩票系统核心 ====================
-        let lotterySystem = null;
-        let lotteryParser = new LotteryBetParser();
-        let isTvMode = false;
-        
         function initLotterySystem() {
             console.log('🎯 初始化彩票系统...');
             
+            initData();
+            loadSavedData();
+            
+            lotterySystem = {
+                updateTotalAmount,
+                renderDataTable,
+                saveData
+            };
+        }
+        
+        function initData() {
             window.lotteryData = [];
             window.moneyMap = {};
-            window.historyRecords = [];
-            window.undoStack = [];
-            
-            function initData() {
-                window.lotteryData = [];
-                window.moneyMap = {};
-                for (let i = 1; i <= 49; i++) {
-                    const zodiac = lotteryParser.findZodiac(i);
-                    const waveColor = lotteryParser.findWaveColor(i);
-                    
-                    window.lotteryData.push({
-                        number: i,
-                        zodiac: zodiac || "未知",
-                        waveColor: waveColor,
-                        amount: 0,
-                        rank: 0
-                    });
-                    window.moneyMap[i] = 0;
-                }
-            }
-            
-            function parseInput(input) {
-                return lotteryParser.parseInput(input);
-            }
-            
-            initData();
-            
-            function loadSavedData() {
-                try {
-                    const saved = localStorage.getItem('lottery_data_v2');
-                    if (saved) {
-                        const data = JSON.parse(saved);
-                        
-                        if (data.moneyMap) window.moneyMap = data.moneyMap;
-                        if (data.historyRecords) window.historyRecords = data.historyRecords;
-                        if (data.undoStack) window.undoStack = data.undoStack;
-                        
-                        window.lotteryData.forEach(item => {
-                            item.amount = window.moneyMap[item.number] || 0;
-                        });
-                        
-                        updateTotalAmount();
-                        updateDataCount();
-                        updateUndoButton();
-                        renderHistory();
-                        renderDataTable();
-                        renderTvGrid();
-                        updateRanking();
-                    }
-                } catch(e) {
-                    console.log('加载本地数据失败');
-                }
-            }
-            
-            function saveData() {
-                try {
-                    const saveData = {
-                        moneyMap: window.moneyMap,
-                        historyRecords: window.historyRecords,
-                        undoStack: window.undoStack,
-                        timestamp: Date.now()
-                    };
-                    localStorage.setItem('lottery_data_v2', JSON.stringify(saveData));
-                } catch(e) {
-                    console.log('保存本地数据失败');
-                }
-            }
-            
-            function updateTotalAmount() {
-                const total = Object.values(window.moneyMap).reduce((sum, amount) => sum + amount, 0);
-                document.getElementById('totalMoney').textContent = total.toFixed(2);
-            }
-            
-            function updateDataCount() {
-                const activeCount = Object.values(window.moneyMap).filter(amount => amount > 0).length;
-                document.getElementById('dataCount').textContent = `${activeCount}/49个号码`;
-                document.getElementById('tvDataCount').textContent = `${activeCount}/49个号码`;
-            }
-            
-            function renderDataTable() {
-                const tbody = document.getElementById('tableBody');
-                   const sortedData = [...window.lotteryData].sort((a, b) => {
-        if (a.amount > 0 && b.amount === 0) return -1;
-        if (a.amount === 0 && b.amount > 0) return 1;
-        if (a.amount > 0 && b.amount > 0) {
-            if (b.amount !== a.amount) return b.amount - a.amount;
-            return a.number - b.number;
-        }
-        return a.number - b.number;
-    });
+            for (let i = 1; i <= 49; i++) {
+                const zodiac = lotteryParser.findZodiac(i);
+                const waveColor = lotteryParser.findWaveColor(i);
                 
-                let html = '';
-                let currentRank = 0;
-                
-                sortedData.forEach((item) => {
-                    const waveClass = item.waveColor === '红波' ? 'wave-red' :
-                                    item.waveColor === '蓝波' ? 'wave-blue' :
-                                    item.waveColor === '绿波' ? 'wave-green' : '';
-                    
-                    let rankClass = '';
-                    let rankDisplay = '-';
-                    let amountDisplay = '0元';
-                    let amountClass = 'amount-cell-zero';
-                    
-                    if (item.amount > 0) {
-                        currentRank++;
-                        rankDisplay = currentRank;
-                        
-                        if (currentRank === 1) rankClass = 'rank-1';
-                        else if (currentRank === 2) rankClass = 'rank-2';
-                        else if (currentRank === 3) rankClass = 'rank-3';
-                        
-                        amountDisplay = `${item.amount.toFixed(2)}元`;
-                        amountClass = 'amount-cell';
-                    }
-                    
-                    html += `
-                        <tr>
-                            <td class="rank-cell ${rankClass}">${rankDisplay}</td>
-                            <td class="number-cell">${item.number}</td>
-                            <td class="zodiac-cell">${item.zodiac}</td>
-                            <td class="${amountClass}">${amountDisplay}</td>
-                            <td><span class="wave-cell ${waveClass}">${item.waveColor}</span></td>
-                        </tr>
-                    `;
+                window.lotteryData.push({
+                    number: i,
+                    zodiac: zodiac || "未知",
+                    waveColor: waveColor,
+                    amount: 0,
+                    rank: 0
                 });
-                
-                tbody.innerHTML = html;
-                updateDataCount();
+                window.moneyMap[i] = 0;
             }
-            
-            // 渲染电视网格
-function renderTvGrid() {
-    const tvGrid = document.getElementById('tvGridContainer');
-    if (!tvGrid) return;
-    
-    // 按金额排序
-    const sortedData = [...window.lotteryData].sort((a, b) => {
-        if (a.amount > 0 && b.amount === 0) return -1;
-        if (a.amount === 0 && b.amount > 0) return 1;
-        if (a.amount > 0 && b.amount > 0) {
-            if (b.amount !== a.amount) return b.amount - a.amount;
-            return a.number - b.number;
         }
-        return a.number - b.number;
-    });
-    
-    let html = '';
-    
-    sortedData.forEach(item => {  // 这里改成 sortedData
-        const hasMoney = item.amount > 0;
-        const amountClass = item.amount === 0 ? 'zero' : '';
-        const waveClass = item.waveColor === '红波' ? 'wave-red' :
-                        item.waveColor === '蓝波' ? 'wave-blue' :
-                        item.waveColor === '绿波' ? 'wave-green' : '';
         
-        html += `
-            <div class="tv-number-card ${hasMoney ? 'has-money' : ''}" data-number="${item.number}">
-                <div class="tv-card-number">[${item.number.toString().padStart(2, '0')}]</div>
-                <div class="tv-card-zodiac">${item.zodiac}</div>
-                <div class="tv-card-amount ${amountClass}">${item.amount.toFixed(2)}元</div>
-                <div class="tv-card-wave ${waveClass}">
-                    ${item.waveColor === '红波' ? '🔴' : 
-                      item.waveColor === '蓝波' ? '🔵' : 
-                      item.waveColor === '绿波' ? '🟢' : ''}
-                    ${item.waveColor}
-                </div>
-            </div>
-        `;
-    });
-    
-    tvGrid.innerHTML = html;
-}
-            
-            // 更新排名
-            function updateRanking() {
-                const rankingList = document.getElementById('rankingList');
-                if (!rankingList) return;
-                
-                // 按金额排序
-                const sortedData = [...window.lotteryData]
-                    .filter(item => item.amount > 0)
-                    .sort((a, b) => b.amount - a.amount)
-                    .slice(0, 10);
-                
-                let html = '';
-                
-                if (sortedData.length === 0) {
-                    html = `<div style="font-size: 18px; color: #666; text-align: center; width: 100%; padding: 20px;">暂无下注数据</div>`;
+        function loadSavedData() {
+            try {
+                const saved = localStorage.getItem('lottery_data_v2');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    
+                    if (data.moneyMap) window.moneyMap = data.moneyMap;
+                    if (data.historyRecords) window.historyRecords = data.historyRecords;
+                    if (data.undoStack) window.undoStack = data.undoStack;
+                    
+                    window.lotteryData.forEach(item => {
+                        item.amount = window.moneyMap[item.number] || 0;
+                    });
+                    
+                    updateTotalAmount();
+                    updateDataCount();
+                    updateUndoButton();
+                    renderHistory();
+                    renderDataTable();
+                    
+                    document.getElementById('statusBar').textContent = '✅ 系统就绪 | 数据已加载';
                 } else {
-                    sortedData.forEach((item, index) => {
-                        const rankClass = index === 0 ? 'rank-1' :
-                                        index === 1 ? 'rank-2' :
-                                        index === 2 ? 'rank-3' : 'rank-other';
-                        
-                        html += `
-                            <div class="ranking-item">
-                                <div class="rank-badge ${rankClass}">${index + 1}</div>
-                                <div class="rank-text">[${item.number.toString().padStart(2, '0')}] ${item.amount.toFixed(2)}元</div>
-                            </div>
-                        `;
-                    });
+                    document.getElementById('statusBar').textContent = '✅ 系统就绪';
                 }
-                
-                rankingList.innerHTML = html;
+            } catch(e) {
+                console.log('加载本地数据失败');
+                document.getElementById('statusBar').textContent = '✅ 系统就绪 | 使用新数据';
             }
-            
-            function addHistoryRecord(text, count, amount) {
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('zh-CN', { 
-                    hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
-                });
-                
-                const record = {
-                    id: Date.now(),
-                    text: text,
-                    time: timeStr,
-                    count: count,
-                    amount: amount
-                };
-                
-                window.historyRecords.unshift(record);
-                if (window.historyRecords.length > 50) window.historyRecords = window.historyRecords.slice(0, 50);
-                document.getElementById('historyCount').textContent = `${window.historyRecords.length}条记录`;
-            }
-            
-            function renderHistory() {
-                const container = document.getElementById('historyList');
-                if (window.historyRecords.length === 0) {
-                    container.innerHTML = `<div style="text-align: center; color: #95a5a6; padding: 20px;">暂无录入记录</div>`;
-                    return;
-                }
-                
-                let html = '';
-                window.historyRecords.forEach(record => {
-                    html += `
-                        <div class="history-item">
-                            <button class="delete-btn" onclick="deleteHistoryRecord(${record.id})">×</button>
-                            <span class="history-time">${record.time}</span>
-                            <div class="history-text">${record.text}</div>
-                            <div class="history-amount">${record.amount.toFixed(2)}元 (${record.count}个)</div>
-                        </div>
-                    `;
-                });
-                container.innerHTML = html;
-            }
-            
-            window.deleteHistoryRecord = function(id) {
-                const index = window.historyRecords.findIndex(r => r.id === id);
-                if (index === -1) return;
-                
-                saveCurrentStateForUndo();
-                window.historyRecords.splice(index, 1);
-                
-                window.moneyMap = {};
-                window.historyRecords.forEach(record => {
-                    const bets = parseInput(record.text);
-                    bets.forEach(bet => {
-                        if (bet.number >= 1 && bet.number <= 49) {
-                            window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
-                        }
-                    });
-                });
-                
-                window.lotteryData.forEach(item => {
-                    item.amount = window.moneyMap[item.number] || 0;
-                });
-                
-                renderHistory();
-                renderDataTable();
-                renderTvGrid();
-                updateRanking();
-                updateTotalAmount();
-                updateUndoButton();
-                saveData();
-                
-                if (window.firebaseDb) saveToCloud();
-                showNotification('✅ 已删除记录');
-            }
-            
-            function saveCurrentStateForUndo() {
-                const state = {
-                    moneyMap: {...window.moneyMap},
-                    historyRecords: JSON.parse(JSON.stringify(window.historyRecords)),
+        }
+        
+        function saveData() {
+            try {
+                const saveData = {
+                    moneyMap: window.moneyMap,
+                    historyRecords: window.historyRecords,
+                    undoStack: window.undoStack,
                     timestamp: Date.now()
                 };
-                window.undoStack.push(state);
-                if (window.undoStack.length > 20) window.undoStack.shift();
-                updateUndoButton();
+                localStorage.setItem('lottery_data_v2', JSON.stringify(saveData));
+            } catch(e) {
+                console.log('保存本地数据失败');
             }
+        }
+        
+        function updateTotalAmount() {
+            const total = Object.values(window.moneyMap).reduce((sum, amount) => sum + amount, 0);
+            document.getElementById('totalMoney').textContent = total.toFixed(2);
+            document.getElementById('bigScreenTotalMoney').textContent = total.toFixed(2);
+        }
+        
+        function updateDataCount() {
+            const activeCount = Object.values(window.moneyMap).filter(amount => amount > 0).length;
+            document.getElementById('dataCount').textContent = `${activeCount}/49个号码`;
+        }
+        
+        function renderDataTable() {
+            const tbody = document.getElementById('tableBody');
+            const sortedData = [...window.lotteryData].sort((a, b) => {
+                if (a.amount > 0 && b.amount === 0) return -1;
+                if (a.amount === 0 && b.amount > 0) return 1;
+                if (a.amount > 0 && b.amount > 0) {
+                    if (b.amount !== a.amount) return b.amount - a.amount;
+                    return a.number - b.number;
+                }
+                return a.number - b.number;
+            });
             
-            function updateUndoButton() {}
+            let html = '';
+            let currentRank = 0;
             
-            window.openHistoryModal = function() {
-                renderHistory();
-                document.getElementById('historyModal').style.display = 'block';
-            }
-            
-            window.closeHistoryModal = function() {
-                document.getElementById('historyModal').style.display = 'none';
-            }
-            
-            window.processData = function() {
-                const input = document.getElementById('inputData').value.trim();
-                if (!input) {
-                    showNotification('请输入数据', 'warning');
-                    return;
+            sortedData.forEach((item) => {
+                const waveClass = item.waveColor === '红波' ? 'wave-red' :
+                                item.waveColor === '蓝波' ? 'wave-blue' :
+                                item.waveColor === '绿波' ? 'wave-green' : '';
+                
+                let rankClass = '';
+                let rankDisplay = '-';
+                let amountDisplay = '0元';
+                let amountClass = 'amount-cell-zero';
+                
+                if (item.amount > 0) {
+                    currentRank++;
+                    rankDisplay = currentRank;
+                    
+                    if (currentRank === 1) rankClass = 'rank-1';
+                    else if (currentRank === 2) rankClass = 'rank-2';
+                    else if (currentRank === 3) rankClass = 'rank-3';
+                    
+                    amountDisplay = `${item.amount.toFixed(2)}元`;
+                    amountClass = 'amount-cell';
                 }
                 
-                saveCurrentStateForUndo();
-                const bets = parseInput(input);
-                
-                if (bets.length === 0) {
-                    showNotification('未识别到有效数据格式', 'warning');
-                    return;
-                }
-                
+                html += `
+                    <tr>
+                        <td class="rank-cell ${rankClass}">${rankDisplay}</td>
+                        <td class="number-cell">${item.number}</td>
+                        <td class="zodiac-cell">${item.zodiac}</td>
+                        <td class="${amountClass}">${amountDisplay}</td>
+                        <td><span class="wave-cell ${waveClass}">${item.waveColor}</span></td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+            updateDataCount();
+            
+            // 同时更新大屏显示
+            renderBigScreenGrid();
+        }
+        
+        function addHistoryRecord(text, count, amount) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { 
+                hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+            
+            const record = {
+                id: Date.now(),
+                text: text,
+                time: timeStr,
+                count: count,
+                amount: amount
+            };
+            
+            window.historyRecords.unshift(record);
+            if (window.historyRecords.length > 50) window.historyRecords = window.historyRecords.slice(0, 50);
+            document.getElementById('historyCount').textContent = `${window.historyRecords.length}条记录`;
+        }
+        
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            if (window.historyRecords.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #95a5a6; padding: 20px;">暂无录入记录</div>`;
+                return;
+            }
+            
+            let html = '';
+            window.historyRecords.forEach(record => {
+                html += `
+                    <div class="history-item">
+                        <button class="delete-btn" onclick="deleteHistoryRecord(${record.id})">×</button>
+                        <span class="history-time">${record.time}</span>
+                        <div class="history-text">${record.text}</div>
+                        <div class="history-amount">${record.amount.toFixed(2)}元 (${record.count}个)</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+        
+        window.deleteHistoryRecord = function(id) {
+            const index = window.historyRecords.findIndex(r => r.id === id);
+            if (index === -1) return;
+            
+            saveCurrentStateForUndo();
+            window.historyRecords.splice(index, 1);
+            
+            window.moneyMap = {};
+            window.historyRecords.forEach(record => {
+                const bets = lotteryParser.parseInput(record.text);
                 bets.forEach(bet => {
                     if (bet.number >= 1 && bet.number <= 49) {
                         window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
                     }
                 });
-                
-                window.lotteryData.forEach(item => {
-                    item.amount = window.moneyMap[item.number] || 0;
-                });
-                
-                const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
-                addHistoryRecord(input, bets.length, totalAmount);
-                
-                updateTotalAmount();
-                document.getElementById('inputData').value = '';
-                renderDataTable();
-                renderTvGrid();
-                updateRanking();
-                renderHistory();
-                updateUndoButton();
-                saveData();
-                
-                if (window.firebaseDb) saveToCloud();
-                
-                showNotification(`✅ 成功录入 ${bets.length} 个下注\n💰 总计 ${totalAmount.toFixed(2)} 元`);
-            }
+            });
             
-            window.clearHistory = function() {
-                if (!confirm('确定要清空所有录入记录吗？\n此操作不可恢复！')) return;
-                
-                saveCurrentStateForUndo();
-                window.historyRecords = [];
-                window.undoStack = [];
-                initData();
-                renderHistory();
-                renderDataTable();
-                renderTvGrid();
-                updateRanking();
-                updateTotalAmount();
-                updateUndoButton();
-                saveData();
-                
-                if (window.firebaseDb) saveToCloud();
-                
-                closeHistoryModal();
-                showNotification('✅ 已清空所有录入记录');
-            }
+            window.lotteryData.forEach(item => {
+                item.amount = window.moneyMap[item.number] || 0;
+            });
             
-            window.clearAll = function() {
-                if (!confirm('⚠️ 确定要清空所有数据吗？\n包括所有录入记录和统计！')) return;
-                
-                initData();
-                window.historyRecords = [];
-                window.undoStack = [];
-                renderDataTable();
-                renderTvGrid();
-                updateRanking();
-                renderHistory();
-                updateUndoButton();
-                document.getElementById('totalMoney').textContent = '0';
-                document.getElementById('dataCount').textContent = '0/49个号码';
-                document.getElementById('tvDataCount').textContent = '0/49个号码';
-                localStorage.removeItem('lottery_data_v2');
-                
-                if (window.firebaseDb) saveToCloud();
-                
-                closeHistoryModal();
-                showNotification('✅ 所有数据已清空');
-            }
-            
-            window.copyLink = function() {
-                const saveData = {
-                    moneyMap: window.moneyMap,
-                    historyRecords: window.historyRecords.slice(0, 10),
-                    timestamp: Date.now()
-                };
-                
-                const dataStr = JSON.stringify(saveData);
-                const encoded = btoa(encodeURIComponent(dataStr));
-                const currentUrl = window.location.origin + window.location.pathname + '?data=' + encoded;
-                
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(currentUrl).then(() => {
-                        showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
-                    }).catch(err => {
-                        fallbackCopyToClipboard(currentUrl);
-                    });
-                } else {
-                    fallbackCopyToClipboard(currentUrl);
-                }
-            }
-            
-            function fallbackCopyToClipboard(text) {
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                textarea.style.position = 'fixed';
-                textarea.style.opacity = '0';
-                document.body.appendChild(textarea);
-                textarea.focus();
-                textarea.select();
-                
-                try {
-                    const successful = document.execCommand('copy');
-                    if (successful) {
-                        showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
-                    } else {
-                        showNotification('❌ 复制失败，请手动复制链接');
-                    }
-                } catch (err) {
-                    console.error('复制失败:', err);
-                    showNotification('❌ 复制失败，请手动复制链接');
-                }
-                
-                document.body.removeChild(textarea);
-            }
-            
-            // 切换电视模式
-            window.toggleTvMode = function() {
-                isTvMode = !isTvMode;
-                const tableSection = document.getElementById('tableSection');
-                const tvSection = document.getElementById('tvSection');
-                const modeToggle = document.getElementById('modeToggle');
-                const container = document.getElementById('appContainer');
-                
-                if (isTvMode) {
-                    tableSection.style.display = 'none';
-                    tvSection.style.display = 'block';
-                    modeToggle.textContent = '📱';
-                    modeToggle.title = '切换到手机模式';
-                    container.classList.add('tv-mode');
-                    document.body.classList.add('tv-mode');
-                    showNotification('📺 已切换到电视大屏模式');
-                } else {
-                    tableSection.style.display = 'block';
-                    tvSection.style.display = 'none';
-                    modeToggle.textContent = '📺';
-                    modeToggle.title = '切换到电视模式';
-                    container.classList.remove('tv-mode');
-                    document.body.classList.remove('tv-mode');
-                    showNotification('📱 已切换到手机模式');
-                }
-                
-                // 重新渲染网格以确保正确显示
-                renderTvGrid();
-                updateRanking();
-            }
-            
-            loadSavedData();
+            renderHistory();
+            renderDataTable();
+            updateTotalAmount();
             updateUndoButton();
+            saveData();
             
-            // 初始化电视网格
-            renderTvGrid();
-            updateRanking();
-            
-            lotterySystem = {
-                updateTotalAmount,
-                renderDataTable,
-                renderTvGrid,
-                updateRanking,
-                renderHistory,
-                saveData
-            };
+            if (window.firebaseDb) saveToCloud();
+            showNotification('✅ 已删除记录');
         }
         
+        function saveCurrentStateForUndo() {
+            const state = {
+                moneyMap: {...window.moneyMap},
+                historyRecords: JSON.parse(JSON.stringify(window.historyRecords)),
+                timestamp: Date.now()
+            };
+            window.undoStack.push(state);
+            if (window.undoStack.length > 20) window.undoStack.shift();
+            updateUndoButton();
+        }
+        
+        function updateUndoButton() {
+            // 暂时不需要此功能
+        }
+        
+        window.openHistoryModal = function() {
+            renderHistory();
+            document.getElementById('historyModal').style.display = 'block';
+        }
+        
+        window.closeHistoryModal = function() {
+            document.getElementById('historyModal').style.display = 'none';
+        }
+        
+        window.processData = function() {
+            const input = document.getElementById('inputData').value.trim();
+            if (!input) {
+                showNotification('请输入数据', 'warning');
+                return;
+            }
+            
+            saveCurrentStateForUndo();
+            const bets = lotteryParser.parseInput(input);
+            
+            if (bets.length === 0) {
+                showNotification('未识别到有效数据格式', 'warning');
+                return;
+            }
+            
+            bets.forEach(bet => {
+                if (bet.number >= 1 && bet.number <= 49) {
+                    window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
+                }
+            });
+            
+            window.lotteryData.forEach(item => {
+                item.amount = window.moneyMap[item.number] || 0;
+            });
+            
+            const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
+            addHistoryRecord(input, bets.length, totalAmount);
+            
+            updateTotalAmount();
+            document.getElementById('inputData').value = '';
+            renderDataTable();
+            renderHistory();
+            updateUndoButton();
+            saveData();
+            
+            if (window.firebaseDb) saveToCloud();
+            
+            showNotification(`✅ 成功录入 ${bets.length} 个下注\n💰 总计 ${totalAmount.toFixed(2)} 元`);
+        }
+        
+        window.clearHistory = function() {
+            if (!confirm('确定要清空所有录入记录吗？\n此操作不可恢复！')) return;
+            
+            saveCurrentStateForUndo();
+            window.historyRecords = [];
+            window.undoStack = [];
+            initData();
+            renderHistory();
+            renderDataTable();
+            updateTotalAmount();
+            updateUndoButton();
+            saveData();
+            
+            if (window.firebaseDb) saveToCloud();
+            
+            closeHistoryModal();
+            showNotification('✅ 已清空所有录入记录');
+        }
+        
+        window.clearAll = function() {
+            if (!confirm('⚠️ 确定要清空所有数据吗？\n包括所有录入记录和统计！')) return;
+            
+            initData();
+            window.historyRecords = [];
+            window.undoStack = [];
+            renderDataTable();
+            renderHistory();
+            updateUndoButton();
+            document.getElementById('totalMoney').textContent = '0';
+            document.getElementById('dataCount').textContent = '0/49个号码';
+            localStorage.removeItem('lottery_data_v2');
+            
+            if (window.firebaseDb) saveToCloud();
+            
+            closeHistoryModal();
+            showNotification('✅ 所有数据已清空');
+        }
+        
+        window.copyLink = function() {
+            const saveData = {
+                moneyMap: window.moneyMap,
+                historyRecords: window.historyRecords.slice(0, 10),
+                timestamp: Date.now()
+            };
+            
+            const dataStr = JSON.stringify(saveData);
+            const encoded = btoa(encodeURIComponent(dataStr));
+            const currentUrl = window.location.origin + window.location.pathname + '?data=' + encoded;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentUrl).then(() => {
+                    showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
+                }).catch(err => {
+                    fallbackCopyToClipboard(currentUrl);
+                });
+            } else {
+                fallbackCopyToClipboard(currentUrl);
+            }
+        }
+        
+        function fallbackCopyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
+                } else {
+                    showNotification('❌ 复制失败，请手动复制链接');
+                }
+            } catch (err) {
+                console.error('复制失败:', err);
+                showNotification('❌ 复制失败，请手动复制链接');
+            }
+            
+            document.body.removeChild(textarea);
+        }
+        
+        // ==================== 大屏显示功能 ====================
+        window.openBigScreen = function() {
+            document.getElementById('bigScreenModal').style.display = 'block';
+            renderBigScreenGrid();
+            
+            // 全屏显示
+            const elem = document.getElementById('bigScreenModal');
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        }
+        
+        window.closeBigScreen = function() {
+            document.getElementById('bigScreenModal').style.display = 'none';
+            
+            // 退出全屏
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+        
+        window.refreshBigScreen = function() {
+            renderBigScreenGrid();
+            showNotification('🔄 大屏数据已刷新');
+        }
+        
+        function renderBigScreenGrid() {
+            const grid = document.getElementById('bigScreenGrid');
+            if (!grid) return;
+            
+            // 排序数据（有金额在前）
+            const sortedData = [...window.lotteryData].sort((a, b) => {
+                if (a.amount > 0 && b.amount === 0) return -1;
+                if (a.amount === 0 && b.amount > 0) return 1;
+                if (a.amount > 0 && b.amount > 0) return b.amount - a.amount;
+                return a.number - b.number;
+            });
+            
+            let html = '';
+            
+            sortedData.forEach(item => {
+                const hasMoney = item.amount > 0;
+                const amountClass = item.amount === 0 ? 'zero' : '';
+                const waveClass = item.waveColor === '红波' ? 'wave-red' :
+                                item.waveColor === '蓝波' ? 'wave-blue' :
+                                item.waveColor === '绿波' ? 'wave-green' : '';
+                
+                html += `
+                    <div class="big-screen-card ${hasMoney ? 'has-money' : ''}">
+                        <div class="big-screen-number">${item.number.toString().padStart(2, '0')}</div>
+                        <div class="big-screen-zodiac">${item.zodiac}</div>
+                        <div class="big-screen-amount ${amountClass}">
+                            ${item.amount.toFixed(2)}元
+                        </div>
+                        <div class="big-screen-wave ${waveClass}">
+                            ${item.waveColor === '红波' ? '🔴' : 
+                              item.waveColor === '蓝波' ? '🔵' : 
+                              item.waveColor === '绿波' ? '🟢' : ''}
+                            ${item.waveColor}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+        }
+        
+        // ==================== Firebase云同步 ====================
         function initFirebase() {
             console.log('🔥 初始化Firebase...');
             updateCloudStatus('连接中...', 'connecting');
@@ -2263,8 +1929,6 @@ function renderTvGrid() {
                 if (lotterySystem) {
                     lotterySystem.updateTotalAmount();
                     lotterySystem.renderDataTable();
-                    lotterySystem.renderTvGrid();
-                    lotterySystem.updateRanking();
                     lotterySystem.renderHistory();
                 }
             }
@@ -2308,6 +1972,7 @@ function renderTvGrid() {
             }
         }
         
+        // ==================== 工具函数 ====================
         function showNotification(message, type = 'success') {
             const existing = document.querySelector('.notification');
             if (existing) existing.remove();
@@ -2320,7 +1985,7 @@ function renderTvGrid() {
             
             setTimeout(() => {
                 notification.style.opacity = '0';
-                notification.style.transform = 'translateY(100%)';
+                notification.style.transform = 'translateX(-50%) translateY(100%)';
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
         }
@@ -2342,7 +2007,8 @@ function renderTvGrid() {
             }
         }
         
-                      window.addEventListener('online', () => {
+        // ==================== 网络状态监听 ====================
+        window.addEventListener('online', () => {
             console.log('🌐 网络恢复');
             document.getElementById('networkIndicator').className = 'network-indicator network-online';
             showNotification('✅ 网络已恢复');
@@ -2359,228 +2025,9 @@ function renderTvGrid() {
             updateCloudStatus('离线模式', 'offline');
         });
         
-        // ====== 按金额排序的电视网格渲染 ======
-        function renderTvGridSorted() {
-            const tvGrid = document.getElementById('tvGridContainer');
-            if (!tvGrid) {
-                console.error('找不到tvGridContainer元素');
-                return;
-            }
-            
-            if (!window.lotteryData || window.lotteryData.length === 0) {
-                console.log('没有彩票数据');
-                return;
-            }
-            
-            // 按金额排序：有金额的在前，金额大的在前，没金额的按号码排序
-               const sortedData = [...window.lotteryData].sort((a, b) => {
-        if (a.amount > 0 && b.amount === 0) return -1;
-        if (a.amount === 0 && b.amount > 0) return 1;
-        if (a.amount > 0 && b.amount > 0) {
-            if (b.amount !== a.amount) return b.amount - a.amount;
-            return a.number - b.number;
-        }
-        return a.number - b.number;
-    });
-            
-            let html = '';
-            
-            sortedData.forEach(item => {
-                const hasMoney = item.amount > 0;
-                const amountClass = item.amount === 0 ? 'zero' : '';
-                const waveClass = item.waveColor === '红波' ? 'wave-red' :
-                                item.waveColor === '蓝波' ? 'wave-blue' :
-                                item.waveColor === '绿波' ? 'wave-green' : '';
-                
-                html += `
-                    <div class="tv-number-card ${hasMoney ? 'has-money' : ''}" data-number="${item.number}">
-                        <div class="tv-card-number">[${item.number.toString().padStart(2, '0')}]</div>
-                        <div class="tv-card-zodiac">${item.zodiac}</div>
-                        <div class="tv-card-amount ${amountClass}">${item.amount.toFixed(2)}元</div>
-                        <div class="tv-card-wave ${waveClass}">
-                            ${item.waveColor === '红波' ? '🔴' : 
-                              item.waveColor === '蓝波' ? '🔵' : 
-                              item.waveColor === '绿波' ? '🟢' : ''}
-                            ${item.waveColor}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            tvGrid.innerHTML = html;
-            console.log('电视网格渲染完成，已按金额排序');
-        }
-        
-        // 将函数挂载到window对象
-        window.renderTvGridSorted = renderTvGridSorted;
-        
-        // ====== 电视模式切换函数 ======
-        function toggleTvMode() {
-            console.log('🎯 电视模式切换函数被调用');
-            
-            const tableSection = document.getElementById('tableSection');
-            const tvSection = document.getElementById('tvSection');
-            const modeToggle = document.getElementById('modeToggle');
-            
-            if (!tableSection || !tvSection || !modeToggle) {
-                console.error('找不到必要的元素');
-                return;
-            }
-            
-            // 判断当前状态
-            const isTvMode = tvSection.style.display === 'block';
-            console.log('当前是否为电视模式:', isTvMode);
-            
-            if (!isTvMode) {
-                // 切换到电视模式
-                console.log('切换到电视模式');
-                tableSection.style.display = 'none';
-                tvSection.style.display = 'block';
-                modeToggle.textContent = '📱';
-                modeToggle.title = '切换到普通模式';
-                
-                // 添加电视模式CSS类
-                const appContainer = document.getElementById('appContainer');
-                if (appContainer) {
-                    appContainer.classList.add('tv-mode');
-                    console.log('已添加tv-mode类到appContainer');
-                }
-                document.body.classList.add('tv-mode');
-                console.log('已添加tv-mode类到body');
-                
-                // 重新渲染电视网格（按金额排序）
-                renderTvGridSorted();
-                updateRanking();
-                
-                showNotification('📺 已切换到电视大屏模式');
-            } else {
-                // 切换回普通模式
-                console.log('切换到普通模式');
-                tableSection.style.display = 'block';
-                tvSection.style.display = 'none';
-                modeToggle.textContent = '📺';
-                modeToggle.title = '切换到电视模式';
-                
-                // 移除电视模式CSS类
-                const appContainer = document.getElementById('appContainer');
-                if (appContainer) {
-                    appContainer.classList.remove('tv-mode');
-                    console.log('已移除tv-mode类从appContainer');
-                }
-                document.body.classList.remove('tv-mode');
-                console.log('已移除tv-mode类从body');
-                
-                showNotification('📱 已切换到普通模式');
-            }
-        }
-        
+        // 初始网络状态
         document.getElementById('networkIndicator').className = 
             navigator.onLine ? 'network-indicator network-online' : 'network-indicator network-offline';
-    // ====== 49号码弹窗功能 ======
-function openPopup49() {
-    const popup = document.getElementById('popup49');
-    popup.style.display = 'block';
-    renderPopupGrid();
-    updatePopupTotal();
-}
-
-function closePopup49() {
-    document.getElementById('popup49').style.display = 'none';
-    document.getElementById('popup49').classList.remove('fullscreen');
-}
-
-function toggleFullscreen() {
-    const popup = document.getElementById('popup49');
-    popup.classList.toggle('fullscreen');
-    
-    if (popup.classList.contains('fullscreen')) {
-        renderPopupGrid();
-    }
-}
-
-function renderPopupGrid() {
-    const container = document.getElementById('popupGridContainer');
-    const isFullscreen = document.getElementById('popup49').classList.contains('fullscreen');
-    
-    if (!window.lotteryData) return;
-    
-    // 排序数据（有金额在前）
-    const sortedData = [...window.lotteryData].sort((a, b) => {
-        if (a.amount > 0 && b.amount === 0) return -1;
-        if (a.amount === 0 && b.amount > 0) return 1;
-        if (a.amount > 0 && b.amount > 0) return b.amount - a.amount;
-        return a.number - b.number;
-    });
-    
-    let html = '';
-    sortedData.forEach(item => {
-        const hasMoney = item.amount > 0;
-        const waveClass = item.waveColor === '红波' ? 'wave-red' :
-                         item.waveColor === '蓝波' ? 'wave-blue' : 'wave-green';
-        
-        html += `
-            <div class="popup-number-card ${hasMoney ? 'has-money' : ''}">
-                <div class="popup-card-number">${item.number.toString().padStart(2, '0')}</div>
-                <div class="popup-card-zodiac">${item.zodiac}</div>
-                <div class="popup-card-amount ${item.amount === 0 ? 'zero' : ''}">
-                    ${item.amount.toFixed(2)}
-                </div>
-                <div class="popup-card-wave ${waveClass}">${item.waveColor}</div>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-}
-
-function updatePopupTotal() {
-    const total = Object.values(window.moneyMap || {}).reduce((sum, amount) => sum + amount, 0);
-    document.getElementById('popupTotalMoney').textContent = total.toFixed(2);
-}
-
-// 数据更新时同步弹窗
-const originalProcessData = window.processData;
-window.processData = function() {
-    originalProcessData();
-    if (document.getElementById('popup49').style.display === 'block') {
-        renderPopupGrid();
-        updatePopupTotal();
-    }
-};
-
-const originalClearAll = window.clearAll;
-window.clearAll = function() {
-    originalClearAll();
-    if (document.getElementById('popup49').style.display === 'block') {
-        renderPopupGrid();
-        updatePopupTotal();
-    }
-};</script>
-<!-- 49号码弹窗 -->
-<div id="popup49" class="number-popup">
-    <div class="popup-header">
-        <div class="popup-title">
-            <h3>📊 49个号码</h3>
-            <div class="popup-total">总计: <span id="popupTotalMoney">0</span>元</div>
-        </div>
-        <div class="popup-controls">
-            <button class="popup-btn fullscreen-btn" onclick="toggleFullscreen()" title="全屏">⛶</button>
-            <button class="close-popup" onclick="closePopup49()">×</button>
-        </div>
-    </div>
-    <div class="popup-grid-container" id="popupGridContainer">
-        <!-- 号码动态生成 -->
-    </div>
-</div>
-
-<!-- 打开按钮 -->
-<button class="open-popup-btn" onclick="openPopup49()" title="49个号码">49格</button></body>
+    </script>
+</body>
 </html>
-
-
-
-
-
-
-
-
