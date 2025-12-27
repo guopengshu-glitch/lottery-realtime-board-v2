@@ -1029,7 +1029,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: #0a0a0a;
+            background: #ffffff; /* 改为白色背景 */
             z-index: 20000;
             overflow: hidden;
             padding: 10px;
@@ -1041,24 +1041,23 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(245, 247, 250, 0.9); /* 浅灰色背景 */
             border-radius: 8px;
             margin-bottom: 10px;
-            color: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
         }
 
         .fullscreen-title {
             font-size: 28px;
             font-weight: 700;
-            color: white;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            color: #333;
         }
 
         .fullscreen-total {
             font-size: 32px;
             font-weight: 800;
-            color: #FFD700;
-            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            color: #667eea;
         }
 
         .fullscreen-total span {
@@ -1070,9 +1069,9 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border: 1px solid #e0e0e0;
             width: 50px;
             height: 50px;
             border-radius: 50%;
@@ -1083,15 +1082,15 @@
             justify-content: center;
             transition: all 0.3s;
             z-index: 20001;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .close-fullscreen-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: #f5f7fa;
             transform: scale(1.1);
         }
 
-        /* 7x7网格布局 - 缩小卡片尺寸 */
+        /* 7x7网格布局 - 保持原有卡片大小 */
         .fullscreen-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -1104,7 +1103,7 @@
         }
 
         .fullscreen-item {
-            background: rgba(30, 30, 30, 0.9);
+            background: white;
             border-radius: 6px;
             display: flex;
             flex-direction: column;
@@ -1112,58 +1111,57 @@
             align-items: center;
             padding: 4px;
             transition: all 0.3s;
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid #e0e0e0;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
         /* 金额排序高亮效果 */
         .fullscreen-item.rank-1 {
             border-color: #FFD700;
-            background: rgba(255, 215, 0, 0.15);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
         }
 
         .fullscreen-item.rank-2 {
             border-color: #C0C0C0;
-            background: rgba(192, 192, 192, 0.15);
-            box-shadow: 0 0 15px rgba(192, 192, 192, 0.3);
+            background: rgba(192, 192, 192, 0.1);
+            box-shadow: 0 0 8px rgba(192, 192, 192, 0.2);
         }
 
         .fullscreen-item.rank-3 {
             border-color: #CD7F32;
-            background: rgba(205, 127, 50, 0.15);
-            box-shadow: 0 0 12px rgba(205, 127, 50, 0.3);
+            background: rgba(205, 127, 50, 0.1);
+            box-shadow: 0 0 6px rgba(205, 127, 50, 0.2);
         }
 
         .fullscreen-item.has-amount {
-            background: rgba(46, 204, 113, 0.2);
-            border: 2px solid rgba(46, 204, 113, 0.4);
+            background: rgba(46, 204, 113, 0.1);
+            border: 1px solid rgba(46, 204, 113, 0.3);
         }
 
-        /* 号码显示 - 缩小字体 */
+        /* 号码显示 - 加大字体 */
         .fullscreen-number {
-            font-size: 24px;
-            font-weight: 800;
-            color: white;
-            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+            font-size: 32px; /* 加大到32px */
+            font-weight: 900;
+            color: #333;
             margin-bottom: 2px;
             line-height: 1;
         }
 
-        /* 金额显示 - 缩小字体 */
+        /* 金额显示 - 加大字体 */
         .fullscreen-amount {
-            font-size: 20px;
-            font-weight: 700;
-            color: #FF6B6B;
-            text-shadow: 0 2px 5px rgba(255, 107, 107, 0.7);
-            margin-bottom: 3px;
+            font-size: 26px; /* 加大到26px */
+            font-weight: 800;
+            color: #e74c3c;
+            margin-bottom: 2px;
             line-height: 1;
         }
 
         .fullscreen-amount.zero {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.3);
+            font-size: 20px; /* 零金额也加大 */
+            color: #bbb;
             font-weight: 500;
         }
 
@@ -1176,35 +1174,36 @@
             width: 100%;
         }
 
+        /* 生肖显示 - 加大字体 */
         .fullscreen-zodiac {
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 20px; /* 加大到20px */
+            font-weight: 700;
             color: #4ECDC4;
-            text-shadow: 0 1px 4px rgba(78, 205, 196, 0.5);
         }
 
+        /* 波色显示 - 缩小很多 */
         .fullscreen-wave {
-            font-size: 14px;
+            font-size: 10px; /* 缩小到10px */
             font-weight: 600;
-            padding: 3px 8px;
-            border-radius: 12px;
-            min-width: 60px;
+            padding: 1px 4px;
+            border-radius: 8px;
+            min-width: 40px;
             text-align: center;
             letter-spacing: 0.5px;
         }
 
         .wave-red-fullscreen {
-            background: linear-gradient(135deg, #ff3333, #cc0000);
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
             color: white;
         }
 
         .wave-blue-fullscreen {
-            background: linear-gradient(135deg, #3399ff, #0066cc);
+            background: linear-gradient(135deg, #4ecdc4, #45b7af);
             color: white;
         }
 
         .wave-green-fullscreen {
-            background: linear-gradient(135deg, #33cc33, #009900);
+            background: linear-gradient(135deg, #1dd1a1, #10ac84);
             color: white;
         }
 
@@ -1227,19 +1226,19 @@
         .rank-1-badge {
             background: #FFD700;
             color: #000;
-            box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+            box-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
         }
 
         .rank-2-badge {
             background: #C0C0C0;
             color: #000;
-            box-shadow: 0 0 6px rgba(192, 192, 192, 0.7);
+            box-shadow: 0 0 3px rgba(192, 192, 192, 0.7);
         }
 
         .rank-3-badge {
             background: #CD7F32;
             color: white;
-            box-shadow: 0 0 5px rgba(205, 127, 50, 0.7);
+            box-shadow: 0 0 2px rgba(205, 127, 50, 0.7);
         }
 
         /* 自动刷新指示灯 */
