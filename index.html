@@ -752,92 +752,61 @@
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* 最简单的自适应电视网格 */
 .tv-mode .tv-grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
     margin-top: 15px;
+    width: 100%;
 }
 
-/* 电视模式号码卡片 - 2米外清晰可见 */
 .tv-mode .tv-number-card {
     background: white;
-    border: 3px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 15px 8px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px 5px;
     text-align: center;
-    min-height: 180px;
+    min-height: 120px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
 }
-.tv-mode .tv-number-card.has-money {
-    border-color: #e74c3c;
-    background: #fff9f9;
-    box-shadow: 0 1px 3px rgba(231, 76, 60, 0.1);
-}
 
-/* 优化显示布局 - 一行显示所有信息 */
 .tv-mode .tv-card-number {
-    font-size: 28px; /* 增大字体 */
+    font-size: 22px;
     font-weight: 900;
     color: #2c3e50;
-    margin: 5px 0; /* 增加间距 */
-    padding: 0;
-    line-height: 1.2; /* 调整行高 */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+    margin: 3px 0;
 }
 
 .tv-mode .tv-card-zodiac {
-    font-size: 20px; /* 增大字体 */
+    font-size: 18px;
     color: #666;
-    margin: 5px 0;
-    padding: 0;
-    line-height: 1.2;
+    margin: 3px 0;
     font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
 }
 
 .tv-mode .tv-card-amount {
-    font-size: 26px; /* 增大字体 */
+    font-size: 20px;
     font-weight: 900;
     color: #e74c3c;
-    margin: 8px 0;
-    padding: 0;
-    line-height: 1.2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    width: 100%;
+    margin: 5px 0;
 }
 
 .tv-mode .tv-card-amount.zero {
+    font-size: 16px;
     color: #95a5a6;
-    font-size: 20px; /* 增大字体 */
 }
 
 .tv-mode .tv-card-wave {
-    font-size: 16px; /* 增大字体 */
+    font-size: 14px;
     font-weight: bold;
-    padding: 8px 12px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1.2;
-    margin-top: 5px;
-    overflow: hidden;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-top: 3px;
 }
 
 .tv-mode .wave-red {
@@ -855,7 +824,7 @@
     color: white;
 }
 
-/* 排名显示 - 更紧凑 */
+/* 排名显示 */
 .tv-mode .ranking-section {
     background: white;
     border-radius: 10px;
@@ -2485,6 +2454,7 @@ function renderTvGrid() {
     </script>
 </body>
 </html>
+
 
 
 
