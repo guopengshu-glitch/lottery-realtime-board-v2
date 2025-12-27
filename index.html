@@ -752,61 +752,88 @@
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* 最简单的自适应电视网格 */
+/* ====== 极致紧凑电视模式 - 一页显示49个号码 ====== */
+.tv-mode .data-section {
+    background: white;
+    padding: 0;
+    margin: 0 0 10px 0;
+    width: 100%;
+    height: 75vh;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
+
 .tv-mode .tv-grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 10px;
-    margin-top: 15px;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(7, 1fr);
+    gap: 0;
+    margin: 0;
+    padding: 0;
     width: 100%;
+    height: 100%;
+    box-sizing: border-box;
 }
 
 .tv-mode .tv-number-card {
     background: white;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 10px 5px;
+    border: 0.5px solid #ddd;
+    margin: 0;
+    padding: 0;
     text-align: center;
-    min-height: 120px;
+    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
+    overflow: hidden;
+}
+
+.tv-mode .tv-number-card.has-money {
+    border-color: #e74c3c;
+    background: #fff9f9;
 }
 
 .tv-mode .tv-card-number {
-    font-size: 22px;
+    font-size: calc(1.8vh + 0.5vw);
     font-weight: 900;
     color: #2c3e50;
-    margin: 3px 0;
+    margin: 0;
+    padding: 0;
+    line-height: 1;
 }
 
 .tv-mode .tv-card-zodiac {
-    font-size: 18px;
+    font-size: calc(1.4vh + 0.4vw);
     color: #666;
-    margin: 3px 0;
+    margin: 0;
+    padding: 0;
+    line-height: 1;
     font-weight: 600;
 }
 
 .tv-mode .tv-card-amount {
-    font-size: 20px;
+    font-size: calc(1.6vh + 0.45vw);
     font-weight: 900;
     color: #e74c3c;
-    margin: 5px 0;
+    margin: 0;
+    padding: 0;
+    line-height: 1;
 }
 
 .tv-mode .tv-card-amount.zero {
-    font-size: 16px;
+    font-size: calc(1.3vh + 0.35vw);
     color: #95a5a6;
 }
 
 .tv-mode .tv-card-wave {
-    font-size: 14px;
+    font-size: calc(1.1vh + 0.3vw);
     font-weight: bold;
-    padding: 6px 10px;
-    border-radius: 6px;
-    margin-top: 3px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    margin-top: 1px;
+    line-height: 1;
 }
 
 .tv-mode .wave-red {
@@ -824,19 +851,20 @@
     color: white;
 }
 
-/* 排名显示 */
 .tv-mode .ranking-section {
     background: white;
-    border-radius: 10px;
-    padding: 10px;
-    margin-bottom: 15px;
+    border-radius: 5px;
+    padding: 8px;
+    margin: 10px 0 0 0;
     border: 1px solid #e0e0e0;
+    height: 15vh;
+    box-sizing: border-box;
 }
 
 .tv-mode .ranking-title {
-    font-size: 16px;
+    font-size: calc(1.5vh + 0.3vw);
     color: #2c3e50;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
     text-align: center;
     font-weight: bold;
 }
@@ -844,30 +872,30 @@
 .tv-mode .ranking-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px;
     justify-content: center;
 }
 
 .tv-mode .ranking-item {
     background: #f8f9fa;
-    padding: 6px 8px;
-    border-radius: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     gap: 6px;
     border: 1px solid #e0e0e0;
-    min-width: 140px;
 }
 
 .tv-mode .rank-badge {
-    font-size: 14px;
+    font-size: calc(1.2vh + 0.2vw);
     font-weight: 900;
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .tv-mode .rank-1 { background: #FFD700; color: #000; }
@@ -876,328 +904,89 @@
 .tv-mode .rank-other { background: #95a5a6; color: white; }
 
 .tv-mode .rank-text {
-    font-size: 14px;
+    font-size: calc(1.3vh + 0.25vw);
     color: #2c3e50;
     font-weight: bold;
 }
 
-/* 极端紧凑模式 - 备用 */
-.tv-mode .tv-grid-container.ultra-compact {
-    gap: 1px;
+/* 电视机全屏优化 */
+.tv-mode body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
-.tv-mode .tv-grid-container.ultra-compact .tv-number-card {
-    height: 80px !important;
-    min-height: 80px !important;
-    max-height: 80px !important;
-    padding: 2px 0;
+.tv-mode .container {
+    padding: 10px !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    height: 100vh !important;
+    box-sizing: border-box;
 }
 
-.tv-mode .tv-grid-container.ultra-compact .tv-card-number {
-    font-size: 14px;
-    height: 14px;
+.tv-mode .section-title {
+    padding: 5px 0;
+    margin: 0 0 8px 0;
 }
 
-.tv-mode .tv-grid-container.ultra-compact .tv-card-zodiac {
-    font-size: 10px;
-    height: 10px;
-}
-
-.tv-mode .tv-grid-container.ultra-compact .tv-card-amount {
-    font-size: 16px;
-    height: 16px;
-}
-
-.tv-mode .tv-grid-container.ultra-compact .tv-card-amount.zero {
-    font-size: 12px;
-}
-
-.tv-mode .tv-grid-container.ultra-compact .tv-card-wave {
-    font-size: 8px;
-    height: 12px;
-}
-
-/* 响应式调整 */
+/* 覆盖原有的响应式媒体查询 */
 @media (max-width: 1600px) {
-    .tv-mode .tv-number-card {
-        height: 85px !important;
-        min-height: 85px !important;
-    }
-    
-    .tv-mode .tv-card-number {
-        font-size: 15px;
-        height: 15px;
-    }
-    
-    .tv-mode .tv-card-amount {
-        font-size: 17px;
-        height: 17px;
+    .tv-mode .tv-grid-container {
+        grid-template-columns: repeat(7, 1fr) !important;
+        grid-template-rows: repeat(7, 1fr) !important;
     }
 }
 
 @media (max-width: 1400px) {
     .tv-mode .tv-grid-container {
-        grid-template-columns: repeat(6, 1fr);
-        grid-template-rows: repeat(9, 1fr);
+        grid-template-columns: repeat(7, 1fr) !important;
+        grid-template-rows: repeat(7, 1fr) !important;
     }
 }
 
 @media (max-width: 1200px) {
     .tv-mode .tv-grid-container {
-        grid-template-columns: repeat(5, 1fr);
-        grid-template-rows: repeat(10, 1fr);
+        grid-template-columns: repeat(7, 1fr) !important;
+        grid-template-rows: repeat(7, 1fr) !important;
     }
 }
-        /* 底部信息 */
-        .footer-info {
-            text-align: center;
-            padding: 15px;
-            color: #7f8c8d;
-            font-size: 12px;
-            border-top: 1px solid #eee;
-            background: #f8f9fa;
-            margin-top: 20px;
-            border-radius: 0 0 15px 15px;
-        }
 
-        /* 模式切换按钮 */
-        .mode-toggle {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            font-size: 24px;
-            cursor: pointer;
-            z-index: 9998;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-        
-        .mode-toggle:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-        }
+@media (max-width: 375px) {
+    .tv-mode .tv-grid-container {
+        grid-template-columns: repeat(7, 1fr) !important;
+        grid-template-rows: repeat(7, 1fr) !important;
+        gap: 0 !important;
+    }
+    
+    .tv-mode .tv-number-card {
+        padding: 0 !important;
+        min-height: auto !important;
+    }
+}
 
-        /* 响应式设计 - 更新电视模式 */
-        @media (max-width: 375px) {
-            /* 原有样式... */
-            
-            .tv-mode .tv-grid-container {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 10px;
-            }
-            
-            .tv-mode .tv-number-card {
-                padding: 12px 8px;
-                min-height: 130px;
-            }
-            
-            .tv-mode .tv-card-number {
-                font-size: 24px;
-            }
-            
-            .tv-mode .tv-card-zodiac {
-                font-size: 18px;
-            }
-            
-            .tv-mode .tv-card-amount {
-                font-size: 28px;
-            }
-            
-            .tv-mode .tv-card-amount.zero {
-                font-size: 20px;
-            }
-            
-            .tv-mode .tv-card-wave {
-                font-size: 14px;
-                padding: 4px 8px;
-            }
-        }
+@media (min-width: 376px) and (max-width: 768px) {
+    .tv-mode .tv-grid-container {
+        grid-template-columns: repeat(7, 1fr) !important;
+        grid-template-rows: repeat(7, 1fr) !important;
+        gap: 0 !important;
+    }
+}
 
-        @media (min-width: 376px) and (max-width: 768px) {
-            .tv-mode .tv-grid-container {
-                grid-template-columns: repeat(5, 1fr);
-                gap: 12px;
-            }
-            
-            .tv-mode .tv-number-card {
-                min-height: 140px;
-            }
-            
-            .tv-mode .tv-card-number {
-                font-size: 26px;
-            }
-            
-            .tv-mode .tv-card-amount {
-                font-size: 30px;
-            }
-        }
+@media (min-width: 769px) {
+    .tv-mode .tv-grid-container {
+        grid-template-columns: repeat(7, 1fr) !important;
+        grid-template-rows: repeat(7, 1fr) !important;
+        gap: 0 !important;
+    }
+}
 
-        @media (min-width: 769px) {
-            .container {
-                padding: 20px;
-            }
-            
-            .header {
-                padding: 30px;
-                margin-bottom: 30px;
-            }
-            
-            .status-bar {
-                padding: 15px 25px;
-                margin-bottom: 20px;
-            }
-            
-            .total-section {
-                flex-direction: row;
-                align-items: stretch;
-                gap: 20px;
-            }
-            
-            .total-box {
-                flex: 1;
-                padding: 25px 30px;
-                order: 1;
-            }
-            
-            .clear-all-btn {
-                width: auto;
-                min-width: 180px;
-                padding: 0 30px;
-                order: 2;
-            }
-            
-            .input-section {
-                padding: 30px;
-                margin-bottom: 25px;
-            }
-            
-            #inputData {
-                min-height: 150px;
-                padding: 20px;
-                margin-bottom: 20px;
-            }
-            
-            .btn-group {
-                flex-direction: row;
-                gap: 15px;
-            }
-            
-            .btn {
-                flex: 1;
-                min-width: 0;
-            }
-            
-            .data-section {
-                padding: 25px;
-                margin-bottom: 30px;
-            }
-            
-            .section-title {
-                flex-direction: row;
-                align-items: center;
-                gap: 0;
-            }
-            
-            /* 电视模式桌面端 */
-            .tv-mode .tv-grid-container {
-                grid-template-columns: repeat(7, 1fr);
-                gap: 15px;
-            }
-            
-            .tv-mode .tv-number-card {
-                min-height: 160px;
-            }
-            
-            .tv-mode .tv-card-number {
-                font-size: 32px;
-            }
-            
-            .tv-mode .tv-card-amount {
-                font-size: 36px;
-            }
-            
-            .tv-mode .tv-card-wave {
-                font-size: 18px;
-            }
-            
-            .tv-mode .ranking-item {
-                min-width: 200px;
-            }
-            
-            .history-modal-content {
-                margin: 10vh auto;
-                height: 70vh;
-            }
-            
-            .notification {
-                right: 30px;
-                left: auto;
-                max-width: 350px;
-                text-align: left;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .container {
-                padding: 30px;
-            }
-            
-            .btn-group {
-                gap: 20px;
-            }
-            
-            /* 电视模式大屏 */
-            .tv-mode .tv-grid-container {
-                gap: 18px;
-            }
-            
-            .tv-mode .tv-number-card {
-                min-height: 180px;
-                padding: 18px 12px;
-            }
-            
-            .tv-mode .tv-card-number {
-                font-size: 36px;
-            }
-            
-            .tv-mode .tv-card-zodiac {
-                font-size: 26px;
-            }
-            
-            .tv-mode .tv-card-amount {
-                font-size: 42px;
-            }
-            
-            .tv-mode .tv-card-amount.zero {
-                font-size: 32px;
-            }
-            
-            .tv-mode .tv-card-wave {
-                font-size: 20px;
-                padding: 6px 12px;
-            }
-            
-            .tv-mode .ranking-title {
-                font-size: 28px;
-            }
-            
-            .tv-mode .ranking-item {
-                padding: 15px 25px;
-            }
-            
-            .tv-mode .rank-text {
-                font-size: 22px;
-            }
-        }
+@media (min-width: 1024px) {
+    .tv-mode .tv-grid-container {
+        grid-template-columns: repeat(7, 1fr) !important;
+        grid-template-rows: repeat(7, 1fr) !important;
+        gap: 0 !important;
+    }
+}
 
         @media (min-width: 1440px) {
             /* 电视模式超大屏 */
@@ -2454,6 +2243,7 @@ function renderTvGrid() {
     </script>
 </body>
 </html>
+
 
 
 
