@@ -743,37 +743,35 @@
             font-size: 13px;
         }
 
-        /* ====== 电视大屏模式专用样式 ====== */
+       /* ====== 电视大屏模式专用样式 ====== */
 .tv-mode .data-section {
     background: white;
-    padding: 15px; /* 减少内边距 */
-    border-radius: 15px;
-    margin-bottom: 20px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    padding: 10px; /* 进一步减少内边距 */
+    border-radius: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
 
 .tv-mode .tv-grid-container {
     display: grid;
     grid-template-columns: repeat(7, 1fr); /* 7列 */
-    grid-template-rows: repeat(7, 1fr); /* 7行 */
-    gap: 4px; /* 大幅减少间隙 */
-    margin-top: 10px;
-    height: calc(7 * (110px + 4px)); /* 固定总高度 */
+    gap: 3px; /* 最小间隙 */
+    margin-top: 8px;
 }
 
-/* 电视模式号码卡片 - 统一固定高度 */
+/* 电视模式号码卡片 - 更紧凑 */
 .tv-mode .tv-number-card {
     background: white;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 5px 2px;
+    border: 1px solid #e0e0e0; /* 细边框 */
+    border-radius: 5px;
+    padding: 3px 1px;
     text-align: center;
-    height: 110px !important; /* 强制固定高度 */
-    min-height: 110px !important;
-    max-height: 110px !important;
+    height: 90px !important; /* 更小高度 */
+    min-height: 90px !important;
+    max-height: 90px !important;
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* 均匀分布内容 */
+    justify-content: space-around; /* 均匀分布 */
     align-items: center;
     overflow: hidden;
     box-sizing: border-box;
@@ -782,19 +780,19 @@
 .tv-mode .tv-number-card.has-money {
     border-color: #e74c3c;
     background: #fff9f9;
-    box-shadow: 0 2px 6px rgba(231, 76, 60, 0.1);
+    box-shadow: 0 1px 3px rgba(231, 76, 60, 0.1);
 }
 
-/* 统一所有内容元素的高度 */
+/* 优化显示布局 - 一行显示所有信息 */
 .tv-mode .tv-card-number {
-    font-size: 18px;
+    font-size: 16px; /* 更小字体 */
     font-weight: 900;
     color: #2c3e50;
     margin: 0;
     padding: 0;
     line-height: 1;
-    height: 18px;
-    min-height: 18px;
+    height: 16px;
+    min-height: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -802,13 +800,13 @@
 }
 
 .tv-mode .tv-card-zodiac {
-    font-size: 14px;
+    font-size: 12px; /* 更小字体 */
     color: #2c3e50;
     margin: 0;
     padding: 0;
     line-height: 1;
-    height: 14px;
-    min-height: 14px;
+    height: 12px;
+    min-height: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -816,14 +814,14 @@
 }
 
 .tv-mode .tv-card-amount {
-    font-size: 20px;
+    font-size: 18px; /* 更小字体 */
     font-weight: 900;
     color: #e74c3c;
     margin: 0;
     padding: 0;
     line-height: 1;
-    height: 22px;
-    min-height: 22px;
+    height: 18px;
+    min-height: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -835,20 +833,20 @@
 
 .tv-mode .tv-card-amount.zero {
     color: #95a5a6;
-    font-size: 16px;
+    font-size: 14px; /* 更小字体 */
 }
 
 .tv-mode .tv-card-wave {
-    font-size: 11px;
+    font-size: 10px; /* 更小字体 */
     font-weight: bold;
-    padding: 2px 4px;
-    border-radius: 4px;
+    padding: 1px 3px;
+    border-radius: 3px;
     display: flex;
     align-items: center;
     justify-content: center;
     line-height: 1;
-    height: 16px;
-    min-height: 16px;
+    height: 14px;
+    min-height: 14px;
     overflow: hidden;
 }
 
@@ -867,19 +865,19 @@
     color: white;
 }
 
-/* 排名显示 */
+/* 排名显示 - 更紧凑 */
 .tv-mode .ranking-section {
     background: white;
-    border-radius: 15px;
-    padding: 15px;
-    margin-bottom: 20px;
-    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #e0e0e0;
 }
 
 .tv-mode .ranking-title {
-    font-size: 20px;
+    font-size: 16px;
     color: #2c3e50;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     text-align: center;
     font-weight: bold;
 }
@@ -887,26 +885,26 @@
 .tv-mode .ranking-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 6px;
     justify-content: center;
 }
 
 .tv-mode .ranking-item {
     background: #f8f9fa;
-    padding: 8px 12px;
-    border-radius: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     border: 1px solid #e0e0e0;
-    min-width: 160px;
+    min-width: 140px;
 }
 
 .tv-mode .rank-badge {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 900;
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -919,62 +917,62 @@
 .tv-mode .rank-other { background: #95a5a6; color: white; }
 
 .tv-mode .rank-text {
-    font-size: 16px;
+    font-size: 14px;
     color: #2c3e50;
     font-weight: bold;
 }
 
-/* 极端情况：如果还是显示不全，启用这个紧凑模式 */
-.tv-mode .tv-grid-container.compact-view {
-    gap: 2px;
+/* 极端紧凑模式 - 备用 */
+.tv-mode .tv-grid-container.ultra-compact {
+    gap: 1px;
 }
 
-.tv-mode .tv-grid-container.compact-view .tv-number-card {
-    height: 100px !important;
-    min-height: 100px !important;
-    max-height: 100px !important;
-    padding: 3px 1px;
+.tv-mode .tv-grid-container.ultra-compact .tv-number-card {
+    height: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
+    padding: 2px 0;
 }
 
-.tv-mode .tv-grid-container.compact-view .tv-card-number {
+.tv-mode .tv-grid-container.ultra-compact .tv-card-number {
+    font-size: 14px;
+    height: 14px;
+}
+
+.tv-mode .tv-grid-container.ultra-compact .tv-card-zodiac {
+    font-size: 10px;
+    height: 10px;
+}
+
+.tv-mode .tv-grid-container.ultra-compact .tv-card-amount {
     font-size: 16px;
     height: 16px;
 }
 
-.tv-mode .tv-grid-container.compact-view .tv-card-zodiac {
+.tv-mode .tv-grid-container.ultra-compact .tv-card-amount.zero {
     font-size: 12px;
+}
+
+.tv-mode .tv-grid-container.ultra-compact .tv-card-wave {
+    font-size: 8px;
     height: 12px;
-}
-
-.tv-mode .tv-grid-container.compact-view .tv-card-amount {
-    font-size: 18px;
-    height: 20px;
-}
-
-.tv-mode .tv-grid-container.compact-view .tv-card-amount.zero {
-    font-size: 14px;
-}
-
-.tv-mode .tv-grid-container.compact-view .tv-card-wave {
-    font-size: 10px;
-    height: 14px;
 }
 
 /* 响应式调整 */
 @media (max-width: 1600px) {
     .tv-mode .tv-number-card {
-        height: 105px !important;
-        min-height: 105px !important;
+        height: 85px !important;
+        min-height: 85px !important;
     }
     
     .tv-mode .tv-card-number {
-        font-size: 17px;
-        height: 17px;
+        font-size: 15px;
+        height: 15px;
     }
     
     .tv-mode .tv-card-amount {
-        font-size: 19px;
-        height: 21px;
+        font-size: 17px;
+        height: 17px;
     }
 }
 
@@ -2480,3 +2478,4 @@
     </script>
 </body>
 </html>
+
