@@ -1334,6 +1334,282 @@
                 bottom: max(20px, env(safe-area-inset-bottom));
             }
         }
+        
+       /* ==================== 全屏大屏显示样式 ==================== */
+.fullscreen-display {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #0a0a0a;
+    z-index: 20000;
+    overflow: hidden;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.fullscreen-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    color: white;
+}
+
+.fullscreen-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.fullscreen-total {
+    font-size: 32px;
+    font-weight: 800;
+    color: #FFD700;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+.fullscreen-total span {
+    font-size: 36px;
+    margin: 0 8px;
+}
+
+.close-fullscreen-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    z-index: 20001;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.close-fullscreen-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+/* 7x7网格布局 - 缩小卡片尺寸 */
+.fullscreen-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(7, 1fr);
+    gap: 6px;
+    width: 100%;
+    height: calc(100vh - 80px);
+    padding: 0 5px;
+    box-sizing: border-box;
+}
+
+.fullscreen-item {
+    background: rgba(30, 30, 30, 0.9);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4px;
+    transition: all 0.3s;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 金额排序高亮效果 */
+.fullscreen-item.rank-1 {
+    border-color: #FFD700;
+    background: rgba(255, 215, 0, 0.15);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+.fullscreen-item.rank-2 {
+    border-color: #C0C0C0;
+    background: rgba(192, 192, 192, 0.15);
+    box-shadow: 0 0 15px rgba(192, 192, 192, 0.3);
+}
+
+.fullscreen-item.rank-3 {
+    border-color: #CD7F32;
+    background: rgba(205, 127, 50, 0.15);
+    box-shadow: 0 0 12px rgba(205, 127, 50, 0.3);
+}
+
+.fullscreen-item.has-amount {
+    background: rgba(46, 204, 113, 0.2);
+    border: 2px solid rgba(46, 204, 113, 0.4);
+}
+
+/* 号码显示 - 缩小字体 */
+.fullscreen-number {
+    font-size: 24px;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+    margin-bottom: 2px;
+    line-height: 1;
+}
+
+/* 金额显示 - 缩小字体 */
+.fullscreen-amount {
+    font-size: 20px;
+    font-weight: 700;
+    color: #FF6B6B;
+    text-shadow: 0 2px 5px rgba(255, 107, 107, 0.7);
+    margin-bottom: 3px;
+    line-height: 1;
+}
+
+.fullscreen-amount.zero {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.3);
+    font-weight: 500;
+}
+
+/* 生肖和波色显示 */
+.fullscreen-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+}
+
+.fullscreen-zodiac {
+    font-size: 16px;
+    font-weight: 600;
+    color: #4ECDC4;
+    text-shadow: 0 1px 4px rgba(78, 205, 196, 0.5);
+}
+
+.fullscreen-wave {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    min-width: 60px;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+.wave-red-fullscreen {
+    background: linear-gradient(135deg, #ff3333, #cc0000);
+    color: white;
+}
+
+.wave-blue-fullscreen {
+    background: linear-gradient(135deg, #3399ff, #0066cc);
+    color: white;
+}
+
+.wave-green-fullscreen {
+    background: linear-gradient(135deg, #33cc33, #009900);
+    color: white;
+}
+
+/* 排名标记 */
+.rank-badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    z-index: 1;
+}
+
+.rank-1-badge {
+    background: #FFD700;
+    color: #000;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+}
+
+.rank-2-badge {
+    background: #C0C0C0;
+    color: #000;
+    box-shadow: 0 0 6px rgba(192, 192, 192, 0.7);
+}
+
+.rank-3-badge {
+    background: #CD7F32;
+    color: white;
+    box-shadow: 0 0 5px rgba(205, 127, 50, 0.7);
+}
+
+/* 全屏按钮样式 */
+.btn-fullscreen {
+    background: linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%);
+    color: white;
+    border: none;
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 60px;
+    margin-top: 10px;
+    width: 100%;
+    letter-spacing: 1px;
+}
+
+.btn-fullscreen:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 25px rgba(255, 107, 107, 0.4);
+}
+
+.btn-fullscreen:active {
+    transform: translateY(-1px);
+}
+
+/* 全屏按钮在主界面 */
+.btn-fullscreen-main {
+    background: linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%);
+    color: white;
+    order: 4;
+}
+
+/* 自动刷新指示灯 */
+.auto-refresh-indicator {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(46, 204, 113, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 20002;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+} 
     </style>
     
     <!-- Firebase SDK -->
@@ -1341,6 +1617,24 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" defer></script>
 </head>
 <body>
+    <!-- ==================== 全屏大屏显示 ==================== -->
+<div class="fullscreen-display" id="fullscreenDisplay">
+    <button class="close-fullscreen-btn" onclick="closeFullscreen()">×</button>
+    
+    <div class="fullscreen-header">
+        <div class="fullscreen-title">📊 彩票实时看板 - 大屏模式</div>
+        <div class="fullscreen-total">总计: <span id="fullscreenTotal">0</span> 元</div>
+    </div>
+    
+    <div class="fullscreen-grid" id="fullscreenGrid">
+        <!-- 49个号码将在这里动态生成 -->
+    </div>
+    
+    <div class="auto-refresh-indicator" id="autoRefreshIndicator">
+        <span>🔄</span> 实时同步中...
+    </div>
+</div>
+    
     <!-- 网络状态指示器 -->
     <div class="network-indicator network-online" id="networkIndicator"></div>
     
@@ -1433,20 +1727,19 @@
                 ></textarea>
                 
                 <div class="btn-group">
-                    <button class="btn btn-primary" onclick="processData()">
-                        📤 发布数据
-                    </button>
-                    <button class="btn btn-history" onclick="openHistoryModal()">
-                        📋 查看记录
-                    </button>
-                    <button class="btn btn-success" onclick="copyLink()">
-                        🔗 分享链接
-                    </button>
-                    <button class="btn btn-fullscreen-main" onclick="openFullscreen()">
-                        🖥️ 大屏显示
-                    </button>
-                </div>
-            </div>
+    <button class="btn btn-primary" onclick="processData()">
+        📤 发布数据
+    </button>
+    <button class="btn btn-history" onclick="openHistoryModal()">
+        📋 查看记录
+    </button>
+    <button class="btn btn-success" onclick="copyLink()">
+        🔗 分享链接
+    </button>
+    <button class="btn btn-fullscreen-main" onclick="openFullscreen()">
+        🖥️ 大屏显示
+    </button>
+</div>
             
             <div class="data-section">
                 <div class="section-title">
@@ -2166,6 +2459,10 @@
                 }
                 
                 showNotification(`✅ 成功录入 ${bets.length} 个下注\n💰 总计 ${totalAmount.toFixed(2)} 元`);
+                // 如果大屏显示已打开，则更新大屏显示
+if (document.getElementById('fullscreenDisplay').style.display === 'block') {
+    renderFullscreenDisplay();
+}
             }
             
             window.clearHistory = function() {
@@ -2456,13 +2753,171 @@
         
         window.addEventListener('offline', () => {
             console.log('🌐 网络断开');
-            document.getElementById('networkIndicator').className = 'network-indicator network-offline';
-            showNotification('⚠️ 网络已断开，切换到离线模式');
-            updateCloudStatus('离线模式', 'offline');
-        });
-        
-        document.getElementById('networkIndicator').className = 
+                    document.getElementById('networkIndicator').className = 
             navigator.onLine ? 'network-indicator network-online' : 'network-indicator network-offline';
+        
+        // ==================== 全屏大屏功能 ====================
+        let fullscreenRefreshInterval = null;
+
+        function openFullscreen() {
+            console.log('🖥️ 打开大屏显示');
+            
+            // 显示全屏窗口
+            document.getElementById('fullscreenDisplay').style.display = 'block';
+            
+            // 首次渲染
+            renderFullscreenDisplay();
+            
+            // 开始自动刷新
+            startFullscreenAutoRefresh();
+            
+            // 禁用主页面滚动
+            document.body.style.overflow = 'hidden';
+            
+            // 隐藏主界面的状态指示器
+            document.getElementById('networkIndicator').style.opacity = '0';
+            document.getElementById('cloudStatus').style.opacity = '0';
+        }
+
+        function closeFullscreen() {
+            console.log('📱 关闭大屏显示');
+            
+            // 隐藏全屏窗口
+            document.getElementById('fullscreenDisplay').style.display = 'none';
+            
+            // 停止自动刷新
+            stopFullscreenAutoRefresh();
+            
+            // 启用主页面滚动
+            document.body.style.overflow = '';
+            
+            // 显示主界面的状态指示器
+            document.getElementById('networkIndicator').style.opacity = '1';
+            document.getElementById('cloudStatus').style.opacity = '1';
+        }
+
+        function renderFullscreenDisplay() {
+            if (!window.lotteryData) return;
+            
+            // 更新总计金额
+            const total = Object.values(window.moneyMap || {}).reduce((sum, amount) => sum + amount, 0);
+            document.getElementById('fullscreenTotal').textContent = total.toFixed(2);
+            
+            // 准备数据 - 按金额排序，金额大的在前
+            const sortedData = [...window.lotteryData].sort((a, b) => {
+                // 按金额排序（金额大的在前）
+                if (a.amount !== b.amount) {
+                    return b.amount - a.amount;
+                }
+                // 金额相同按号码排序
+                return a.number - b.number;
+            });
+            
+            // 计算排名
+            let currentRank = 0;
+            let lastAmount = null;
+            let sameAmountCount = 0;
+            
+            const rankedData = sortedData.map(item => {
+                if (item.amount > 0) {
+                    if (item.amount !== lastAmount) {
+                        currentRank += 1 + sameAmountCount;
+                        sameAmountCount = 0;
+                    } else {
+                        sameAmountCount++;
+                    }
+                    lastAmount = item.amount;
+                    return { ...item, rank: currentRank };
+                }
+                return { ...item, rank: 0 };
+            });
+            
+            // 生成7x7网格的HTML
+            let html = '';
+            let gridIndex = 0;
+            
+            // 创建7x7网格 (7行7列 = 49个单元格)
+            for (let row = 0; row < 7; row++) {
+                for (let col = 0; col < 7; col++) {
+                    const dataItem = gridIndex < rankedData.length ? rankedData[gridIndex] : null;
+                    gridIndex++;
+                    
+                    if (!dataItem) continue;
+                    
+                    // 确定波色CSS类
+                    let waveClass = '';
+                    if (dataItem.waveColor === '红波') waveClass = 'wave-red-fullscreen';
+                    else if (dataItem.waveColor === '蓝波') waveClass = 'wave-blue-fullscreen';
+                    else if (dataItem.waveColor === '绿波') waveClass = 'wave-green-fullscreen';
+                    
+                    // 确定排名CSS类
+                    let rankClass = '';
+                    let rankBadge = '';
+                    if (dataItem.rank === 1) {
+                        rankClass = 'rank-1';
+                        rankBadge = '<div class="rank-badge rank-1-badge">1</div>';
+                    } else if (dataItem.rank === 2) {
+                        rankClass = 'rank-2';
+                        rankBadge = '<div class="rank-badge rank-2-badge">2</div>';
+                    } else if (dataItem.rank === 3) {
+                        rankClass = 'rank-3';
+                        rankBadge = '<div class="rank-badge rank-3-badge">3</div>';
+                    }
+                    
+                    // 添加有金额的样式
+                    const hasAmountClass = dataItem.amount > 0 ? 'has-amount' : '';
+                    
+                    html += `
+                        <div class="fullscreen-item ${rankClass} ${hasAmountClass}">
+                            ${rankBadge}
+                            <div class="fullscreen-number">${dataItem.number}</div>
+                            <div class="fullscreen-amount ${dataItem.amount > 0 ? '' : 'zero'}">
+                                ${dataItem.amount > 0 ? dataItem.amount.toFixed(2) + '元' : '0元'}
+                            </div>
+                            <div class="fullscreen-info">
+                                <div class="fullscreen-zodiac">${dataItem.zodiac}</div>
+                                <div class="fullscreen-wave ${waveClass}">${dataItem.waveColor}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            document.getElementById('fullscreenGrid').innerHTML = html;
+            
+            // 更新刷新时间显示
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { 
+                hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+            document.getElementById('autoRefreshIndicator').innerHTML = 
+                `<span>🔄</span> 最后更新: ${timeStr}`;
+        }
+
+        function startFullscreenAutoRefresh() {
+            // 清除现有定时器
+            if (fullscreenRefreshInterval) {
+                clearInterval(fullscreenRefreshInterval);
+            }
+            
+            // 每5秒自动刷新一次
+            fullscreenRefreshInterval = setInterval(() => {
+                if (document.getElementById('fullscreenDisplay').style.display === 'block') {
+                    renderFullscreenDisplay();
+                }
+            }, 5000); // 5秒刷新一次
+            
+            console.log('🔄 大屏自动刷新已启动（每5秒刷新）');
+        }
+
+        function stopFullscreenAutoRefresh() {
+            if (fullscreenRefreshInterval) {
+                clearInterval(fullscreenRefreshInterval);
+                fullscreenRefreshInterval = null;
+                console.log('🔄 大屏自动刷新已停止');
+            }
+        }
+        
     </script>
 </body>
 </html>
