@@ -1781,12 +1781,15 @@
             
             function renderDataTable() {
                 const tbody = document.getElementById('tableBody');
-                const sortedData = [...window.lotteryData].sort((a, b) => {
-                    if (a.amount > 0 && b.amount === 0) return -1;
-                    if (a.amount === 0 && b.amount > 0) return 1;
-                    if (a.amount > 0 && b.amount > 0) return b.amount - a.amount;
-                    return a.number - b.number;
-                });
+                   const sortedData = [...window.lotteryData].sort((a, b) => {
+        if (a.amount > 0 && b.amount === 0) return -1;
+        if (a.amount === 0 && b.amount > 0) return 1;
+        if (a.amount > 0 && b.amount > 0) {
+            if (b.amount !== a.amount) return b.amount - a.amount;
+            return a.number - b.number;
+        }
+        return a.number - b.number;
+    });
                 
                 let html = '';
                 let currentRank = 0;
@@ -2375,12 +2378,15 @@
             }
             
             // 按金额排序：有金额的在前，金额大的在前，没金额的按号码排序
-            const sortedData = [...window.lotteryData].sort((a, b) => {
-                if (a.amount > 0 && b.amount === 0) return -1;
-                if (a.amount === 0 && b.amount > 0) return 1;
-                if (a.amount > 0 && b.amount > 0) return b.amount - a.amount;
-                return a.number - b.number;
-            });
+               const sortedData = [...window.lotteryData].sort((a, b) => {
+        if (a.amount > 0 && b.amount === 0) return -1;
+        if (a.amount === 0 && b.amount > 0) return 1;
+        if (a.amount > 0 && b.amount > 0) {
+            if (b.amount !== a.amount) return b.amount - a.amount;
+            return a.number - b.number;
+        }
+        return a.number - b.number;
+    });
             
             let html = '';
             
@@ -2478,4 +2484,5 @@
     </script>
 </body>
 </html>
+
 
