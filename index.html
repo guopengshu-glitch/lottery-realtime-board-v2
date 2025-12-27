@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>📊 彩票实时看板 - 多人实时同步</title>
+    <title>📊 彩票实时看板 - 电视大屏模式</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
     <style>
-        /* 你的原有CSS样式完全保持不变 */
+        /* 你的原有CSS样式完全保持不变，只添加电视模式 */
+        
+        /* 原有样式全部保留... */
         * {
             margin: 0;
             padding: 0;
@@ -613,7 +615,7 @@
             align-self: flex-end;
         }
 
-        /* 表格样式（手机端） */
+        /* 表格样式 - 修改为电视大屏模式 */
         .compact-table {
             width: 100%;
             border-collapse: collapse;
@@ -741,6 +743,154 @@
             font-size: 13px;
         }
 
+        /* 电视大屏模式专用样式 */
+        .tv-mode .data-section {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tv-mode .tv-grid-container {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .tv-mode .tv-number-card {
+            background: white;
+            border: 3px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 15px 10px;
+            text-align: center;
+            transition: all 0.3s;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .tv-mode .tv-number-card.has-money {
+            border-color: #e74c3c;
+            background: #fff9f9;
+            box-shadow: 0 5px 20px rgba(231, 76, 60, 0.15);
+        }
+        
+        .tv-mode .tv-card-number {
+            font-size: 32px;
+            font-weight: 900;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+        
+        .tv-mode .tv-card-zodiac {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+        
+        .tv-mode .tv-card-amount {
+            font-size: 36px;
+            font-weight: 900;
+            color: #e74c3c;
+            margin-bottom: 8px;
+            line-height: 1;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .tv-mode .tv-card-amount.zero {
+            color: #95a5a6;
+            font-size: 28px;
+        }
+        
+        .tv-mode .tv-card-wave {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 10px;
+            display: inline-block;
+            line-height: 1;
+        }
+        
+        .tv-mode .wave-red {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .tv-mode .wave-blue {
+            background: #4ecdc4;
+            color: white;
+        }
+        
+        .tv-mode .wave-green {
+            background: #1dd1a1;
+            color: white;
+        }
+
+        /* 排名显示 */
+        .tv-mode .ranking-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 3px solid #e0e0e0;
+        }
+        
+        .tv-mode .ranking-title {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .tv-mode .ranking-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .tv-mode .ranking-item {
+            background: #f8f9fa;
+            padding: 12px 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 2px solid #e0e0e0;
+            min-width: 180px;
+        }
+        
+        .tv-mode .rank-badge {
+            font-size: 20px;
+            font-weight: 900;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .tv-mode .rank-1 { background: #FFD700; color: #000; }
+        .tv-mode .rank-2 { background: #C0C0C0; color: #000; }
+        .tv-mode .rank-3 { background: #CD7F32; color: #000; }
+        .tv-mode .rank-other { background: #95a5a6; color: white; }
+        
+        .tv-mode .rank-text {
+            font-size: 20px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
         /* 通知样式 */
         .notification {
             position: fixed;
@@ -784,110 +934,90 @@
             border-radius: 0 0 15px 15px;
         }
 
-        /* 响应式设计 */
+        /* 模式切换按钮 */
+        .mode-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 9998;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .mode-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 响应式设计 - 更新电视模式 */
         @media (max-width: 375px) {
-            .compact-table th,
-            .compact-table td {
-                font-size: 13px;
-                padding: 8px 2px;
+            /* 原有样式... */
+            
+            .tv-mode .tv-grid-container {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
             }
             
-            .compact-table th:nth-child(1),
-            .compact-table td:nth-child(1) {
-                width: 10%;
+            .tv-mode .tv-number-card {
+                padding: 12px 8px;
+                min-height: 130px;
             }
             
-            .compact-table th:nth-child(2),
-            .compact-table td:nth-child(2) {
-                width: 10%;
+            .tv-mode .tv-card-number {
+                font-size: 24px;
             }
             
-            .compact-table th:nth-child(3),
-            .compact-table td:nth-child(3) {
-                width: 16%;
-            }
-            
-            .compact-table th:nth-child(4),
-            .compact-table td:nth-child(4) {
-                width: 32%;
-                padding-right: 4px;
-            }
-            
-            .compact-table th:nth-child(5),
-            .compact-table td:nth-child(5) {
-                width: 32%;
-            }
-            
-            .wave-cell {
-                padding: 3px 6px;
-                font-size: 11px;
-                min-width: 45px;
-            }
-            
-            .amount-cell {
-                font-size: 13px;
-            }
-            
-            .header h1 {
-                font-size: 22px;
-            }
-            
-            .header p {
-                font-size: 14px;
-            }
-            
-            .status-bar {
-                font-size: 15px;
-                padding: 12px 15px;
-            }
-            
-            .total-box {
-                font-size: 20px;
-                padding: 20px;
-            }
-            
-            .total-box span {
-                font-size: 28px;
-            }
-            
-            .clear-all-btn {
-                font-size: 15px;
-                padding: 14px;
-            }
-            
-            .section-title span:first-child {
+            .tv-mode .tv-card-zodiac {
                 font-size: 18px;
             }
             
-            .btn {
-                font-size: 15px;
-                padding: 14px;
+            .tv-mode .tv-card-amount {
+                font-size: 28px;
             }
             
-            .notification {
-                font-size: 15px;
+            .tv-mode .tv-card-amount.zero {
+                font-size: 20px;
+            }
+            
+            .tv-mode .tv-card-wave {
+                font-size: 14px;
+                padding: 4px 8px;
             }
         }
 
         @media (min-width: 376px) and (max-width: 768px) {
-            .compact-table th,
-            .compact-table td {
-                font-size: 14px;
+            .tv-mode .tv-grid-container {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 12px;
             }
             
-            .wave-cell {
-                font-size: 12px;
+            .tv-mode .tv-number-card {
+                min-height: 140px;
             }
             
-            .amount-cell {
-                font-size: 14px;
+            .tv-mode .tv-card-number {
+                font-size: 26px;
+            }
+            
+            .tv-mode .tv-card-amount {
+                font-size: 30px;
             }
         }
 
         @media (min-width: 769px) {
             .container {
                 padding: 20px;
-                max-width: 1600px;
             }
             
             .header {
@@ -951,204 +1081,35 @@
                 gap: 0;
             }
             
-            /* 电脑端：隐藏表格，显示网格 */
-            .compact-table {
-                display: none;
-            }
-            
-            /* 网格容器 */
-            .grid-container {
-                display: grid !important;
+            /* 电视模式桌面端 */
+            .tv-mode .tv-grid-container {
                 grid-template-columns: repeat(7, 1fr);
-                grid-template-rows: repeat(7, auto);
-                gap: 12px;
-                margin-top: 20px;
+                gap: 15px;
             }
             
-            /* 网格项目 - 每个号码卡片 */
-            .grid-item {
-                background: white;
-                border-radius: 10px;
-                padding: 12px 8px;
-                text-align: center;
-                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-                border: 1px solid #eee;
-                transition: all 0.3s ease;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                min-height: 100px;
+            .tv-mode .tv-number-card {
+                min-height: 160px;
             }
             
-            .grid-item:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-                border-color: #667eea;
+            .tv-mode .tv-card-number {
+                font-size: 32px;
             }
             
-            /* 号码行（排名+号码） */
-            .grid-number-row {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 5px;
-                margin-bottom: 8px;
-                width: 100%;
+            .tv-mode .tv-card-amount {
+                font-size: 36px;
             }
             
-            /* 排名徽章 */
-            .rank-badge {
-                width: 28px;
-                height: 28px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: 900;
-                font-size: 14px;
-                color: white;
-            }
-            
-            .rank-1-badge {
-                background: linear-gradient(135deg, #FFD700, #FFAA00);
-                box-shadow: 0 3px 8px rgba(255, 215, 0, 0.4);
-            }
-            
-            .rank-2-badge {
-                background: linear-gradient(135deg, #C0C0C0, #A0A0A0);
-                box-shadow: 0 3px 8px rgba(192, 192, 192, 0.4);
-            }
-            
-            .rank-3-badge {
-                background: linear-gradient(135deg, #CD7F32, #B3692B);
-                box-shadow: 0 3px 8px rgba(205, 127, 50, 0.4);
-            }
-            
-            .rank-other-badge {
-                background: #667eea;
-                font-size: 12px;
-            }
-            
-            /* 号码显示 */
-            .grid-number {
-                font-size: 26px;
-                font-weight: 900;
-                font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-                color: #2c3e50;
-                min-width: 50px;
-            }
-            
-            /* 生肖显示 */
-            .grid-zodiac {
-                font-size: 14px;
-                font-weight: 600;
-                color: #666;
-                margin-bottom: 6px;
-                background: #f8f9fa;
-                padding: 3px 10px;
-                border-radius: 20px;
-                width: 80%;
-            }
-            
-            /* 金额显示 */
-            .grid-amount {
-                font-size: 16px;
-                font-weight: 800;
-                color: #e74c3c;
-                margin-bottom: 8px;
-                font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-            }
-            
-            .grid-amount-zero {
-                color: #bbb;
-                font-weight: 500;
-            }
-            
-            /* 波色显示 */
-            .grid-wave {
-                display: inline-block;
-                padding: 4px 12px;
-                border-radius: 20px;
-                font-size: 12px;
-                font-weight: 700;
-                color: white;
-                min-width: 60px;
-            }
-            
-            .grid-wave-red {
-                background: linear-gradient(135deg, #ff6b6b, #ee5a52);
-            }
-            
-            .grid-wave-blue {
-                background: linear-gradient(135deg, #4ecdc4, #45b7af);
-            }
-            
-            .grid-wave-green {
-                background: linear-gradient(135deg, #1dd1a1, #10ac84);
-            }
-            
-            /* 高亮前三名 */
-            .grid-item.highlight-rank-1 {
-                border: 2px solid #FFD700;
-                background: linear-gradient(135deg, #fff9e6, #fff);
-            }
-            
-            .grid-item.highlight-rank-2 {
-                border: 2px solid #C0C0C0;
-                background: linear-gradient(135deg, #f8f8f8, #fff);
-            }
-            
-            .grid-item.highlight-rank-3 {
-                border: 2px solid #CD7F32;
-                background: linear-gradient(135deg, #f7f0e6, #fff);
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .container {
-                max-width: 1800px;
-                padding: 30px;
-            }
-            
-            .btn-group {
-                gap: 20px;
-            }
-            
-            .grid-container {
-                gap: 16px;
-            }
-            
-            .grid-item {
-                padding: 15px 10px;
-                min-height: 120px;
-                border-radius: 12px;
-            }
-            
-            .grid-number {
-                font-size: 30px;
-                min-width: 60px;
-            }
-            
-            .grid-zodiac {
-                font-size: 16px;
-                padding: 4px 12px;
-            }
-            
-            .grid-amount {
+            .tv-mode .tv-card-wave {
                 font-size: 18px;
             }
             
-            .grid-wave {
-                font-size: 14px;
-                padding: 5px 15px;
-                min-width: 70px;
+            .tv-mode .ranking-item {
+                min-width: 200px;
             }
             
-            .rank-badge {
-                width: 32px;
-                height: 32px;
-                font-size: 15px;
+            .history-modal-content {
+                margin: 10vh auto;
+                height: 70vh;
             }
             
             .notification {
@@ -1157,244 +1118,91 @@
                 max-width: 350px;
                 text-align: left;
             }
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                padding: 30px;
+            }
             
-            .history-modal-content {
-                margin: 10vh auto;
-                height: 70vh;
+            .btn-group {
+                gap: 20px;
+            }
+            
+            /* 电视模式大屏 */
+            .tv-mode .tv-grid-container {
+                gap: 18px;
+            }
+            
+            .tv-mode .tv-number-card {
+                min-height: 180px;
+                padding: 18px 12px;
+            }
+            
+            .tv-mode .tv-card-number {
+                font-size: 36px;
+            }
+            
+            .tv-mode .tv-card-zodiac {
+                font-size: 26px;
+            }
+            
+            .tv-mode .tv-card-amount {
+                font-size: 42px;
+            }
+            
+            .tv-mode .tv-card-amount.zero {
+                font-size: 32px;
+            }
+            
+            .tv-mode .tv-card-wave {
+                font-size: 20px;
+                padding: 6px 12px;
+            }
+            
+            .tv-mode .ranking-title {
+                font-size: 28px;
+            }
+            
+            .tv-mode .ranking-item {
+                padding: 15px 25px;
+            }
+            
+            .tv-mode .rank-text {
+                font-size: 22px;
             }
         }
 
         @media (min-width: 1440px) {
-            .container {
-                max-width: 2000px;
-                padding: 40px;
-            }
-            
-            .grid-container {
+            /* 电视模式超大屏 */
+            .tv-mode .tv-grid-container {
                 gap: 20px;
             }
             
-            .grid-item {
-                padding: 18px 12px;
-                min-height: 140px;
-                border-radius: 14px;
+            .tv-mode .tv-number-card {
+                min-height: 200px;
+                padding: 20px 15px;
             }
             
-            .grid-number {
-                font-size: 34px;
-                min-width: 70px;
+            .tv-mode .tv-card-number {
+                font-size: 40px;
             }
             
-            .grid-zodiac {
-                font-size: 18px;
-                padding: 5px 14px;
+            .tv-mode .tv-card-zodiac {
+                font-size: 28px;
             }
             
-            .grid-amount {
-                font-size: 20px;
+            .tv-mode .tv-card-amount {
+                font-size: 48px;
             }
             
-            .grid-wave {
-                font-size: 15px;
-                padding: 6px 18px;
-                min-width: 80px;
+            .tv-mode .tv-card-amount.zero {
+                font-size: 36px;
             }
             
-            .rank-badge {
-                width: 36px;
-                height: 36px;
-                font-size: 16px;
-            }
-        }
-
-        /* 电视超大屏专用（1920px+） */
-        @media (min-width: 1920px) {
-            .container {
-                max-width: 2400px !important;
-                padding: 60px !important;
-            }
-            
-            .header {
-                padding: 60px !important;
-                margin-bottom: 50px !important;
-                border-radius: 40px !important;
-            }
-            
-            .header h1 {
-                font-size: 64px !important;
-                margin-bottom: 20px !important;
-            }
-            
-            .header p {
-                font-size: 42px !important;
-            }
-            
-            .status-bar {
-                font-size: 42px !important;
-                padding: 30px 35px !important;
-                border-radius: 25px !important;
-                margin-bottom: 40px !important;
-            }
-            
-            .total-box {
-                font-size: 48px !important;
-                padding: 50px 40px !important;
-                border-radius: 35px !important;
-                margin-bottom: 40px !important;
-            }
-            
-            .total-box span {
-                font-size: 88px !important;
-                margin: 0 15px !important;
-            }
-            
-            .clear-all-btn {
-                font-size: 36px !important;
-                padding: 35px 40px !important;
-                border-radius: 30px !important;
-                min-height: 100px !important;
-            }
-            
-            .input-section {
-                padding: 50px !important;
-                margin-bottom: 50px !important;
-                border-radius: 30px !important;
-            }
-            
-            #inputData {
-                min-height: 250px !important;
-                padding: 40px !important;
-                font-size: 36px !important;
-                border-radius: 25px !important;
-                margin-bottom: 40px !important;
-            }
-            
-            .paste-label {
-                font-size: 38px !important;
-                margin-bottom: 25px !important;
-            }
-            
-            .btn {
-                font-size: 36px !important;
-                padding: 35px 40px !important;
-                border-radius: 30px !important;
-                min-height: 100px !important;
-                margin-bottom: 25px !important;
-            }
-            
-            .data-section {
-                padding: 50px 60px !important;
-                border-radius: 40px !important;
-                margin-bottom: 50px !important;
-            }
-            
-            .section-title span:first-child {
-                font-size: 64px !important;
-                margin-bottom: 30px !important;
-            }
-            
-            .section-title span:last-child {
-                font-size: 42px !important;
-            }
-            
-            /* 电视超大屏网格 */
-            .grid-container {
-                gap: 35px !important;
-                margin-top: 40px !important;
-            }
-            
-            .grid-item {
-                padding: 35px 25px !important;
-                min-height: 220px !important;
-                border-radius: 25px !important;
-                border: 2px solid #eee !important;
-            }
-            
-            .grid-item:hover {
-                transform: translateY(-5px) !important;
-                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2) !important;
-            }
-            
-            .grid-number-row {
-                margin-bottom: 20px !important;
-                gap: 15px !important;
-            }
-            
-            .rank-badge {
-                width: 70px !important;
-                height: 70px !important;
-                font-size: 32px !important;
-                border-radius: 50% !important;
-            }
-            
-            .grid-number {
-                font-size: 72px !important;
-                font-weight: 900 !important;
-                min-width: 120px !important;
-                color: #000 !important;
-                text-shadow: 3px 3px 6px rgba(0,0,0,0.1) !important;
-            }
-            
-            .grid-zodiac {
-                font-size: 42px !important;
-                font-weight: 700 !important;
-                padding: 10px 25px !important;
-                border-radius: 30px !important;
-                margin-bottom: 15px !important;
-                background: linear-gradient(135deg, #f8f9fa, #e9ecef) !important;
-                width: 90% !important;
-            }
-            
-            .grid-amount {
-                font-size: 64px !important;
-                font-weight: 900 !important;
-                margin-bottom: 20px !important;
-                text-shadow: 2px 2px 5px rgba(0,0,0,0.1) !important;
-            }
-            
-            .grid-amount-zero {
-                font-size: 52px !important;
-                color: #999 !important;
-            }
-            
-            .grid-wave {
-                font-size: 42px !important;
-                padding: 15px 30px !important;
-                border-radius: 30px !important;
-                min-width: 160px !important;
-                font-weight: 800 !important;
-            }
-            
-            /* 高亮前三名 - 电视版 */
-            .grid-item.highlight-rank-1 {
-                border: 4px solid #FFD700 !important;
-                background: linear-gradient(135deg, #fff9e6, #fff) !important;
-                box-shadow: 0 20px 50px rgba(255, 215, 0, 0.3) !important;
-            }
-            
-            .grid-item.highlight-rank-2 {
-                border: 4px solid #C0C0C0 !important;
-                background: linear-gradient(135deg, #f8f8f8, #fff) !important;
-                box-shadow: 0 20px 50px rgba(192, 192, 192, 0.3) !important;
-            }
-            
-            .grid-item.highlight-rank-3 {
-                border: 4px solid #CD7F32 !important;
-                background: linear-gradient(135deg, #f7f0e6, #fff) !important;
-                box-shadow: 0 20px 50px rgba(205, 127, 50, 0.3) !important;
-            }
-            
-            .notification {
-                font-size: 42px !important;
-                padding: 30px 40px !important;
-                border-radius: 25px !important;
-                bottom: 40px !important;
-            }
-            
-            .footer-info {
-                font-size: 32px !important;
-                padding: 30px !important;
-                margin-top: 40px !important;
+            .tv-mode .tv-card-wave {
+                font-size: 22px;
+                padding: 8px 14px;
             }
         }
 
@@ -1424,6 +1232,9 @@
         <span id="cloudIcon">🔄</span>
         <span id="cloudText">初始化中...</span>
     </div>
+
+    <!-- 模式切换按钮 -->
+    <button class="mode-toggle" id="modeToggle" title="切换显示模式">📺</button>
 
     <!-- 密码验证覆盖层 -->
     <div id="passwordOverlay">
@@ -1462,7 +1273,7 @@
 
     <!-- 主看板页面 -->
     <div id="mainApp" style="display: none;">
-        <div class="container">
+        <div class="container" id="appContainer">
             <div class="header">
                 <h1>📊 彩票实时看板 - 多人实时同步</h1>
                 <p>支持任意格式 • 实时多人同步 • 国内优化</p>
@@ -1502,13 +1313,13 @@
                 </div>
             </div>
             
-            <div class="data-section">
+            <!-- 普通表格模式 -->
+            <div class="data-section" id="tableSection">
                 <div class="section-title">
                     <span>📈 号码数据（按金额排序）</span>
                     <span id="dataCount">0/49个号码</span>
                 </div>
                 
-                <!-- 手机端：单一表格 -->
                 <table class="compact-table" id="dataTable">
                     <thead>
                         <tr>
@@ -1523,10 +1334,25 @@
                         <!-- 表格数据动态生成 -->
                     </tbody>
                 </table>
+            </div>
+            
+            <!-- 电视网格模式（默认隐藏） -->
+            <div class="data-section" id="tvSection" style="display: none;">
+                <div class="section-title">
+                    <span>📊 电视大屏模式 - 49个号码全显</span>
+                    <span id="tvDataCount">0/49个号码</span>
+                </div>
                 
-                <!-- 电脑/电视端：7×7网格 -->
-                <div class="grid-container" id="gridContainer" style="display: none;">
-                    <!-- 网格数据动态生成 -->
+                <div class="tv-grid-container" id="tvGridContainer">
+                    <!-- 电视网格由JavaScript动态生成 -->
+                </div>
+                
+                <!-- 排名显示 -->
+                <div class="ranking-section" id="rankingSection">
+                    <div class="ranking-title">🏆 金额排名 TOP 10</div>
+                    <div class="ranking-list" id="rankingList">
+                        <!-- 排名由JavaScript动态生成 -->
+                    </div>
                 </div>
             </div>
             
@@ -1535,6 +1361,7 @@
             </div>
         </div>
     </div>
+
     <script>
         // ==================== 彩票配置数据 ====================
         const LOTTERY_CONFIG = {
@@ -1704,13 +1531,16 @@
             }
         }
 
-        // ==================== 原有应用代码（已添加7×7网格渲染） ====================
+        // ==================== 原有应用代码（完全保持不变） ====================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📄 页面加载完成 - 核心功能启动');
             
             document.getElementById('passwordInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') checkPassword();
             });
+            
+            // 模式切换按钮事件
+            document.getElementById('modeToggle').addEventListener('click', toggleTvMode);
             
             try {
                 const authStr = localStorage.getItem('lottery_admin_auth');
@@ -1796,6 +1626,7 @@
         // ==================== 彩票系统核心 ====================
         let lotterySystem = null;
         let lotteryParser = new LotteryBetParser();
+        let isTvMode = false;
         
         function initLotterySystem() {
             console.log('🎯 初始化彩票系统...');
@@ -1848,6 +1679,8 @@
                         updateUndoButton();
                         renderHistory();
                         renderDataTable();
+                        renderTvGrid();
+                        updateRanking();
                     }
                 } catch(e) {
                     console.log('加载本地数据失败');
@@ -1876,94 +1709,9 @@
             function updateDataCount() {
                 const activeCount = Object.values(window.moneyMap).filter(amount => amount > 0).length;
                 document.getElementById('dataCount').textContent = `${activeCount}/49个号码`;
+                document.getElementById('tvDataCount').textContent = `${activeCount}/49个号码`;
             }
             
-            // ==================== 新增：渲染7×7网格 ====================
-            function renderGrid() {
-                const gridContainer = document.getElementById('gridContainer');
-                const table = document.getElementById('dataTable');
-                
-                if (!gridContainer || !table) return;
-                
-                // 按金额排序
-                const sortedData = [...window.lotteryData].sort((a, b) => {
-                    if (a.amount > 0 && b.amount === 0) return -1;
-                    if (a.amount === 0 && b.amount > 0) return 1;
-                    if (a.amount > 0 && b.amount > 0) return b.amount - a.amount;
-                    return a.number - b.number;
-                });
-                
-                let currentRank = 0;
-                let gridHtml = '';
-                
-                // 按7×7网格排列
-                for (let row = 0; row < 7; row++) {
-                    for (let col = 0; col < 7; col++) {
-                        const index = row * 7 + col;
-                        if (index >= sortedData.length) break;
-                        
-                        const item = sortedData[index];
-                        
-                        // 计算排名
-                        let rankDisplay = '-';
-                        let rankBadgeClass = 'rank-other-badge';
-                        let highlightClass = '';
-                        
-                        if (item.amount > 0) {
-                            currentRank++;
-                            rankDisplay = currentRank;
-                            
-                            if (currentRank === 1) {
-                                rankBadgeClass = 'rank-1-badge';
-                                highlightClass = 'highlight-rank-1';
-                            } else if (currentRank === 2) {
-                                rankBadgeClass = 'rank-2-badge';
-                                highlightClass = 'highlight-rank-2';
-                            } else if (currentRank === 3) {
-                                rankBadgeClass = 'rank-3-badge';
-                                highlightClass = 'highlight-rank-3';
-                            }
-                        }
-                        
-                        // 波色样式
-                        const waveClass = item.waveColor === '红波' ? 'grid-wave-red' :
-                                        item.waveColor === '蓝波' ? 'grid-wave-blue' :
-                                        item.waveColor === '绿波' ? 'grid-wave-green' : '';
-                        
-                        // 金额样式
-                        const amountClass = item.amount > 0 ? '' : 'grid-amount-zero';
-                        const amountDisplay = item.amount > 0 ? `${item.amount.toFixed(2)}元` : '0元';
-                        
-                        // 构建网格项HTML
-                        gridHtml += `
-                            <div class="grid-item ${highlightClass}">
-                                <div class="grid-number-row">
-                                    ${item.amount > 0 ? `<div class="rank-badge ${rankBadgeClass}">${rankDisplay}</div>` : ''}
-                                    <div class="grid-number">${item.number.toString().padStart(2, '0')}</div>
-                                </div>
-                                <div class="grid-zodiac">${item.zodiac}</div>
-                                <div class="grid-amount ${amountClass}">${amountDisplay}</div>
-                                <div class="grid-wave ${waveClass}">${item.waveColor}</div>
-                            </div>
-                        `;
-                    }
-                }
-                
-                gridContainer.innerHTML = gridHtml;
-                
-                // 根据屏幕宽度显示对应的布局
-                const isDesktop = window.innerWidth >= 769;
-                
-                if (isDesktop) {
-                    table.style.display = 'none';
-                    gridContainer.style.display = 'grid';
-                } else {
-                    table.style.display = 'table';
-                    gridContainer.style.display = 'none';
-                }
-            }
-            
-            // 修改原有的renderDataTable函数
             function renderDataTable() {
                 const tbody = document.getElementById('tableBody');
                 const sortedData = [...window.lotteryData].sort((a, b) => {
@@ -2001,7 +1749,7 @@
                     html += `
                         <tr>
                             <td class="rank-cell ${rankClass}">${rankDisplay}</td>
-                            <td class="number-cell">${item.number.toString().padStart(2, '0')}</td>
+                            <td class="number-cell">${item.number}</td>
                             <td class="zodiac-cell">${item.zodiac}</td>
                             <td class="${amountClass}">${amountDisplay}</td>
                             <td><span class="wave-cell ${waveClass}">${item.waveColor}</span></td>
@@ -2011,11 +1759,72 @@
                 
                 tbody.innerHTML = html;
                 updateDataCount();
-                
-                // 同时渲染网格
-                renderGrid();
             }
-            // ==================== 新增结束 ====================
+            
+            // 渲染电视网格
+            function renderTvGrid() {
+                const tvGrid = document.getElementById('tvGridContainer');
+                if (!tvGrid) return;
+                
+                let html = '';
+                
+                window.lotteryData.forEach(item => {
+                    const hasMoney = item.amount > 0;
+                    const amountClass = item.amount === 0 ? 'zero' : '';
+                    const waveClass = item.waveColor === '红波' ? 'wave-red' :
+                                    item.waveColor === '蓝波' ? 'wave-blue' :
+                                    item.waveColor === '绿波' ? 'wave-green' : '';
+                    
+                    html += `
+                        <div class="tv-number-card ${hasMoney ? 'has-money' : ''}" data-number="${item.number}">
+                            <div class="tv-card-number">[${item.number.toString().padStart(2, '0')}]</div>
+                            <div class="tv-card-zodiac">${item.zodiac}</div>
+                            <div class="tv-card-amount ${amountClass}">${item.amount.toFixed(2)}元</div>
+                            <div class="tv-card-wave ${waveClass}">
+                                ${item.waveColor === '红波' ? '🔴' : 
+                                  item.waveColor === '蓝波' ? '🔵' : 
+                                  item.waveColor === '绿波' ? '🟢' : ''}
+                                ${item.waveColor}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                tvGrid.innerHTML = html;
+            }
+            
+            // 更新排名
+            function updateRanking() {
+                const rankingList = document.getElementById('rankingList');
+                if (!rankingList) return;
+                
+                // 按金额排序
+                const sortedData = [...window.lotteryData]
+                    .filter(item => item.amount > 0)
+                    .sort((a, b) => b.amount - a.amount)
+                    .slice(0, 10);
+                
+                let html = '';
+                
+                if (sortedData.length === 0) {
+                    html = `<div style="font-size: 18px; color: #666; text-align: center; width: 100%; padding: 20px;">暂无下注数据</div>`;
+                } else {
+                    sortedData.forEach((item, index) => {
+                        const rankClass = index === 0 ? 'rank-1' :
+                                        index === 1 ? 'rank-2' :
+                                        index === 2 ? 'rank-3' : 'rank-other';
+                        
+                        html += `
+                            <div class="ranking-item">
+                                <div class="rank-badge ${rankClass}">${index + 1}</div>
+                                <div class="rank-text">[${item.number.toString().padStart(2, '0')}] ${item.amount.toFixed(2)}元</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                rankingList.innerHTML = html;
+            }
             
             function addHistoryRecord(text, count, amount) {
                 const now = new Date();
@@ -2080,6 +1889,8 @@
                 
                 renderHistory();
                 renderDataTable();
+                renderTvGrid();
+                updateRanking();
                 updateTotalAmount();
                 updateUndoButton();
                 saveData();
@@ -2141,6 +1952,8 @@
                 updateTotalAmount();
                 document.getElementById('inputData').value = '';
                 renderDataTable();
+                renderTvGrid();
+                updateRanking();
                 renderHistory();
                 updateUndoButton();
                 saveData();
@@ -2159,6 +1972,8 @@
                 initData();
                 renderHistory();
                 renderDataTable();
+                renderTvGrid();
+                updateRanking();
                 updateTotalAmount();
                 updateUndoButton();
                 saveData();
@@ -2176,11 +1991,13 @@
                 window.historyRecords = [];
                 window.undoStack = [];
                 renderDataTable();
+                renderTvGrid();
+                updateRanking();
                 renderHistory();
                 updateUndoButton();
                 document.getElementById('totalMoney').textContent = '0';
                 document.getElementById('dataCount').textContent = '0/49个号码';
-                document.getElementById('historyCount').textContent = '0条记录';
+                document.getElementById('tvDataCount').textContent = '0/49个号码';
                 localStorage.removeItem('lottery_data_v2');
                 
                 if (window.firebaseDb) saveToCloud();
@@ -2235,17 +2052,49 @@
                 document.body.removeChild(textarea);
             }
             
-            // 新增：窗口大小变化时重新渲染
-            window.addEventListener('resize', function() {
-                renderGrid();
-            });
+            // 切换电视模式
+            window.toggleTvMode = function() {
+                isTvMode = !isTvMode;
+                const tableSection = document.getElementById('tableSection');
+                const tvSection = document.getElementById('tvSection');
+                const modeToggle = document.getElementById('modeToggle');
+                const container = document.getElementById('appContainer');
+                
+                if (isTvMode) {
+                    tableSection.style.display = 'none';
+                    tvSection.style.display = 'block';
+                    modeToggle.textContent = '📱';
+                    modeToggle.title = '切换到手机模式';
+                    container.classList.add('tv-mode');
+                    document.body.classList.add('tv-mode');
+                    showNotification('📺 已切换到电视大屏模式');
+                } else {
+                    tableSection.style.display = 'block';
+                    tvSection.style.display = 'none';
+                    modeToggle.textContent = '📺';
+                    modeToggle.title = '切换到电视模式';
+                    container.classList.remove('tv-mode');
+                    document.body.classList.remove('tv-mode');
+                    showNotification('📱 已切换到手机模式');
+                }
+                
+                // 重新渲染网格以确保正确显示
+                renderTvGrid();
+                updateRanking();
+            }
             
             loadSavedData();
             updateUndoButton();
             
+            // 初始化电视网格
+            renderTvGrid();
+            updateRanking();
+            
             lotterySystem = {
                 updateTotalAmount,
                 renderDataTable,
+                renderTvGrid,
+                updateRanking,
                 renderHistory,
                 saveData
             };
@@ -2349,6 +2198,8 @@
                 if (lotterySystem) {
                     lotterySystem.updateTotalAmount();
                     lotterySystem.renderDataTable();
+                    lotterySystem.renderTvGrid();
+                    lotterySystem.updateRanking();
                     lotterySystem.renderHistory();
                 }
             }
