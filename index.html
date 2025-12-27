@@ -1234,7 +1234,7 @@
     </div>
 
     <!-- 模式切换按钮 -->
-    <button class="mode-toggle" id="modeToggle" title="切换显示模式">📺</button>
+    <button class="mode-toggle" id="modeToggle" onclick="toggleTvMode()" title="切换显示模式">📺</button>
 
     <!-- 密码验证覆盖层 -->
     <div id="passwordOverlay">
@@ -2277,7 +2277,7 @@
             }
         }
         
-        window.addEventListener('online', () => {
+               window.addEventListener('online', () => {
             console.log('🌐 网络恢复');
             document.getElementById('networkIndicator').className = 'network-indicator network-online';
             showNotification('✅ 网络已恢复');
@@ -2293,6 +2293,62 @@
             showNotification('⚠️ 网络已断开，切换到离线模式');
             updateCloudStatus('离线模式', 'offline');
         });
+        
+        // ====== 电视模式切换函数 ======
+        function toggleTvMode() {
+            console.log('🎯 电视模式切换函数被调用');
+            
+            const tableSection = document.getElementById('tableSection');
+            const tvSection = document.getElementById('tvSection');
+            const modeToggle = document.getElementById('modeToggle');
+            
+            if (!tableSection || !tvSection || !modeToggle) {
+                console.error('找不到必要的元素');
+                return;
+            }
+            
+            // 判断当前状态
+            const isTvMode = tvSection.style.display === 'block';
+            console.log('当前是否为电视模式:', isTvMode);
+            
+            if (!isTvMode) {
+                // 切换到电视模式
+                console.log('切换到电视模式');
+                tableSection.style.display = 'none';
+                tvSection.style.display = 'block';
+                modeToggle.textContent = '📱';
+                modeToggle.title = '切换到普通模式';
+                
+                // 添加电视模式CSS类
+                const appContainer = document.getElementById('appContainer');
+                if (appContainer) {
+                    appContainer.classList.add('tv-mode');
+                    console.log('已添加tv-mode类到appContainer');
+                }
+                document.body.classList.add('tv-mode');
+                console.log('已添加tv-mode类到body');
+                
+                showNotification('📺 已切换到电视大屏模式');
+            } else {
+                // 切换回普通模式
+                console.log('切换到普通模式');
+                tableSection.style.display = 'block';
+                tvSection.style.display = 'none';
+                modeToggle.textContent = '📺';
+                modeToggle.title = '切换到电视模式';
+                
+                // 移除电视模式CSS类
+                const appContainer = document.getElementById('appContainer');
+                if (appContainer) {
+                    appContainer.classList.remove('tv-mode');
+                    console.log('已移除tv-mode类从appContainer');
+                }
+                document.body.classList.remove('tv-mode');
+                console.log('已移除tv-mode类从body');
+                
+                showNotification('📱 已切换到普通模式');
+            }
+        }
         
         document.getElementById('networkIndicator').className = 
             navigator.onLine ? 'network-indicator network-online' : 'network-indicator network-offline';
