@@ -1174,6 +1174,34 @@
     width: 100%;
 }
 
+/* ========== 添加这里 ========== */
+/* 新的波色和金额容器 */
+.wave-amount-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 2px;
+    width: 100%;
+}
+
+/* 调整金额的margin */
+.fullscreen-amount {
+    font-size: 30px;
+    font-weight: 800;
+    color: #2ecc71;
+    margin-bottom: 0; /* 改为0，因为现在有容器包裹 */
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.fullscreen-amount.zero {
+    font-size: 24px;
+    color: #a3d9a5;
+    font-weight: 500;
+}
+/* ========== 添加结束 ========== */
+
 /* 生肖显示 - 加大字体并改为黑色 */
 .fullscreen-zodiac {
     font-size: 20px; /* 加大到20px */
@@ -1678,22 +1706,20 @@
                     
                     // 添加有金额的样式
                     const hasAmountClass = dataItem.amount > 0 ? 'has-amount' : '';
-                    
-                    html += `
-                        <div class="fullscreen-item ${rankClass} ${hasAmountClass}">
-                            ${rankBadge}
-                            <div class="fullscreen-number">${dataItem.number}</div>
-                            <div class="fullscreen-amount ${dataItem.amount > 0 ? '' : 'zero'}">
-                                ${dataItem.amount > 0 ? dataItem.amount.toFixed(2) + '元' : '0元'}
-                            </div>
-                            <div class="fullscreen-info">
-                                <div class="fullscreen-zodiac">${dataItem.zodiac}</div>
-                                <div class="fullscreen-wave ${waveClass}">${dataItem.waveColor}</div>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
+
+html += `
+    <div class="fullscreen-item ${rankClass} ${hasAmountClass}">
+        ${rankBadge}
+        <div class="fullscreen-number">${dataItem.number}</div>
+        <div class="wave-amount-container">
+            <div class="fullscreen-wave ${waveClass}">${dataItem.waveColor}</div>
+            <div class="fullscreen-amount ${dataItem.amount > 0 ? '' : 'zero'}">
+                ${dataItem.amount > 0 ? dataItem.amount.toFixed(2) + '元' : '0元'}
+            </div>
+        </div>
+        <div class="fullscreen-zodiac">${dataItem.zodiac}</div>
+    </div>
+`;
             
             document.getElementById('fullscreenGrid').innerHTML = html;
             
@@ -2389,6 +2415,7 @@
     </script>
 </body>
 </html>
+
 
 
 
