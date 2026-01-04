@@ -1155,8 +1155,9 @@
     font-size: 30px; /* 加大到30px */
     font-weight: 800;
     color: #2ecc71; /* 改为绿色 */
-    margin-bottom: 2px;
+    margin-bottom: 0; /* 改为0，因为现在有容器包裹 */
     line-height: 1;
+    white-space: nowrap;
 }
 
 .fullscreen-amount.zero {
@@ -1171,6 +1172,16 @@
     flex-direction: column;
     align-items: center;
     gap: 2px;
+    width: 100%;
+}
+
+/* 新的波色和金额容器 */
+.wave-amount-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 2px;
     width: 100%;
 }
 
@@ -1683,13 +1694,13 @@
                         <div class="fullscreen-item ${rankClass} ${hasAmountClass}">
                             ${rankBadge}
                             <div class="fullscreen-number">${dataItem.number}</div>
-                            <div class="fullscreen-amount ${dataItem.amount > 0 ? '' : 'zero'}">
-                                ${dataItem.amount > 0 ? dataItem.amount.toFixed(2) + '元' : '0元'}
-                            </div>
-                            <div class="fullscreen-info">
-                                <div class="fullscreen-zodiac">${dataItem.zodiac}</div>
+                            <div class="wave-amount-container">
                                 <div class="fullscreen-wave ${waveClass}">${dataItem.waveColor}</div>
+                                <div class="fullscreen-amount ${dataItem.amount > 0 ? '' : 'zero'}">
+                                    ${dataItem.amount > 0 ? dataItem.amount.toFixed(2) + '元' : '0元'}
+                                </div>
                             </div>
+                            <div class="fullscreen-zodiac">${dataItem.zodiac}</div>
                         </div>
                     `;
                 }
