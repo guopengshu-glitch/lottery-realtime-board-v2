@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -1141,67 +1142,65 @@
             border: 1px solid rgba(46, 204, 113, 0.3);
         }
 
-       /* 号码显示 - 加大字体 */
-.fullscreen-number {
-    font-size: 32px; /* 加大到32px */
-    font-weight: 900;
-    color: #000000; /* 改为黑色 */
-    margin-bottom: 2px;
-    line-height: 1;
-}
+        /* ========== 修改大屏布局 ========== */
+        /* 号码显示 */
+        .fullscreen-number {
+            font-size: 32px;
+            font-weight: 900;
+            color: #000000;
+            margin: 4px 0;
+            line-height: 1;
+            text-align: center;
+            width: 100%;
+        }
 
-        /* 金额显示 - 加大字体并改为绿色 */
-.fullscreen-amount {
-    font-size: 30px; /* 加大到30px */
-    font-weight: 800;
-    color: #2ecc71; /* 改为绿色 */
-    margin-bottom: 0; /* 改为0，因为现在有容器包裹 */
-    line-height: 1;
-    white-space: nowrap;
-}
+        /* 金额显示 */
+        .fullscreen-amount {
+            font-size: 30px;
+            font-weight: 800;
+            color: #2ecc71;
+            margin: 4px 0;
+            line-height: 1;
+            white-space: nowrap;
+            text-align: center;
+            width: 100%;
+        }
 
-.fullscreen-amount.zero {
-    font-size: 24px; /* 加大到24px */
-    color: #a3d9a5; /* 改为浅绿色 */
-    font-weight: 500;
-}
+        .fullscreen-amount.zero {
+            font-size: 24px;
+            color: #a3d9a5;
+            font-weight: 500;
+        }
 
-/* 生肖和波色显示 */
-.fullscreen-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    width: 100%;
-}
+        /* 生肖和波色在同一行 */
+        .zodiac-wave-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 4px 0;
+            width: 100%;
+        }
 
-/* 新的波色和金额容器 */
-.wave-amount-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 2px;
-    width: 100%;
-}
+        /* 生肖显示 */
+        .fullscreen-zodiac {
+            font-size: 26px; /* 26px字体 */
+            font-weight: 700;
+            color: #000000;
+            white-space: nowrap;
+        }
 
-/* 生肖显示 - 加大字体并改为黑色 */
-.fullscreen-zodiac {
-    font-size: 26px; /* 从20px加大到26px */
-    font-weight: 700;
-    color: #000000; /* 改为纯黑色 */
-}
-
-/* 波色显示 - 缩小很多 */
-.fullscreen-wave {
-    font-size: 10px; /* 缩小到10px */
-    font-weight: 600;
-    padding: 1px 4px;
-    border-radius: 8px;
-    min-width: 40px;
-    text-align: center;
-    letter-spacing: 0.5px;
-}
+        /* 波色显示 */
+        .fullscreen-wave {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 8px;
+            min-width: 45px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+        
         .wave-red-fullscreen {
             background: linear-gradient(135deg, #ff6b6b, #ee5a52);
             color: white;
@@ -1693,14 +1692,14 @@
                     html += `
                         <div class="fullscreen-item ${rankClass} ${hasAmountClass}">
                             ${rankBadge}
-                            <div class="fullscreen-number">${dataItem.number}</div>
-                            <div class="wave-amount-container">
+                            <div class="zodiac-wave-row">
+                                <div class="fullscreen-zodiac">${dataItem.zodiac}</div>
                                 <div class="fullscreen-wave ${waveClass}">${dataItem.waveColor}</div>
-                                <div class="fullscreen-amount ${dataItem.amount > 0 ? '' : 'zero'}">
-                                    ${dataItem.amount > 0 ? dataItem.amount.toFixed(2) + '元' : '0元'}
-                                </div>
                             </div>
-                            <div class="fullscreen-zodiac">${dataItem.zodiac}</div>
+                            <div class="fullscreen-number">${dataItem.number}</div>
+                            <div class="fullscreen-amount ${dataItem.amount > 0 ? '' : 'zero'}">
+                                ${dataItem.amount > 0 ? dataItem.amount.toFixed(2) + '元' : '0元'}
+                            </div>
                         </div>
                     `;
                 }
@@ -2400,4 +2399,4 @@
     </script>
 </body>
 </html>
-
+```
