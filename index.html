@@ -1029,7 +1029,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: #ffffff; /* 改为白色背景 */
+            background: #ffffff;
             z-index: 20000;
             overflow: hidden;
             padding: 10px;
@@ -1041,7 +1041,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px 20px;
-            background: rgba(245, 247, 250, 0.9); /* 浅灰色背景 */
+            background: rgba(245, 247, 250, 0.9);
             border-radius: 8px;
             margin-bottom: 10px;
             color: #333;
@@ -1055,10 +1055,10 @@
         }
 
         .fullscreen-total {
-    font-size: 32px;
-    font-weight: 800;
-    color: #e74c3c; /* 改为红色 */
-}
+            font-size: 32px;
+            font-weight: 800;
+            color: #e74c3c;
+        }
 
         .fullscreen-total span {
             font-size: 36px;
@@ -1090,7 +1090,7 @@
             transform: scale(1.1);
         }
 
-        /* 7x7网格布局 - 保持原有卡片大小 */
+        /* 7x7网格布局 - 卡片大小完全不变，只改内部布局为两排 */
         .fullscreen-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -1107,7 +1107,7 @@
             border-radius: 6px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
             padding: 4px;
             transition: all 0.3s;
@@ -1141,67 +1141,64 @@
             border: 1px solid rgba(46, 204, 113, 0.3);
         }
 
-       /* 号码显示 - 加大字体 */
-.fullscreen-number {
-    font-size: 32px; /* 加大到32px */
-    font-weight: 900;
-    color: #000000; /* 改为黑色 */
-    margin-bottom: 2px;
-    line-height: 1;
-}
+        /* 第一排：波色 + 号码 + 生肖（横向排列） */
+        .wave-number-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 2px 6px;
+            margin-bottom: 4px;
+        }
 
-        /* 金额显示 - 加大字体并改为绿色 */
-.fullscreen-amount {
-    font-size: 30px; /* 加大到30px */
-    font-weight: 800;
-    color: #2ecc71; /* 改为绿色 */
-    margin-bottom: 0; /* 改为0，因为现在有容器包裹 */
-    line-height: 1;
-    white-space: nowrap;
-}
+        /* 第二排：金额（居中） */
+        .amount-row {
+            width: 100%;
+            text-align: center;
+            padding: 2px 6px;
+        }
 
-.fullscreen-amount.zero {
-    font-size: 24px; /* 加大到24px */
-    color: #a3d9a5; /* 改为浅绿色 */
-    font-weight: 500;
-}
+        /* 号码显示 - 保持原字体大小 */
+        .fullscreen-number {
+            font-size: 32px;
+            font-weight: 900;
+            color: #000000;
+            margin: 0 8px;
+            line-height: 1;
+        }
 
-/* 生肖和波色显示 */
-.fullscreen-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    width: 100%;
-}
+        /* 金额显示 - 保持原字体大小 */
+        .fullscreen-amount {
+            font-size: 30px;
+            font-weight: 800;
+            color: #2ecc71;
+            line-height: 1;
+        }
 
-/* 新的波色和金额容器 */
-.wave-amount-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 2px;
-    width: 100%;
-}
+        .fullscreen-amount.zero {
+            font-size: 24px;
+            color: #a3d9a5;
+            font-weight: 500;
+        }
 
-/* 生肖显示 - 加大字体并改为黑色 */
-.fullscreen-zodiac {
-    font-size: 26px; /* 从20px加大到26px */
-    font-weight: 700;
-    color: #000000; /* 改为纯黑色 */
-}
+        /* 生肖显示 - 保持原字体大小 */
+        .fullscreen-zodiac {
+            font-size: 26px;
+            font-weight: 700;
+            color: #000000;
+        }
 
-/* 波色显示 - 缩小很多 */
-.fullscreen-wave {
-    font-size: 10px; /* 缩小到10px */
-    font-weight: 600;
-    padding: 1px 4px;
-    border-radius: 8px;
-    min-width: 40px;
-    text-align: center;
-    letter-spacing: 0.5px;
-}
+        /* 波色显示 - 保持原字体大小 */
+        .fullscreen-wave {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 4px;
+            border-radius: 8px;
+            min-width: 40px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
         .wave-red-fullscreen {
             background: linear-gradient(135deg, #ff6b6b, #ee5a52);
             color: white;
@@ -1655,7 +1652,7 @@
                 return { ...item, rank: 0 };
             });
             
-            // 生成7x7网格的HTML
+            // 生成7x7网格的HTML - 使用两排布局
             let html = '';
             let gridIndex = 0;
             
@@ -1690,17 +1687,24 @@
                     // 添加有金额的样式
                     const hasAmountClass = dataItem.amount > 0 ? 'has-amount' : '';
                     
+                    // 两排布局HTML
                     html += `
                         <div class="fullscreen-item ${rankClass} ${hasAmountClass}">
                             ${rankBadge}
-                            <div class="fullscreen-number">${dataItem.number}</div>
-                            <div class="wave-amount-container">
+                            
+                            <!-- 第一排：波色 + 号码 + 生肖 -->
+                            <div class="wave-number-row">
                                 <div class="fullscreen-wave ${waveClass}">${dataItem.waveColor}</div>
+                                <div class="fullscreen-number">${dataItem.number}</div>
+                                <div class="fullscreen-zodiac">${dataItem.zodiac}</div>
+                            </div>
+                            
+                            <!-- 第二排：金额 -->
+                            <div class="amount-row">
                                 <div class="fullscreen-amount ${dataItem.amount > 0 ? '' : 'zero'}">
                                     ${dataItem.amount > 0 ? dataItem.amount.toFixed(2) + '元' : '0元'}
                                 </div>
                             </div>
-                            <div class="fullscreen-zodiac">${dataItem.zodiac}</div>
                         </div>
                     `;
                 }
