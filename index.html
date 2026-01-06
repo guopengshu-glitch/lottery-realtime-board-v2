@@ -1142,12 +1142,13 @@
         }
 
         /* 第一排：波色 + 号码 + 生肖 - 三列紧凑 */
+               /* 第一排：波色 + 号码 + 生肖 - 均匀分布居中 */
         .wave-number-row {
             display: flex;
-            justify-content: space-between;
+            justify-content: space-around; /* 改为space-around，均匀分布 */
             align-items: center;
             width: 100%;
-            padding: 0 4px; /* 减少左右内边距 */
+            padding: 0 2px; /* 进一步减少左右内边距 */
             margin-top: 2px;
         }
 
@@ -1156,16 +1157,16 @@
             width: 100%;
             text-align: center;
             padding: 0 4px; /* 减少左右内边距 */
-            margin-top: -6px;
+            margin-top: -8px; /* 增加负边距，让金额更贴近第一排 */
             margin-bottom: 0;
         }
 
-        /* 号码显示 - 减小左右外边距 */
+        /* 号码显示 - 进一步减小左右外边距 */
         .fullscreen-number {
             font-size: 32px;
             font-weight: 900;
             color: #000000;
-            margin: 0 4px; /* 减小左右外边距 */
+            margin: 0 2px; /* 进一步减小左右外边距 */
             line-height: 1;
         }
 
@@ -1185,25 +1186,25 @@
             margin-top: 0;
         }
 
-        /* 生肖显示 - 减小最小宽度 */
+        /* 生肖显示 - 进一步减小最小宽度，改为居中 */
         .fullscreen-zodiac {
             font-size: 26px;
             font-weight: 700;
             color: #000000;
-            min-width: 30px; /* 减小最小宽度 */
-            text-align: right;
+            min-width: 25px; /* 进一步减小最小宽度 */
+            text-align: center; /* 改为居中，配合space-around */
         }
 
-        /* 波色显示 - 减少左右内边距 */
+        /* 波色显示 - 进一步减少左右内边距和宽度 */
         .fullscreen-wave {
             font-size: 10px;
             font-weight: 600;
-            padding: 1px 3px; /* 减少左右内边距 */
+            padding: 1px 2px; /* 进一步减少左右内边距 */
             border-radius: 8px;
-            min-width: 35px; /* 减小最小宽度 */
-            max-width: 45px;
+            min-width: 30px; /* 进一步减小最小宽度 */
+            max-width: 38px;
             text-align: center;
-            letter-spacing: 0.3px; /* 减小字间距 */
+            letter-spacing: 0.2px; /* 进一步减小字间距 */
         }
 
         .wave-red-fullscreen {
@@ -2411,4 +2412,5 @@
     </script>
 </body>
 </html>
+
 
