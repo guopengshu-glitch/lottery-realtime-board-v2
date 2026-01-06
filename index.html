@@ -1141,13 +1141,46 @@
             border: 1px solid rgba(46, 204, 113, 0.3);
         }
 
-       /* 号码显示 - 加大字体 */
+       /* 第一行：波色(左) + 号码(中) + 生肖(右) */
+.top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+/* 波色样式 - 放在左边 */
+.fullscreen-wave {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 8px;
+    min-width: 45px;
+    text-align: center;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+/* 号码在中间 */
 .fullscreen-number {
-    font-size: 32px; /* 加大到32px */
+    font-size: 32px;
     font-weight: 900;
-    color: #000000; /* 改为黑色 */
-    margin-bottom: 2px;
+    color: #000000;
     line-height: 1;
+    text-align: center;
+    flex-grow: 1;
+    margin: 0 10px;
+}
+
+/* 生肖样式 - 放在右边 */
+.fullscreen-zodiac {
+    font-size: 26px;
+    font-weight: 700;
+    color: #000000;
+    white-space: nowrap;
+    text-align: right;
+    flex-shrink: 0;
 }
 
         /* 金额显示 - 加大字体并改为绿色 */
@@ -1691,20 +1724,18 @@
                     const hasAmountClass = dataItem.amount > 0 ? 'has-amount' : '';
                     
                     html += `
-                        <div class="fullscreen-item ${rankClass} ${hasAmountClass}">
-                            ${rankBadge}
-                            <div class="fullscreen-number">${dataItem.number}</div>
-                            <div class="wave-amount-container">
-                                <div class="fullscreen-wave ${waveClass}">${dataItem.waveColor}</div>
-                                <div class="fullscreen-amount ${dataItem.amount > 0 ? '' : 'zero'}">
-                                    ${dataItem.amount > 0 ? dataItem.amount.toFixed(2) + '元' : '0元'}
-                                </div>
-                            </div>
-                            <div class="fullscreen-zodiac">${dataItem.zodiac}</div>
-                        </div>
-                    `;
-                }
-            }
+    <div class="fullscreen-item ${rankClass} ${hasAmountClass}">
+        ${rankBadge}
+        <div class="top-row">
+            <div class="fullscreen-wave ${waveClass}">${dataItem.waveColor}</div>
+            <div class="fullscreen-number">${dataItem.number}</div>
+            <div class="fullscreen-zodiac">${dataItem.zodiac}</div>
+        </div>
+        <div class="fullscreen-amount ${dataItem.amount > 0 ? '' : 'zero'}">
+            ${dataItem.amount > 0 ? dataItem.amount.toFixed(2) + '元' : '0元'}
+        </div>
+    </div>
+`;
             
             document.getElementById('fullscreenGrid').innerHTML = html;
             
@@ -2400,3 +2431,4 @@
     </script>
 </body>
 </html>
+
