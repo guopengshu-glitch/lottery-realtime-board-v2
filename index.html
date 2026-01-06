@@ -1141,13 +1141,13 @@
             border: 1px solid rgba(46, 204, 113, 0.3);
         }
 
-              /* 第一排：波色 + 号码 + 生肖 - 均匀分布居中 */
+                   /* 第一排：波色 + 号码 + 生肖 - 间隙减半 */
         .wave-number-row {
             display: flex;
             justify-content: space-around; /* 改为space-around，均匀分布 */
             align-items: center;
             width: 100%;
-            padding: 0 1px; /* 改为1px，更紧凑 */
+            padding: 0; /* 改为0px */
             margin-top: 2px;
         }
 
@@ -1162,14 +1162,14 @@
 
         /* 波色显示 - 进一步缩小 */
         .fullscreen-wave {
-            font-size: 10px;
+            font-size: 9px; /* 减小1px */
             font-weight: 600;
-            padding: 1px 1px; /* 左右内边距减少到1px */
-            border-radius: 6px; /* 圆角稍小 */
-            min-width: 28px; /* 进一步减小最小宽度 */
-            max-width: 32px;
+            padding: 0px 1px; /* 上下改为0px */
+            border-radius: 4px; /* 圆角更小 */
+            min-width: 26px; /* 减小到26px */
+            max-width: 30px; /* 减小到30px */
             text-align: center;
-            letter-spacing: 0.1px; /* 最小字间距 */
+            letter-spacing: 0; /* 移除字间距 */
         }
 
         /* 号码显示 - 进一步减小左右外边距 */
@@ -1177,7 +1177,7 @@
             font-size: 32px;
             font-weight: 900;
             color: #000000;
-            margin: 0 1px; /* 改为1px，更紧凑 */
+            margin: 0; /* 改为0px */
             line-height: 1;
         }
 
@@ -1202,7 +1202,7 @@
             font-size: 26px;
             font-weight: 700;
             color: #000000;
-            min-width: 22px; /* 改为22px，更紧凑 */
+            min-width: 20px; /* 减小到20px */
             text-align: center; /* 改为居中，配合space-around */
         }
 
@@ -2411,6 +2411,7 @@
     </script>
 </body>
 </html>
+
 
 
 
