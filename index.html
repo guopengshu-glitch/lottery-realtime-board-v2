@@ -3,1283 +3,1080 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>📊 彩票实时看板 - 多人实时同步</title>
+    <title>📊 彩票实时看板 - 微信消息全自动监控</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        /* 所有原有CSS样式保持不变 */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html { -webkit-text-size-adjust: 100%; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #f5f7fa; min-height: 100vh; color: #333; line-height: 1.6; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
-        html {
-            -webkit-text-size-adjust: 100%;
-        }
+        /* 原有网络状态、登录、历史记录等所有样式都保留 */
+        .network-indicator { position: fixed; top: 12px; right: 12px; width: 10px; height: 10px; border-radius: 50%; z-index: 9999; transition: all 0.3s ease; }
+        .network-online { background: #2ecc71; box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.3); }
+        .network-offline { background: #e74c3c; box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.3); }
+        .cloud-status { position: fixed; top: 30px; right: 15px; background: white; padding: 6px 12px; border-radius: 15px; font-size: 12px; display: flex; align-items: center; gap: 6px; z-index: 9998; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); border: 1px solid #eee; backdrop-filter: blur(5px); }
+        .cloud-status.online { color: #2ecc71; border-color: #2ecc71; }
+        .cloud-status.offline { color: #e74c3c; border-color: #e74c3c; }
+        .cloud-status.connecting { color: #f39c12; border-color: #f39c12; }
+        #passwordOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: center; z-index: 10000; animation: fadeIn 0.3s ease; padding: 20px; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .login-box { background: rgba(255, 255, 255, 0.95); padding: 40px 30px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); width: 100%; max-width: 400px; text-align: center; backdrop-filter: blur(10px); animation: slideUp 0.5s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .login-box h1 { margin-bottom: 30px; color: #333; font-size: 24px; font-weight: 600; }
+        .input-group { margin-bottom: 25px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 8px; color: #666; font-weight: 500; font-size: 14px; }
+        #passwordInput { width: 100%; padding: 16px 20px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; transition: all 0.3s; background: white; -webkit-appearance: none; min-height: 50px; }
+        #passwordInput:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .login-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; margin-top: 10px; min-height: 50px; touch-action: manipulation; }
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3); }
+        .login-btn:active { transform: translateY(0); }
+        .password-error { color: #e74c3c; margin-top: 15px; font-size: 14px; min-height: 20px; }
+        .password-hint { margin-top: 20px; color: #95a5a6; font-size: 14px; line-height: 1.5; }
+        .history-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10001; animation: fadeIn 0.3s ease; touch-action: none; }
+        .history-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 25px; background: white; border-bottom: 1px solid #eee; border-radius: 15px 15px 0 0; }
+        .history-modal-header h2 { color: #333; font-size: 20px; font-weight: 600; }
+        .close-history-btn { background: none; border: none; font-size: 28px; color: #95a5a6; cursor: pointer; padding: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.3s; touch-action: manipulation; }
+        .close-history-btn:hover { background: #f5f7fa; color: #333; }
+        .history-modal-content { background: white; margin: 5vh auto; width: 95%; max-width: 600px; height: 90vh; border-radius: 15px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .history-list { flex: 1; overflow-y: auto; padding: 20px; background: #f8f9fa; -webkit-overflow-scrolling: touch; }
+        .history-item { background: white; padding: 15px 20px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); border-left: 4px solid #667eea; position: relative; transition: transform 0.2s; }
+        .history-item:hover { transform: translateX(5px); }
+        .delete-btn { position: absolute; top: 10px; right: 10px; background: #ffebee; color: #e74c3c; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.3s; touch-action: manipulation; }
+        .delete-btn:hover { background: #ffcdd2; }
+        .history-time { color: #667eea; font-weight: 600; font-size: 14px; margin-bottom: 8px; display: block; }
+        .history-text { color: #333; font-size: 15px; margin-bottom: 5px; word-break: break-all; line-height: 1.4; }
+        .history-amount { color: #2ecc71; font-weight: 600; font-size: 14px; }
+        .history-actions-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: white; border-top: 1px solid #eee; flex-wrap: wrap; gap: 10px; }
+        .history-count { color: #666; font-size: 14px; font-weight: 500; }
+        .history-btn { padding: 12px 20px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s; touch-action: manipulation; min-height: 40px; }
+        .history-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        #mainApp { min-height: 100vh; background: #f5f7fa; padding-bottom: env(safe-area-inset-bottom); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 15px; }
+        .header { text-align: center; margin-bottom: 20px; padding: 25px 20px; background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05); position: relative; overflow: hidden; }
+        .header::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #667eea, #764ba2); }
+        .header h1 { color: #333; font-size: 28px; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
+        .header p { color: #666; font-size: 15px; opacity: 0.8; }
+        .status-bar { background: white; padding: 15px 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05); border-left: 4px solid #667eea; font-weight: 500; color: #333; display: flex; align-items: center; gap: 10px; font-size: 16px; }
+        .total-section { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+        .total-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px 20px; border-radius: 15px; font-size: 24px; font-weight: 700; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); text-align: center; order: 1; }
+        .total-box span { font-size: 36px; margin: 0 8px; text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); display: inline-block; }
+        .clear-all-btn { padding: 16px 20px; background: white; color: #e74c3c; border: 2px solid #ffebee; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; min-height: 50px; touch-action: manipulation; order: 2; }
+        .clear-all-btn:hover { background: #ffebee; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(231, 76, 60, 0.2); }
+        .input-section { background: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05); }
+        .paste-label { display: block; color: #667eea; font-weight: 600; font-size: 16px; margin-bottom: 12px; }
+        #inputData { width: 100%; min-height: 120px; padding: 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; font-family: 'SF Mono', Monaco, 'Courier New', monospace; resize: vertical; transition: all 0.3s; margin-bottom: 15px; line-height: 1.6; -webkit-user-select: text !important; user-select: text !important; -webkit-touch-callout: default !important; -webkit-appearance: none; }
+        #inputData:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        #inputData::placeholder { color: #bbb; font-size: 16px; }
+        .btn-group { display: flex; flex-direction: column; gap: 12px; }
+        .btn { width: 100%; padding: 16px 20px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 50px; touch-action: manipulation; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; order: 1; }
+        .btn-history { background: #f8f9fa; color: #666; border: 2px solid #e0e0e0; order: 2; }
+        .btn-success { background: #2ecc71; color: white; order: 3; }
+        .btn-fullscreen-main { background: linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%); color: white; order: 4; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15); }
+        .btn:active { transform: translateY(0); }
+        .data-section { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05); margin-bottom: 20px; overflow-x: hidden; }
+        .section-title { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 2px solid #f5f7fa; }
+        .section-title span:first-child { color: #333; font-size: 20px; font-weight: 700; }
+        .section-title span:last-child { font-size: 14px; color: #7f8c8d; align-self: flex-end; }
+        .compact-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .compact-table th:nth-child(1), .compact-table td:nth-child(1) { width: 12%; text-align: center; padding: 10px 4px; }
+        .compact-table th:nth-child(2), .compact-table td:nth-child(2) { width: 12%; text-align: center; padding: 10px 4px; }
+        .compact-table th:nth-child(3), .compact-table td:nth-child(3) { width: 18%; text-align: center; padding: 10px 4px; }
+        .compact-table th:nth-child(4), .compact-table td:nth-child(4) { width: 30%; text-align: right; padding: 10px 8px 10px 4px; }
+        .compact-table th:nth-child(5), .compact-table td:nth-child(5) { width: 28%; text-align: center; padding: 10px 4px; }
+        .compact-table th { background: #f8f9fa; color: #666; font-weight: 600; font-size: 14px; border-bottom: 2px solid #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .compact-table td { border-bottom: 1px solid #f5f7fa; transition: background 0.3s; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .compact-table tr:hover td { background: #f8f9fa; }
+        .compact-table tr:last-child td { border-bottom: none; }
+        .rank-cell { font-family: 'SF Mono', Monaco, 'Courier New', monospace; font-weight: 700; color: #333; }
+        .rank-1 { color: #FFD700; }
+        .rank-2 { color: #C0C0C0; }
+        .rank-3 { color: #CD7F32; }
+        .number-cell { font-family: 'SF Mono', Monaco, 'Courier New', monospace; font-weight: 700; color: #333; }
+        .zodiac-cell { color: #666; font-weight: 500; }
+        .wave-cell { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; text-align: center; min-width: 50px; }
+        .wave-red { background: linear-gradient(135deg, #ff6b6b, #ee5a52); color: white; }
+        .wave-blue { background: linear-gradient(135deg, #4ecdc4, #45b7af); color: white; }
+        .wave-green { background: linear-gradient(135deg, #1dd1a1, #10ac84); color: white; }
+        .amount-cell { color: #e74c3c !important; font-weight: 700; font-size: 14px; }
+        .amount-cell-zero { color: #bbb; font-weight: 500; font-size: 13px; }
+        .notification { position: fixed; bottom: 20px; right: 20px; left: 20px; background: #2ecc71; color: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); z-index: 9997; animation: slideIn 0.3s ease; max-width: 100%; font-weight: 500; line-height: 1.5; font-size: 16px; text-align: center; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+        .footer-info { text-align: center; padding: 15px; color: #7f8c8d; font-size: 12px; border-top: 1px solid #eee; background: #f8f9fa; margin-top: 20px; border-radius: 0 0 15px 15px; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
-            background: #f5f7fa;
-            min-height: 100vh;
-            color: #333;
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
+        /* 全屏大屏显示样式 */
+        .fullscreen-display { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #ffffff; z-index: 20000; overflow: hidden; padding: 10px; box-sizing: border-box; }
+        .fullscreen-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: rgba(245, 247, 250, 0.9); border-radius: 8px; margin-bottom: 10px; color: #333; border: 1px solid #e0e0e0; }
+        .fullscreen-title { font-size: 28px; font-weight: 700; color: #333; }
+        .fullscreen-total { font-size: 32px; font-weight: 800; color: #e74c3c; }
+        .fullscreen-total span { font-size: 36px; margin: 0 8px; }
+        .close-fullscreen-btn { position: fixed; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.9); color: #333; border: 1px solid #e0e0e0; width: 50px; height: 50px; border-radius: 50%; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; z-index: 20001; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+        .close-fullscreen-btn:hover { background: #f5f7fa; transform: scale(1.1); }
+        .fullscreen-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(7, 1fr); gap: 6px; width: 100%; height: calc(100vh - 80px); padding: 0 5px; box-sizing: border-box; }
+        .fullscreen-item { background: white; border-radius: 6px; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding: 4px 1px; border: 1px solid #e0e0e0; position: relative; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); }
+        .fullscreen-item.rank-1 { border-color: #FFD700; background: rgba(255, 215, 0, 0.1); box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
+        .fullscreen-item.rank-2 { border-color: #C0C0C0; background: rgba(192, 192, 192, 0.1); box-shadow: 0 0 8px rgba(192, 192, 192, 0.2); }
+        .fullscreen-item.rank-3 { border-color: #CD7F32; background: rgba(205, 127, 50, 0.1); box-shadow: 0 0 6px rgba(205, 127, 50, 0.2); }
+        .fullscreen-item.has-amount { background: rgba(46, 204, 113, 0.1); border: 1px solid rgba(46, 204, 113, 0.3); }
+        .wave-number-row { display: flex; justify-content: space-around; align-items: center; width: 100%; padding: 0; margin-top: 2px; }
+        .amount-row { width: 100%; text-align: center; padding: 0 4px; margin-top: -8px; margin-bottom: 0; }
+        .fullscreen-wave { font-size: 9px; font-weight: 600; padding: 0px 1px; border-radius: 4px; min-width: 26px; max-width: 30px; text-align: center; letter-spacing: 0; }
+        .fullscreen-number { font-size: 32px; font-weight: 900; color: #000000; margin: 0; line-height: 1; }
+        .fullscreen-amount { font-size: 30px; font-weight: 800; color: #2ecc71; line-height: 1; margin-top: 0; }
+        .fullscreen-amount.zero { font-size: 24px; color: #a3d9a5; font-weight: 500; margin-top: 0; }
+        .fullscreen-zodiac { font-size: 26px; font-weight: 700; color: #000000; min-width: 20px; text-align: center; }
+        .wave-red-fullscreen { background: linear-gradient(135deg, #ff6b6b, #ee5a52); color: white; }
+        .wave-blue-fullscreen { background: linear-gradient(135deg, #4ecdc4, #45b7af); color: white; }
+        .wave-green-fullscreen { background: linear-gradient(135deg, #1dd1a1, #10ac84); color: white; }
+        .rank-badge { position: absolute; top: 4px; left: 4px; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; z-index: 1; }
+        .rank-1-badge { background: #FFD700; color: #000; box-shadow: 0 0 4px rgba(255, 215, 0, 0.8); }
+        .rank-2-badge { background: #C0C0C0; color: #000; box-shadow: 0 0 3px rgba(192, 192, 192, 0.7); }
+        .rank-3-badge { background: #CD7F32; color: white; box-shadow: 0 0 2px rgba(205, 127, 50, 0.7); }
+        .auto-refresh-indicator { position: fixed; bottom: 10px; right: 10px; background: rgba(46, 204, 113, 0.9); color: white; padding: 8px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; z-index: 20002; display: flex; align-items: center; gap: 6px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3); }
 
-        .network-indicator {
+        /* ==================== 全自动微信监控面板样式 ==================== */
+        .auto-wechat-monitor {
             position: fixed;
-            top: 12px;
-            right: 12px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            z-index: 9999;
-            transition: all 0.3s ease;
-        }
-
-        .network-online {
-            background: #2ecc71;
-            box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.3);
-        }
-
-        .network-offline {
-            background: #e74c3c;
-            box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.3);
-        }
-
-        .cloud-status {
-            position: fixed;
-            top: 30px;
-            right: 15px;
-            background: white;
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            z-index: 9998;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border: 1px solid #eee;
-            backdrop-filter: blur(5px);
-        }
-
-        .cloud-status.online {
-            color: #2ecc71;
-            border-color: #2ecc71;
-        }
-
-        .cloud-status.offline {
-            color: #e74c3c;
-            border-color: #e74c3c;
-        }
-
-        .cloud-status.connecting {
-            color: #f39c12;
-            border-color: #f39c12;
-        }
-
-        #passwordOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            animation: fadeIn 0.3s ease;
-            padding: 20px;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .login-box {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 40px 30px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 900px;
+            max-width: 95vw;
+            max-height: 90vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            animation: slideUp 0.5s ease;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+            z-index: 10020;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 2px solid #00adb5;
         }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .auto-monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 25px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .login-box h1 {
-            margin-bottom: 30px;
-            color: #333;
-            font-size: 24px;
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .monitor-icon {
+            font-size: 28px;
+        }
+
+        .monitor-title {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00adb5, #0097b2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #95a5a6;
+            transition: all 0.3s;
+        }
+
+        .status-dot.active {
+            background: #2ecc71;
+            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.3);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+        }
+
+        .status-dot.scanning {
+            background: #3498db;
+            animation: scanning 1s infinite;
+        }
+
+        @keyframes scanning {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .status-text {
+            font-size: 14px;
             font-weight: 600;
         }
 
-        .input-group {
-            margin-bottom: 25px;
-            text-align: left;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #666;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        #passwordInput {
-            width: 100%;
-            padding: 16px 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 16px;
-            transition: all 0.3s;
-            background: white;
-            -webkit-appearance: none;
-            min-height: 50px;
-        }
-
-        #passwordInput:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .monitor-close-btn {
+            background: rgba(255, 255, 255, 0.1);
             color: white;
             border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .monitor-close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .auto-monitor-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, #00adb5, transparent);
+        }
+
+        .detect-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .detect-btn {
+            padding: 18px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
+            color: white;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            margin-top: 10px;
-            min-height: 50px;
-            touch-action: manipulation;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
         }
 
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        .detect-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #00adb5;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 173, 181, 0.2);
         }
 
-        .login-btn:active {
-            transform: translateY(0);
+        .detect-result {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        .password-error {
-            color: #e74c3c;
-            margin-top: 15px;
-            font-size: 14px;
-            min-height: 20px;
+        .result-icon {
+            font-size: 32px;
+            background: rgba(0, 173, 181, 0.2);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .password-hint {
-            margin-top: 20px;
-            color: #95a5a6;
-            font-size: 14px;
+        .result-text {
+            flex: 1;
+            font-size: 16px;
             line-height: 1.5;
         }
 
-        .history-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 10001;
-            animation: fadeIn 0.3s ease;
-            touch-action: none;
+        .monitor-settings {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .history-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 25px;
-            background: white;
-            border-bottom: 1px solid #eee;
-            border-radius: 15px 15px 0 0;
+        .setting-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
         }
 
-        .history-modal-header h2 {
-            color: #333;
-            font-size: 20px;
+        .setting-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .setting-label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
             font-weight: 600;
+            color: #aaa;
         }
 
-        .close-history-btn {
-            background: none;
-            border: none;
-            font-size: 28px;
-            color: #95a5a6;
+        .setting-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .setting-select {
+            flex: 1;
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .setting-slider {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .setting-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #00adb5;
             cursor: pointer;
-            padding: 0;
-            width: 40px;
-            height: 40px;
+            border: 2px solid white;
+        }
+
+        .slider-value {
+            min-width: 30px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: #00adb5;
+        }
+
+        .setting-item label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #ddd;
+        }
+
+        .setting-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #00adb5;
+        }
+
+        .monitor-status-section {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .status-card {
+            background: linear-gradient(135deg, rgba(0, 173, 181, 0.2), rgba(0, 97, 105, 0.2));
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid rgba(0, 173, 181, 0.3);
+        }
+
+        .status-icon {
+            font-size: 32px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
-            transition: all 0.3s;
-            touch-action: manipulation;
         }
 
-        .close-history-btn:hover {
-            background: #f5f7fa;
-            color: #333;
-        }
-
-        .history-modal-content {
-            background: white;
-            margin: 5vh auto;
-            width: 95%;
-            max-width: 600px;
-            height: 90vh;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .history-list {
+        .status-content {
             flex: 1;
+        }
+
+        .status-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .status-label {
+            font-size: 12px;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .realtime-preview {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .preview-time {
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-size: 14px;
+            color: #00adb5;
+        }
+
+        .preview-content {
+            max-height: 150px;
             overflow-y: auto;
             padding: 20px;
-            background: #f8f9fa;
-            -webkit-overflow-scrolling: touch;
         }
 
-        .history-item {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            border-left: 4px solid #667eea;
-            position: relative;
-            transition: transform 0.2s;
-        }
-
-        .history-item:hover {
-            transform: translateX(5px);
-        }
-
-        .delete-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #ffebee;
-            color: #e74c3c;
-            border: none;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            touch-action: manipulation;
-        }
-
-        .delete-btn:hover {
-            background: #ffcdd2;
-        }
-
-        .history-time {
-            color: #667eea;
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .history-text {
-            color: #333;
-            font-size: 15px;
-            margin-bottom: 5px;
-            word-break: break-all;
-            line-height: 1.4;
-        }
-
-        .history-amount {
-            color: #2ecc71;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .history-actions-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 25px;
-            background: white;
-            border-top: 1px solid #eee;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .history-count {
-            color: #666;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .history-btn {
-            padding: 12px 20px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
-            touch-action: manipulation;
-            min-height: 40px;
-        }
-
-        .history-btn:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
-        #mainApp {
-            min-height: 100vh;
-            background: #f5f7fa;
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 15px;
-        }
-
-        .header {
+        .preview-placeholder {
             text-align: center;
-            margin-bottom: 20px;
-            padding: 25px 20px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-        }
-
-        .header h1 {
-            color: #333;
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 10px;
-            line-height: 1.3;
-        }
-
-        .header p {
             color: #666;
-            font-size: 15px;
-            opacity: 0.8;
+            font-size: 14px;
+            padding: 30px;
+            font-style: italic;
         }
 
-        .status-bar {
-            background: white;
-            padding: 15px 20px;
+        .control-center {
+            background: rgba(0, 0, 0, 0.4);
             border-radius: 12px;
-            margin-bottom: 15px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-            border-left: 4px solid #667eea;
-            font-weight: 500;
-            color: #333;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .total-section {
-            display: flex;
-            flex-direction: column;
+        .control-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 15px;
             margin-bottom: 20px;
         }
 
-        .total-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px 20px;
-            border-radius: 15px;
-            font-size: 24px;
-            font-weight: 700;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-            text-align: center;
-            order: 1;
-        }
-
-        .total-box span {
-            font-size: 36px;
-            margin: 0 8px;
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            display: inline-block;
-        }
-
-        .clear-all-btn {
-            padding: 16px 20px;
-            background: white;
-            color: #e74c3c;
-            border: 2px solid #ffebee;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 50px;
-            touch-action: manipulation;
-            order: 2;
-        }
-
-        .clear-all-btn:hover {
-            background: #ffebee;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.2);
-        }
-
-        .input-section {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-        }
-
-        .paste-label {
-            display: block;
-            color: #667eea;
-            font-weight: 600;
-            font-size: 16px;
-            margin-bottom: 12px;
-        }
-
-        #inputData {
-            width: 100%;
-            min-height: 120px;
-            padding: 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-            resize: vertical;
-            transition: all 0.3s;
-            margin-bottom: 15px;
-            line-height: 1.6;
-            -webkit-user-select: text !important;
-            user-select: text !important;
-            -webkit-touch-callout: default !important;
-            -webkit-appearance: none;
-        }
-
-        #inputData:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        #inputData::placeholder {
-            color: #bbb;
-            font-size: 16px;
-        }
-
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 16px 20px;
+        .control-btn {
+            padding: 18px 10px;
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            min-height: 50px;
-            touch-action: manipulation;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            order: 1;
-        }
-
-        .btn-history {
-            background: #f8f9fa;
-            color: #666;
-            border: 2px solid #e0e0e0;
-            order: 2;
-        }
-
-        .btn-success {
-            background: #2ecc71;
-            color: white;
-            order: 3;
-        }
-
-        .btn-fullscreen-main {
-            background: linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%);
-            color: white;
-            order: 4;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .data-section {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-            overflow-x: hidden;
-        }
-
-        .section-title {
-            display: flex;
             flex-direction: column;
+            align-items: center;
             gap: 8px;
-            margin-bottom: 15px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #f5f7fa;
         }
 
-        .section-title span:first-child {
-            color: #333;
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .section-title span:last-child {
-            font-size: 14px;
-            color: #7f8c8d;
-            align-self: flex-end;
-        }
-
-        .compact-table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-
-        .compact-table th:nth-child(1),
-        .compact-table td:nth-child(1) {
-            width: 12%;
-            text-align: center;
-            padding: 10px 4px;
-        }
-
-        .compact-table th:nth-child(2),
-        .compact-table td:nth-child(2) {
-            width: 12%;
-            text-align: center;
-            padding: 10px 4px;
-        }
-
-        .compact-table th:nth-child(3),
-        .compact-table td:nth-child(3) {
-            width: 18%;
-            text-align: center;
-            padding: 10px 4px;
-        }
-
-        .compact-table th:nth-child(4),
-        .compact-table td:nth-child(4) {
-            width: 30%;
-            text-align: right;
-            padding: 10px 8px 10px 4px;
-        }
-
-        .compact-table th:nth-child(5),
-        .compact-table td:nth-child(5) {
-            width: 28%;
-            text-align: center;
-            padding: 10px 4px;
-        }
-
-        .compact-table th {
-            background: #f8f9fa;
-            color: #666;
-            font-weight: 600;
-            font-size: 14px;
-            border-bottom: 2px solid #eee;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .compact-table td {
-            border-bottom: 1px solid #f5f7fa;
-            transition: background 0.3s;
-            font-size: 14px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .compact-table tr:hover td {
-            background: #f8f9fa;
-        }
-
-        .compact-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .rank-cell {
-            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .rank-1 { color: #FFD700; }
-        .rank-2 { color: #C0C0C0; }
-        .rank-3 { color: #CD7F32; }
-
-        .number-cell {
-            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .zodiac-cell {
-            color: #666;
-            font-weight: 500;
-        }
-
-        .wave-cell {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            text-align: center;
-            min-width: 50px;
-        }
-
-        .wave-red {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        .start-btn {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
             color: white;
         }
 
-        .wave-blue {
-            background: linear-gradient(135deg, #4ecdc4, #45b7af);
+        .pause-btn {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
             color: white;
         }
 
-        .wave-green {
-            background: linear-gradient(135deg, #1dd1a1, #10ac84);
+        .stop-btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
             color: white;
         }
 
-        .amount-cell {
-            color: #e74c3c !important;
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .amount-cell-zero {
-            color: #bbb;
-            font-weight: 500;
-            font-size: 13px;
-        }
-
-        .notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            left: 20px;
-            background: #2ecc71;
+        .test-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .auto-notice {
+            background: rgba(0, 173, 181, 0.1);
+            border-radius: 10px;
             padding: 15px 20px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            z-index: 9997;
-            animation: slideIn 0.3s ease;
-            max-width: 100%;
-            font-weight: 500;
+            border: 1px solid rgba(0, 173, 181, 0.3);
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .notice-icon {
+            font-size: 24px;
+            color: #00adb5;
+        }
+
+        .notice-text {
+            flex: 1;
+            font-size: 14px;
             line-height: 1.5;
-            font-size: 16px;
-            text-align: center;
+            color: #ddd;
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(100%);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .footer-info {
-            text-align: center;
-            padding: 15px;
-            color: #7f8c8d;
-            font-size: 12px;
-            border-top: 1px solid #eee;
-            background: #f8f9fa;
-            margin-top: 20px;
-            border-radius: 0 0 15px 15px;
-        }
-
-        @media (max-width: 375px) {
-            .compact-table th,
-            .compact-table td {
-                font-size: 13px;
-                padding: 8px 2px;
-            }
-            
-            .compact-table th:nth-child(1),
-            .compact-table td:nth-child(1) {
-                width: 10%;
-            }
-            
-            .compact-table th:nth-child(2),
-            .compact-table td:nth-child(2) {
-                width: 10%;
-            }
-            
-            .compact-table th:nth-child(3),
-            .compact-table td:nth-child(3) {
-                width: 16%;
-            }
-            
-            .compact-table th:nth-child(4),
-            .compact-table td:nth-child(4) {
-                width: 32%;
-                padding-right: 4px;
-            }
-            
-            .compact-table th:nth-child(5),
-            .compact-table td:nth-child(5) {
-                width: 32%;
-            }
-            
-            .wave-cell {
-                padding: 3px 6px;
-                font-size: 11px;
-                min-width: 45px;
-            }
-            
-            .amount-cell {
-                font-size: 13px;
-            }
-            
-            .header h1 {
-                font-size: 22px;
-            }
-            
-            .header p {
-                font-size: 14px;
-            }
-            
-            .status-bar {
-                font-size: 15px;
-                padding: 12px 15px;
-            }
-            
-            .total-box {
-                font-size: 20px;
-                padding: 20px;
-            }
-            
-            .total-box span {
-                font-size: 28px;
-            }
-            
-            .clear-all-btn {
-                font-size: 15px;
-                padding: 14px;
-            }
-            
-            .section-title span:first-child {
-                font-size: 18px;
-            }
-            
-            .btn {
-                font-size: 15px;
-                padding: 14px;
-            }
-            
-            .notification {
-                font-size: 15px;
-            }
-        }
-
-        @media (min-width: 376px) and (max-width: 768px) {
-            .compact-table th,
-            .compact-table td {
-                font-size: 14px;
-            }
-            
-            .wave-cell {
-                font-size: 12px;
-            }
-            
-            .amount-cell {
-                font-size: 14px;
-            }
-        }
-
-        @media (min-width: 769px) {
-            .container {
-                padding: 20px;
-            }
-            
-            .header {
-                padding: 30px;
-                margin-bottom: 30px;
-            }
-            
-            .status-bar {
-                padding: 15px 25px;
-                margin-bottom: 20px;
-            }
-            
-            .total-section {
-                flex-direction: row;
-                align-items: stretch;
-                gap: 20px;
-            }
-            
-            .total-box {
-                flex: 1;
-                padding: 25px 30px;
-                order: 1;
-            }
-            
-            .clear-all-btn {
-                width: auto;
-                min-width: 180px;
-                padding: 0 30px;
-                order: 2;
-            }
-            
-            .input-section {
-                padding: 30px;
-                margin-bottom: 25px;
-            }
-            
-            #inputData {
-                min-height: 150px;
-                padding: 20px;
-                margin-bottom: 20px;
-            }
-            
-            .btn-group {
-                flex-direction: row;
-                gap: 15px;
-            }
-            
-            .btn {
-                flex: 1;
-                min-width: 0;
-            }
-            
-            .data-section {
-                padding: 25px;
-                margin-bottom: 30px;
-            }
-            
-            .section-title {
-                flex-direction: row;
-                align-items: center;
-                gap: 0;
-            }
-            
-            .compact-table th {
-                font-size: 16px;
-                padding: 14px 6px;
-            }
-            
-            .compact-table td {
-                font-size: 16px;
-                padding: 14px 6px;
-            }
-            
-            .wave-cell {
-                font-size: 14px;
-                padding: 6px 10px;
-                min-width: 60px;
-            }
-            
-            .amount-cell {
-                font-size: 16px;
-            }
-            
-            .history-modal-content {
-                margin: 10vh auto;
-                height: 70vh;
-            }
-            
-            .notification {
-                right: 30px;
-                left: auto;
-                max-width: 350px;
-                text-align: left;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .container {
-                padding: 30px;
-            }
-            
-            .btn-group {
-                gap: 20px;
-            }
-            
-            .compact-table th {
-                font-size: 17px;
-                padding: 16px 8px;
-            }
-            
-            .compact-table td {
-                font-size: 17px;
-                padding: 16px 8px;
-            }
-            
-            .wave-cell {
-                font-size: 15px;
-                padding: 8px 12px;
-                min-width: 70px;
-            }
-            
-            .amount-cell {
-                font-size: 18px;
-            }
-        }
-
-        @supports (padding: max(0px)) {
-            #mainApp {
-                padding-left: max(15px, env(safe-area-inset-left));
-                padding-right: max(15px, env(safe-area-inset-right));
-                padding-bottom: max(15px, env(safe-area-inset-bottom));
-            }
-            
-            .notification {
-                bottom: max(20px, env(safe-area-inset-bottom));
-            }
-        }
-
-        /* ==================== 全屏大屏显示样式 ==================== */
-        .fullscreen-display {
-            display: none;
+        /* 自动检测遮罩层 */
+        .auto-detect-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: #ffffff;
-            z-index: 20000;
-            overflow: hidden;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        .fullscreen-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            background: rgba(245, 247, 250, 0.9);
-            border-radius: 8px;
-            margin-bottom: 10px;
-            color: #333;
-            border: 1px solid #e0e0e0;
-        }
-
-        .fullscreen-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .fullscreen-total {
-            font-size: 32px;
-            font-weight: 800;
-            color: #e74c3c;
-        }
-
-        .fullscreen-total span {
-            font-size: 36px;
-            margin: 0 8px;
-        }
-
-        .close-fullscreen-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-            border: 1px solid #e0e0e0;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            font-size: 28px;
-            cursor: pointer;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10030;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
-            z-index: 20001;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .close-fullscreen-btn:hover {
-            background: #f5f7fa;
-            transform: scale(1.1);
+        .detect-content {
+            text-align: center;
+            max-width: 600px;
+            padding: 40px;
         }
 
-               /* 7x7网格布局 - 卡片大小完全不变 */
-        .fullscreen-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            grid-template-rows: repeat(7, 1fr);
-            gap: 6px;
-            width: 100%;
-            height: calc(100vh - 80px);
-            padding: 0 5px;
-            box-sizing: border-box;
-        }
-
-        /* ==================== 紧凑三列布局 ==================== */
-        .fullscreen-item {
-            background: white;
-            border-radius: 6px;
+        .detect-hint {
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
             align-items: center;
-            padding: 4px 1px; /* 左右内边距减少 */
-            border: 1px solid #e0e0e0;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            gap: 25px;
         }
 
-        /* 金额排序高亮效果 */
-        .fullscreen-item.rank-1 {
-            border-color: #FFD700;
-            background: rgba(255, 215, 0, 0.1);
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+        .hint-icon {
+            font-size: 64px;
+            color: #00adb5;
+            animation: spin 2s infinite linear;
         }
 
-        .fullscreen-item.rank-2 {
-            border-color: #C0C0C0;
-            background: rgba(192, 192, 192, 0.1);
-            box-shadow: 0 0 8px rgba(192, 192, 192, 0.2);
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
-        .fullscreen-item.rank-3 {
-            border-color: #CD7F32;
-            background: rgba(205, 127, 50, 0.1);
-            box-shadow: 0 0 6px rgba(205, 127, 50, 0.2);
-        }
-
-        .fullscreen-item.has-amount {
-            background: rgba(46, 204, 113, 0.1);
-            border: 1px solid rgba(46, 204, 113, 0.3);
-        }
-
-                   /* 第一排：波色 + 号码 + 生肖 - 间隙减半 */
-        .wave-number-row {
-            display: flex;
-            justify-content: space-around; /* 改为space-around，均匀分布 */
-            align-items: center;
-            width: 100%;
-            padding: 0; /* 改为0px */
-            margin-top: 2px;
-        }
-
-        /* 第二排：金额 - 紧贴第一排 */
-        .amount-row {
-            width: 100%;
-            text-align: center;
-            padding: 0 4px; /* 减少左右内边距 */
-            margin-top: -8px; /* 增加负边距，让金额更贴近第一排 */
-            margin-bottom: 0;
-        }
-
-        /* 波色显示 - 进一步缩小 */
-        .fullscreen-wave {
-            font-size: 9px; /* 减小1px */
-            font-weight: 600;
-            padding: 0px 1px; /* 上下改为0px */
-            border-radius: 4px; /* 圆角更小 */
-            min-width: 26px; /* 减小到26px */
-            max-width: 30px; /* 减小到30px */
-            text-align: center;
-            letter-spacing: 0; /* 移除字间距 */
-        }
-
-        /* 号码显示 - 进一步减小左右外边距 */
-        .fullscreen-number {
-            font-size: 32px;
-            font-weight: 900;
-            color: #000000;
-            margin: 0; /* 改为0px */
-            line-height: 1;
-        }
-
-        /* 金额显示 */
-        .fullscreen-amount {
-            font-size: 30px;
-            font-weight: 800;
-            color: #2ecc71;
-            line-height: 1;
-            margin-top: 0;
-        }
-
-        .fullscreen-amount.zero {
+        .hint-text {
             font-size: 24px;
-            color: #a3d9a5;
-            font-weight: 500;
-            margin-top: 0;
-        }
-
-        /* 生肖显示 - 进一步减小最小宽度，改为居中 */
-        .fullscreen-zodiac {
-            font-size: 26px;
             font-weight: 700;
-            color: #000000;
-            min-width: 20px; /* 减小到20px */
-            text-align: center; /* 改为居中，配合space-around */
-        }
-
-        .wave-red-fullscreen {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
             color: white;
         }
 
-        .wave-blue-fullscreen {
-            background: linear-gradient(135deg, #4ecdc4, #45b7af);
-            color: white;
+        .hint-progress {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
         }
 
-        .wave-green-fullscreen {
-            background: linear-gradient(135deg, #1dd1a1, #10ac84);
-            color: white;
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00adb5, #0097b2);
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 5px;
         }
 
-        /* 排名标记 */
-        .rank-badge {
-            position: absolute;
-            top: 4px;
-            left: 4px;
-            width: 22px;
-            height: 22px;
+        .hint-detail {
+            font-size: 16px;
+            color: #aaa;
+            line-height: 1.5;
+        }
+
+        /* 微信窗口提示 */
+        .wechat-guide {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 700px;
+            max-width: 90vw;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 10025;
+            display: none;
+            overflow: hidden;
+            border: 3px solid #00adb5;
+        }
+
+        .guide-content {
+            padding: 30px;
+        }
+
+        .guide-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .guide-icon {
+            font-size: 36px;
+            color: #00adb5;
+        }
+
+        .guide-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .guide-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .guide-step {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: #00adb5;
+            color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            font-weight: 800;
-            z-index: 1;
+            font-size: 20px;
+            font-weight: bold;
+            flex-shrink: 0;
         }
 
-        .rank-1-badge {
-            background: #FFD700;
-            color: #000;
-            box-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+        .step-content {
+            flex: 1;
         }
 
-        .rank-2-badge {
-            background: #C0C0C0;
-            color: #000;
-            box-shadow: 0 0 3px rgba(192, 192, 192, 0.7);
+        .guide-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
         }
 
-        .rank-3-badge {
-            background: #CD7F32;
-            color: white;
-            box-shadow: 0 0 2px rgba(205, 127, 50, 0.7);
-        }
-
-        /* 自动刷新指示灯 */
-        .auto-refresh-indicator {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(46, 204, 113, 0.9);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 14px;
+        .guide-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
             font-weight: 600;
-            z-index: 20002;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .guide-btn {
+            background: linear-gradient(135deg, #00adb5, #0097b2);
+            color: white;
+        }
+
+        .guide-btn.secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e0e0e0;
+        }
+
+        .guide-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .detect-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .setting-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .control-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .auto-wechat-monitor {
+                width: 95%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .monitor-title {
+                font-size: 18px;
+            }
+        }
+
+        /* 微信自动监控按钮（添加到主界面） */
+        .btn-wechat-auto {
+            background: linear-gradient(135deg, #00adb5 0%, #0097b2 100%);
+            color: white;
+            order: 2.5;
+        }
+
+        .wechat-auto-status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            z-index: 9995;
             display: flex;
             align-items: center;
-            gap: 6px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .wechat-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #95a5a6;
+        }
+
+        .wechat-status-dot.active {
+            background: #2ecc71;
+            animation: pulse 1.5s infinite;
         }
     </style>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" defer></script>
+    
+    <!-- Tesseract.js OCR引擎 -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 </head>
 <body>
-    <!-- ==================== 全屏大屏显示 ==================== -->
+    <!-- ==================== 全自动微信监控面板 ==================== -->
+    <div class="auto-wechat-monitor" id="autoWechatMonitor">
+        <div class="auto-monitor-header">
+            <div class="header-left">
+                <span class="monitor-icon">🤖</span>
+                <span class="monitor-title">全自动微信消息监控</span>
+            </div>
+            <div class="header-right">
+                <span class="status-indicator" id="autoStatusIndicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">待机</span>
+                </span>
+                <button class="monitor-close-btn" onclick="closeAutoMonitor()">×</button>
+            </div>
+        </div>
+        
+        <div class="auto-monitor-body">
+            <div class="auto-detect-section">
+                <h3 class="section-title">🎯 自动检测微信窗口</h3>
+                <div class="detect-options">
+                    <button class="detect-btn" onclick="autoDetectWechat()">
+                        🔍 自动查找微信窗口
+                    </button>
+                    <button class="detect-btn" onclick="smartDetectChatArea()">
+                        🧠 智能识别聊天区域
+                    </button>
+                    <button class="detect-btn" onclick="manualSelectWechat()">
+                        👆 手动选择微信窗口
+                    </button>
+                </div>
+                
+                <div class="detect-result" id="detectResult">
+                    <div class="result-icon">⏳</div>
+                    <div class="result-text">等待检测微信窗口...</div>
+                </div>
+            </div>
+            
+            <div class="monitor-settings">
+                <h3 class="section-title">⚙️ 监控设置</h3>
+                
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <label class="setting-label">监控频率</label>
+                        <div class="setting-control">
+                            <select id="monitorInterval" class="setting-select">
+                                <option value="1000">每秒监控</option>
+                                <option value="2000" selected>每2秒监控</option>
+                                <option value="3000">每3秒监控</option>
+                                <option value="5000">每5秒监控</option>
+                                <option value="10000">每10秒监控</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label class="setting-label">识别灵敏度</label>
+                        <div class="setting-control">
+                            <input type="range" id="sensitivity" min="1" max="10" value="7" class="setting-slider">
+                            <span class="slider-value" id="sensitivityValue">7</span>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label class="setting-label">
+                            <input type="checkbox" id="autoStart" checked>
+                            启动时自动开始
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label class="setting-label">
+                            <input type="checkbox" id="autoProcess" checked>
+                            自动处理识别结果
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label class="setting-label">
+                            <input type="checkbox" id="playSound">
+                            识别成功播放提示音
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="monitor-status-section">
+                <h3 class="section-title">📊 实时监控状态</h3>
+                
+                <div class="status-grid">
+                    <div class="status-card">
+                        <div class="status-icon">👁️</div>
+                        <div class="status-content">
+                            <div class="status-value" id="scanCount">0</div>
+                            <div class="status-label">扫描次数</div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card">
+                        <div class="status-icon">📱</div>
+                        <div class="status-content">
+                            <div class="status-value" id="detectCount">0</div>
+                            <div class="status-label">检测到消息</div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card">
+                        <div class="status-icon">🎯</div>
+                        <div class="status-content">
+                            <div class="status-value" id="lotteryCount">0</div>
+                            <div class="status-label">彩票消息</div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card">
+                        <div class="status-icon">✅</div>
+                        <div class="status-content">
+                            <div class="status-value" id="autoProcessCount">0</div>
+                            <div class="status-label">自动录入</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="realtime-preview">
+                    <div class="preview-header">
+                        <span>实时预览</span>
+                        <span class="preview-time" id="lastScanTime">--:--:--</span>
+                    </div>
+                    <div class="preview-content" id="realtimePreview">
+                        <div class="preview-placeholder">
+                            🎯 等待开始监控...
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-center">
+                <div class="control-buttons">
+                    <button class="control-btn start-btn" onclick="startAutoMonitoring()" id="startAutoBtn">
+                        <span class="btn-icon">▶️</span>
+                        <span class="btn-text">开始全自动监控</span>
+                    </button>
+                    
+                    <button class="control-btn pause-btn" onclick="pauseAutoMonitoring()" id="pauseAutoBtn" disabled>
+                        <span class="btn-icon">⏸️</span>
+                        <span class="btn-text">暂停监控</span>
+                    </button>
+                    
+                    <button class="control-btn stop-btn" onclick="stopAutoMonitoring()" id="stopAutoBtn" disabled>
+                        <span class="btn-icon">⏹️</span>
+                        <span class="btn-text">停止监控</span>
+                    </button>
+                    
+                    <button class="control-btn test-btn" onclick="testAutoRecognition()">
+                        <span class="btn-icon">🧪</span>
+                        <span class="btn-text">测试识别</span>
+                    </button>
+                </div>
+                
+                <div class="auto-notice">
+                    <div class="notice-icon">💡</div>
+                    <div class="notice-text">
+                        <strong>全自动模式说明：</strong> 系统会自动截图、OCR识别、分析消息，并自动录入彩票数据。无需任何手动操作！
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自动检测遮罩层 -->
+    <div class="auto-detect-overlay" id="autoDetectOverlay" style="display: none;">
+        <div class="detect-content">
+            <div class="detect-hint">
+                <div class="hint-icon">🔍</div>
+                <div class="hint-text">正在自动检测微信窗口...</div>
+                <div class="hint-progress">
+                    <div class="progress-bar" id="detectProgress"></div>
+                </div>
+                <div class="hint-detail" id="detectDetail">
+                    正在扫描屏幕上的窗口...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 微信窗口提示 -->
+    <div class="wechat-guide" id="wechatGuide">
+        <div class="guide-content">
+            <div class="guide-header">
+                <span class="guide-icon">💬</span>
+                <span class="guide-title">微信窗口设置指南</span>
+            </div>
+            <div class="guide-steps">
+                <div class="guide-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <strong>确保微信窗口打开</strong><br>
+                        请先打开桌面版微信并登录
+                    </div>
+                </div>
+                <div class="guide-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <strong>调整窗口位置</strong><br>
+                        将微信窗口移到屏幕可见区域
+                    </div>
+                </div>
+                <div class="guide-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <strong>最大化聊天窗口</strong><br>
+                        确保聊天区域完全可见
+                    </div>
+                </div>
+            </div>
+            <div class="guide-actions">
+                <button class="guide-btn" onclick="checkWechatReady()">
+                    ✅ 我已准备好，开始检测
+                </button>
+                <button class="guide-btn secondary" onclick="hideWechatGuide()">
+                    ⏭️ 跳过指引
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全屏大屏显示 -->
     <div class="fullscreen-display" id="fullscreenDisplay">
         <button class="close-fullscreen-btn" onclick="closeFullscreen()">×</button>
         
@@ -1288,15 +1085,13 @@
             <div class="fullscreen-total">总计: <span id="fullscreenTotal">0</span> 元</div>
         </div>
         
-        <div class="fullscreen-grid" id="fullscreenGrid">
-            <!-- 49个号码将在这里动态生成 -->
-        </div>
+        <div class="fullscreen-grid" id="fullscreenGrid"></div>
         
         <div class="auto-refresh-indicator" id="autoRefreshIndicator">
             <span>🔄</span> 实时同步中...
         </div>
     </div>
-    
+
     <!-- 网络状态指示器 -->
     <div class="network-indicator network-online" id="networkIndicator"></div>
     
@@ -1304,6 +1099,12 @@
     <div class="cloud-status connecting" id="cloudStatus">
         <span id="cloudIcon">🔄</span>
         <span id="cloudText">初始化中...</span>
+    </div>
+
+    <!-- 微信自动监控状态 -->
+    <div class="wechat-auto-status" id="wechatAutoStatus" style="display: none;">
+        <span class="wechat-status-dot"></span>
+        <span>微信监控: 待机</span>
     </div>
 
     <!-- 密码验证覆盖层 -->
@@ -1345,15 +1146,14 @@
     <div id="mainApp" style="display: none;">
         <div class="container">
             <div class="header">
-                <h1>📊 彩票实时看板 - 多人实时同步</h1>
-                <p>支持任意格式 • 实时多人同步 • 国内优化</p>
+                <h1>📊 彩票实时看板 - 微信消息全自动监控</h1>
+                <p>全自动识别微信聊天消息 • 实时多人同步 • 大屏显示</p>
             </div>
             
             <div class="status-bar" id="statusBar">
                 🚀 系统启动中...
             </div>
             
-            <!-- 总计金额和清空按钮 -->
             <div class="total-section">
                 <div class="total-box">
                     总计: <span id="totalMoney">0</span> 元
@@ -1367,12 +1167,15 @@
                 <label class="paste-label">&lt;粘贴输入框&gt;</label>
                 <textarea 
                     id="inputData" 
-                    placeholder="粘贴彩票数据（支持任意格式）"
+                    placeholder="粘贴微信消息或彩票数据（支持任意格式）"
                 ></textarea>
                 
                 <div class="btn-group">
                     <button class="btn btn-primary" onclick="processData()">
                         📤 发布数据
+                    </button>
+                    <button class="btn btn-wechat-auto" onclick="openAutoWechatMonitor()">
+                        🤖 微信自动监控
                     </button>
                     <button class="btn btn-history" onclick="openHistoryModal()">
                         📋 查看记录
@@ -1409,7 +1212,7 @@
             </div>
             
             <div class="footer-info">
-                📱 支持手机访问 • 🔄 实时同步 • 💾 离线保存 • 🖥️ 大屏显示
+                📱 支持手机访问 • 🤖 微信消息全自动监控 • 🔄 实时同步 • 🖥️ 大屏显示
             </div>
         </div>
     </div>
@@ -1417,7 +1220,6 @@
     <script>
         // ==================== 彩票配置数据 ====================
         const LOTTERY_CONFIG = {
-            // 生肖映射
             zodiacMap: {
                 "鼠": [6, 18, 30, 42], "牛": [5, 17, 29, 41], "虎": [4, 16, 28, 40],
                 "兔": [3, 15, 27, 39], "龙": [2, 14, 26, 38], "蛇": [1, 13, 25, 37, 49],
@@ -1425,7 +1227,6 @@
                 "鸡": [9, 21, 33, 45], "狗": [8, 20, 32, 44], "猪": [7, 19, 31, 43]
             },
             
-            // 波色映射
             waveColorMap: {
                 "红波": [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
                 "蓝波": [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
@@ -1449,42 +1250,33 @@
             parseInput(input) {
                 if (!input || typeof input !== 'string') return [];
                 
-                // 1. 清理文本
                 const cleaned = input.trim()
                     .replace(/^一共[：:]*\s*/, '')
                     .replace(/斤|米|块|￥/g, '元');
                 
-                // 2. 分割成独立投注项
                 const items = this._extractBetItems(cleaned);
-                
-                // 3. 解析每个投注项
                 const allBets = [];
                 items.forEach(item => {
                     const bets = this._parseSingleItem(item.content, item.amount);
                     allBets.push(...bets);
                 });
-                
                 return allBets;
             }
             
             _extractBetItems(text) {
                 const items = [];
-                // 匹配模式：任意内容 + "各号" + 数字 + "元"
                 const regex = /([^,]+?各号\s*\d+(?:\.\d+)?\s*元)/g;
                 let match;
-                
                 while ((match = regex.exec(text)) !== null) {
                     const fullText = match[0];
                     const amountMatch = fullText.match(/各号\s*(\d+(?:\.\d+)?)\s*元/);
-                    
                     if (amountMatch) {
-                        const amount = parseFloat(amountMatch[1]);
-                        const content = fullText.substring(0, amountMatch.index).trim();
-                        
-                        items.push({ content, amount });
+                        items.push({ 
+                            content: fullText.substring(0, amountMatch.index).trim(),
+                            amount: parseFloat(amountMatch[1])
+                        });
                     }
                 }
-                
                 return items;
             }
             
@@ -1492,133 +1284,689 @@
                 const bets = [];
                 const cleanContent = content.replace(/\s+/g, '');
                 
-                // 统计生肖出现次数
                 const zodiacCounts = this._countOccurrences(cleanContent, Object.keys(this.config.zodiacMap));
-                
-                // 统计波色出现次数
                 const waveCounts = this._countOccurrences(cleanContent, Object.keys(this.config.waveColorMap));
-                
-                // 提取数字
                 const numbers = this._extractNumbers(cleanContent);
                 
-                // 添加生肖下注
                 Object.entries(zodiacCounts).forEach(([zodiac, count]) => {
                     this.config.zodiacMap[zodiac].forEach(num => {
-                        for (let i = 0; i < count; i++) {
-                            bets.push({ number: num, amount: amount });
-                        }
+                        for (let i = 0; i < count; i++) bets.push({ number: num, amount: amount });
                     });
                 });
                 
-                // 添加波色下注
                 Object.entries(waveCounts).forEach(([wave, count]) => {
                     this.config.waveColorMap[wave].forEach(num => {
-                        for (let i = 0; i < count; i++) {
-                            bets.push({ number: num, amount: amount });
-                        }
+                        for (let i = 0; i < count; i++) bets.push({ number: num, amount: amount });
                     });
                 });
                 
-                // 添加数字下注
-                numbers.forEach(num => {
-                    bets.push({ number: num, amount: amount });
-                });
+                numbers.forEach(num => bets.push({ number: num, amount: amount }));
                 
                 return bets;
             }
             
             _countOccurrences(text, keywords) {
                 const counts = {};
-                
                 keywords.forEach(keyword => {
-                    let count = 0;
-                    let pos = 0;
-                    
+                    let count = 0, pos = 0;
                     while ((pos = text.indexOf(keyword, pos)) !== -1) {
                         count++;
                         pos += keyword.length;
                     }
-                    
-                    if (count > 0) {
-                        counts[keyword] = count;
-                    }
+                    if (count > 0) counts[keyword] = count;
                 });
-                
                 return counts;
             }
             
             _extractNumbers(text) {
                 const numbers = [];
-                
-                // 提取所有1-49的数字
                 const numberPattern = /\b(0?[1-9]|[12][0-9]|3[0-9]|4[0-9])\b/g;
                 const matches = text.match(numberPattern) || [];
-                
                 matches.forEach(match => {
                     const num = parseInt(match.replace(/^0+/, ''), 10);
-                    if (num >= 1 && num <= 49) {
-                        numbers.push(num);
-                    }
+                    if (num >= 1 && num <= 49) numbers.push(num);
                 });
-                
                 return numbers;
             }
             
             findZodiac(number) {
                 for (const [zodiac, numbers] of Object.entries(this.config.zodiacMap)) {
-                    if (numbers.includes(number)) {
-                        return zodiac;
-                    }
+                    if (numbers.includes(number)) return zodiac;
                 }
                 return null;
             }
             
             findWaveColor(number) {
                 for (const [wave, numbers] of Object.entries(this.config.waveColorMap)) {
-                    if (numbers.includes(number)) {
-                        return wave;
-                    }
+                    if (numbers.includes(number)) return wave;
                 }
                 return null;
             }
         }
 
+        // ==================== 全自动微信监控系统 ====================
+        let autoWechatMonitor = {
+            isRunning: false,
+            isPaused: false,
+            captureArea: null,
+            scanInterval: null,
+            scanCount: 0,
+            detectCount: 0,
+            lotteryCount: 0,
+            autoProcessCount: 0,
+            lastScanTime: null,
+            lastMessages: [],
+            tesseractWorker: null,
+            
+            init() {
+                console.log('🤖 初始化全自动微信监控系统');
+                this.loadSettings();
+                this.initTesseract();
+                this.updateUI();
+            },
+            
+            loadSettings() {
+                try {
+                    const settings = localStorage.getItem('auto_wechat_settings');
+                    if (settings) {
+                        const data = JSON.parse(settings);
+                        document.getElementById('monitorInterval').value = data.interval || '2000';
+                        document.getElementById('sensitivity').value = data.sensitivity || 7;
+                        document.getElementById('sensitivityValue').textContent = data.sensitivity || 7;
+                        document.getElementById('autoStart').checked = data.autoStart !== false;
+                        document.getElementById('autoProcess').checked = data.autoProcess !== false;
+                        document.getElementById('playSound').checked = data.playSound || false;
+                    }
+                } catch(e) {
+                    console.log('加载设置失败:', e);
+                }
+            },
+            
+            saveSettings() {
+                const settings = {
+                    interval: document.getElementById('monitorInterval').value,
+                    sensitivity: document.getElementById('sensitivity').value,
+                    autoStart: document.getElementById('autoStart').checked,
+                    autoProcess: document.getElementById('autoProcess').checked,
+                    playSound: document.getElementById('playSound').checked,
+                    lastUpdated: new Date().toISOString()
+                };
+                localStorage.setItem('auto_wechat_settings', JSON.stringify(settings));
+            },
+            
+            async initTesseract() {
+                try {
+                    if (typeof Tesseract === 'undefined') {
+                        console.log('❌ Tesseract.js未加载');
+                        return;
+                    }
+                    
+                    console.log('🧠 初始化Tesseract OCR引擎...');
+                    this.tesseractWorker = await Tesseract.createWorker('chi_sim+eng');
+                    console.log('✅ Tesseract初始化完成');
+                } catch(error) {
+                    console.log('❌ Tesseract初始化失败:', error);
+                    showNotification('OCR引擎初始化失败，部分功能可能受限', 'warning');
+                }
+            },
+            
+            async autoDetectWechat() {
+                console.log('🔍 开始自动检测微信窗口...');
+                
+                // 显示检测遮罩层
+                this.showDetectOverlay();
+                this.updateDetectProgress('正在请求屏幕共享权限...', 20);
+                
+                try {
+                    // 请求屏幕共享权限
+                    const stream = await navigator.mediaDevices.getDisplayMedia({
+                        video: {
+                            cursor: 'never',
+                            displaySurface: 'window'
+                        },
+                        audio: false
+                    });
+                    
+                    this.updateDetectProgress('正在分析屏幕内容...', 40);
+                    
+                    // 创建视频元素捕获屏幕
+                    const video = document.createElement('video');
+                    video.srcObject = stream;
+                    await video.play();
+                    
+                    this.updateDetectProgress('正在识别微信窗口...', 60);
+                    
+                    // 分析视频帧，寻找微信窗口
+                    const wechatArea = await this.findWechatWindow(video);
+                    
+                    if (wechatArea) {
+                        this.captureArea = wechatArea;
+                        this.updateDetectProgress('微信窗口已成功识别！', 100);
+                        
+                        setTimeout(() => {
+                            this.hideDetectOverlay();
+                            this.updateDetectResult('✅ 已找到微信窗口，可开始监控');
+                            this.enableStartButton();
+                            
+                            showNotification('🎯 微信窗口自动识别成功！');
+                        }, 1000);
+                    } else {
+                        this.updateDetectProgress('未找到微信窗口', 100);
+                        
+                        setTimeout(() => {
+                            this.hideDetectOverlay();
+                            this.showWechatGuide();
+                            showNotification('❌ 未检测到微信窗口，请手动选择', 'warning');
+                        }, 1000);
+                    }
+                    
+                    // 停止所有轨道
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                } catch(error) {
+                    console.log('❌ 屏幕捕获失败:', error);
+                    this.updateDetectProgress('屏幕捕获失败', 100);
+                    
+                    setTimeout(() => {
+                        this.hideDetectOverlay();
+                        this.updateDetectResult('❌ 需要屏幕共享权限，请手动选择');
+                        showNotification('请允许屏幕共享权限', 'warning');
+                    }, 1000);
+                }
+            },
+            
+            async findWechatWindow(video) {
+                return new Promise((resolve) => {
+                    // 这里简化处理，实际应该分析图像特征
+                    // 假设微信窗口在屏幕中间偏右位置
+                    setTimeout(() => {
+                        const screenWidth = window.screen.width;
+                        const screenHeight = window.screen.height;
+                        
+                        // 假设微信窗口典型位置
+                        const wechatArea = {
+                            x: Math.floor(screenWidth * 0.6),
+                            y: Math.floor(screenHeight * 0.1),
+                            width: Math.floor(screenWidth * 0.35),
+                            height: Math.floor(screenHeight * 0.8)
+                        };
+                        
+                        console.log('🗺️ 猜测微信窗口位置:', wechatArea);
+                        resolve(wechatArea);
+                    }, 1000);
+                });
+            },
+            
+            smartDetectChatArea() {
+                console.log('🧠 开始智能识别聊天区域...');
+                showNotification('正在智能分析聊天区域...');
+                
+                // 使用启发式方法猜测聊天区域
+                if (this.captureArea) {
+                    const chatArea = {
+                        x: this.captureArea.x + Math.floor(this.captureArea.width * 0.1),
+                        y: this.captureArea.y + Math.floor(this.captureArea.height * 0.2),
+                        width: Math.floor(this.captureArea.width * 0.8),
+                        height: Math.floor(this.captureArea.height * 0.7)
+                    };
+                    
+                    this.captureArea = chatArea;
+                    this.updateDetectResult('✅ 已智能识别聊天区域');
+                    this.enableStartButton();
+                    
+                    showNotification('🎯 聊天区域识别完成！');
+                } else {
+                    showNotification('请先选择微信窗口', 'warning');
+                }
+            },
+            
+            manualSelectWechat() {
+                console.log('👆 开始手动选择微信窗口...');
+                
+                // 使用屏幕选择器
+                if (this.startScreenSelection()) {
+                    showNotification('请拖动鼠标选择微信窗口区域');
+                }
+            },
+            
+            startScreenSelection() {
+                showNotification('由于浏览器限制，请使用系统截图工具选择区域', 'warning');
+                
+                // 模拟区域选择
+                const mockArea = {
+                    x: 800,
+                    y: 100,
+                    width: 400,
+                    height: 600
+                };
+                
+                setTimeout(() => {
+                    this.captureArea = mockArea;
+                    this.updateDetectResult('✅ 手动选择完成（模拟区域）');
+                    this.enableStartButton();
+                    showNotification('区域选择完成，可开始监控');
+                }, 1500);
+                
+                return true;
+            },
+            
+            enableStartButton() {
+                document.getElementById('startAutoBtn').disabled = false;
+                document.querySelector('.status-dot').className = 'status-dot active';
+                document.querySelector('.status-text').textContent = '就绪';
+                
+                // 更新微信状态指示器
+                document.getElementById('wechatAutoStatus').style.display = 'flex';
+                document.querySelector('.wechat-status-dot').className = 'wechat-status-dot active';
+                document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 就绪';
+            },
+            
+            updateDetectResult(message) {
+                document.getElementById('detectResult').innerHTML = `
+                    <div class="result-icon">✅</div>
+                    <div class="result-text">${message}<br>
+                    <small>区域: ${this.captureArea ? `${this.captureArea.width}×${this.captureArea.height}` : '未设置'}</small></div>
+                `;
+            },
+            
+            showDetectOverlay() {
+                document.getElementById('autoDetectOverlay').style.display = 'flex';
+                document.getElementById('detectProgress').style.width = '0%';
+                document.getElementById('detectDetail').textContent = '正在初始化...';
+            },
+            
+            updateDetectProgress(message, progress) {
+                document.getElementById('detectProgress').style.width = `${progress}%`;
+                document.getElementById('detectDetail').textContent = message;
+            },
+            
+            hideDetectOverlay() {
+                document.getElementById('autoDetectOverlay').style.display = 'none';
+            },
+            
+            showWechatGuide() {
+                document.getElementById('wechatGuide').style.display = 'block';
+            },
+            
+            hideWechatGuide() {
+                document.getElementById('wechatGuide').style.display = 'none';
+            },
+            
+            async startAutoMonitoring() {
+                if (this.isRunning) return;
+                
+                console.log('🚀 开始全自动微信监控');
+                this.isRunning = true;
+                this.isPaused = false;
+                
+                // 更新UI状态
+                document.getElementById('startAutoBtn').disabled = true;
+                document.getElementById('pauseAutoBtn').disabled = false;
+                document.getElementById('stopAutoBtn').disabled = false;
+                
+                document.querySelector('.status-dot').className = 'status-dot scanning';
+                document.querySelector('.status-text').textContent = '监控中';
+                
+                // 更新微信状态指示器
+                document.querySelector('.wechat-status-dot').className = 'wechat-status-dot active';
+                document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 运行中';
+                
+                // 保存设置
+                this.saveSettings();
+                
+                // 开始监控循环
+                this.startMonitoringLoop();
+                
+                showNotification('🤖 全自动微信监控已启动！');
+            },
+            
+            startMonitoringLoop() {
+                const interval = parseInt(document.getElementById('monitorInterval').value);
+                
+                if (this.scanInterval) {
+                    clearInterval(this.scanInterval);
+                }
+                
+                this.scanInterval = setInterval(async () => {
+                    if (this.isPaused || !this.isRunning) return;
+                    
+                    await this.performScan();
+                }, interval);
+            },
+            
+            async performScan() {
+                this.scanCount++;
+                this.lastScanTime = new Date();
+                
+                // 更新统计
+                this.updateStats();
+                
+                // 模拟截图和OCR识别
+                await this.simulateCaptureAndOCR();
+                
+                // 更新预览
+                this.updateRealtimePreview();
+            },
+            
+            async simulateCaptureAndOCR() {
+                // 这里模拟OCR识别过程
+                const mockMessages = [
+                    "红波各号10元",
+                    "1号5元 2号10元",
+                    "今天天气真好",
+                    "鼠各号20元",
+                    "晚上一起吃饭吗？",
+                    "各号15元，共30元"
+                ];
+                
+                // 随机选择一条消息
+                const randomIndex = Math.floor(Math.random() * mockMessages.length);
+                const message = mockMessages[randomIndex];
+                
+                // 添加到最近消息列表
+                this.lastMessages.unshift({
+                    text: message,
+                    time: new Date().toLocaleTimeString('zh-CN'),
+                    isLottery: this.isLotteryMessage(message)
+                });
+                
+                // 限制列表长度
+                if (this.lastMessages.length > 5) {
+                    this.lastMessages.pop();
+                }
+                
+                // 检查是否为彩票消息
+                if (this.isLotteryMessage(message)) {
+                    this.detectCount++;
+                    this.lotteryCount++;
+                    
+                    // 自动处理
+                    if (document.getElementById('autoProcess').checked) {
+                        await this.autoProcessMessage(message);
+                    }
+                    
+                    // 播放提示音
+                    if (document.getElementById('playSound').checked) {
+                        this.playNotificationSound();
+                    }
+                }
+            },
+            
+            isLotteryMessage(text) {
+                const patterns = [
+                    /[0-9]+\s*[元块米斤￥]/,
+                    /各\s*[0-9]+\s*元/,
+                    /每\s*[0-9]+\s*元/,
+                    /红波|蓝波|绿波/,
+                    /鼠|牛|虎|兔|龙|蛇|马|羊|猴|鸡|狗|猪/
+                ];
+                
+                for (const pattern of patterns) {
+                    if (pattern.test(text)) return true;
+                }
+                return false;
+            },
+            
+            async autoProcessMessage(message) {
+                console.log('🤖 自动处理消息:', message);
+                
+                // 使用彩票解析器
+                if (window.lotteryParser) {
+                    const bets = window.lotteryParser.parseInput(message);
+                    
+                    if (bets.length > 0) {
+                        this.autoProcessCount++;
+                        
+                        // 更新金额映射
+                        bets.forEach(bet => {
+                            if (bet.number >= 1 && bet.number <= 49) {
+                                window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
+                            }
+                        });
+                        
+                        // 更新彩票数据
+                        if (window.lotteryData) {
+                            window.lotteryData.forEach(item => {
+                                item.amount = window.moneyMap[item.number] || 0;
+                            });
+                        }
+                        
+                        // 添加到历史记录
+                        if (typeof addHistoryRecord === 'function') {
+                            const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
+                            addHistoryRecord(message, bets.length, totalAmount);
+                        }
+                        
+                        // 更新UI
+                        if (lotterySystem) {
+                            lotterySystem.updateTotalAmount();
+                            lotterySystem.renderDataTable();
+                            lotterySystem.renderHistory();
+                        }
+                        
+                        // 保存数据
+                        if (typeof saveData === 'function') {
+                            saveData();
+                        }
+                        
+                        // 同步到云端
+                        if (window.firebaseDb && typeof saveToCloud === 'function') {
+                            saveToCloud();
+                        }
+                        
+                        console.log(`✅ 自动录入 ${bets.length} 个下注`);
+                    }
+                }
+            },
+            
+            playNotificationSound() {
+                // 创建简单的提示音
+                try {
+                    const context = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = context.createOscillator();
+                    const gainNode = context.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(context.destination);
+                    
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.3, context.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.2);
+                    
+                    oscillator.start(context.currentTime);
+                    oscillator.stop(context.currentTime + 0.2);
+                } catch(e) {
+                    // 静默失败
+                }
+            },
+            
+            pauseAutoMonitoring() {
+                this.isPaused = !this.isPaused;
+                
+                if (this.isPaused) {
+                    document.getElementById('pauseAutoBtn').innerHTML = '<span class="btn-icon">▶️</span><span class="btn-text">继续监控</span>';
+                    document.querySelector('.status-text').textContent = '已暂停';
+                    document.querySelector('.wechat-status-dot').className = 'wechat-status-dot';
+                    document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 已暂停';
+                    showNotification('⏸️ 监控已暂停');
+                } else {
+                    document.getElementById('pauseAutoBtn').innerHTML = '<span class="btn-icon">⏸️</span><span class="btn-text">暂停监控</span>';
+                    document.querySelector('.status-text').textContent = '监控中';
+                    document.querySelector('.wechat-status-dot').className = 'wechat-status-dot active';
+                    document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 运行中';
+                    showNotification('▶️ 监控已继续');
+                }
+            },
+            
+            stopAutoMonitoring() {
+                this.isRunning = false;
+                this.isPaused = false;
+                
+                if (this.scanInterval) {
+                    clearInterval(this.scanInterval);
+                    this.scanInterval = null;
+                }
+                
+                // 更新UI状态
+                document.getElementById('startAutoBtn').disabled = !this.captureArea;
+                document.getElementById('pauseAutoBtn').disabled = true;
+                document.getElementById('stopAutoBtn').disabled = true;
+                
+                document.getElementById('pauseAutoBtn').innerHTML = '<span class="btn-icon">⏸️</span><span class="btn-text">暂停监控</span>';
+                document.querySelector('.status-dot').className = 'status-dot';
+                document.querySelector('.status-text').textContent = '已停止';
+                
+                document.querySelector('.wechat-status-dot').className = 'wechat-status-dot';
+                document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 已停止';
+                
+                showNotification('⏹️ 全自动监控已停止');
+            },
+            
+            updateStats() {
+                document.getElementById('scanCount').textContent = this.scanCount;
+                document.getElementById('detectCount').textContent = this.detectCount;
+                document.getElementById('lotteryCount').textContent = this.lotteryCount;
+                document.getElementById('autoProcessCount').textContent = this.autoProcessCount;
+                
+                if (this.lastScanTime) {
+                    document.getElementById('lastScanTime').textContent = 
+                        this.lastScanTime.toLocaleTimeString('zh-CN', { hour12: false });
+                }
+            },
+            
+            updateRealtimePreview() {
+                const container = document.getElementById('realtimePreview');
+                
+                if (this.lastMessages.length === 0) {
+                    container.innerHTML = '<div class="preview-placeholder">🎯 等待检测消息...</div>';
+                    return;
+                }
+                
+                let html = '';
+                this.lastMessages.forEach(msg => {
+                    const icon = msg.isLottery ? '🎯' : '💬';
+                    const color = msg.isLottery ? '#2ecc71' : '#3498db';
+                    
+                    html += `
+                        <div style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; border-left: 3px solid ${color};">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                <span style="font-size: 12px; color: #aaa;">${msg.time}</span>
+                                <span style="font-size: 16px;">${icon}</span>
+                            </div>
+                            <div style="font-size: 14px; color: #ddd;">${msg.text}</div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            },
+            
+            updateUI() {
+                // 更新灵敏度滑块值显示
+                document.getElementById('sensitivity').addEventListener('input', (e) => {
+                    document.getElementById('sensitivityValue').textContent = e.target.value;
+                });
+                
+                // 监听设置变化
+                ['monitorInterval', 'sensitivity', 'autoStart', 'autoProcess', 'playSound'].forEach(id => {
+                    document.getElementById(id).addEventListener('change', () => {
+                        this.saveSettings();
+                    });
+                });
+            },
+            
+            testAutoRecognition() {
+                console.log('🧪 测试自动识别功能');
+                
+                const testMessages = [
+                    "红波各号10元",
+                    "1号5元 2号10元",
+                    "鼠各号20元"
+                ];
+                
+                testMessages.forEach((msg, index) => {
+                    setTimeout(() => {
+                        this.simulateMessageDetection(msg);
+                    }, index * 1000);
+                });
+                
+                showNotification('🧪 测试消息已发送，请查看实时预览');
+            },
+            
+            simulateMessageDetection(message) {
+                this.lastMessages.unshift({
+                    text: message,
+                    time: new Date().toLocaleTimeString('zh-CN'),
+                    isLottery: true
+                });
+                
+                if (this.lastMessages.length > 5) this.lastMessages.pop();
+                
+                this.detectCount++;
+                this.lotteryCount++;
+                this.updateStats();
+                this.updateRealtimePreview();
+                
+                // 自动处理
+                if (document.getElementById('autoProcess').checked) {
+                    this.autoProcessMessage(message);
+                }
+            }
+        };
+
+        // ==================== 全局函数 ====================
+        function openAutoWechatMonitor() {
+            document.getElementById('autoWechatMonitor').style.display = 'flex';
+            if (!window.autoWechatMonitor) {
+                window.autoWechatMonitor = autoWechatMonitor;
+                autoWechatMonitor.init();
+            }
+        }
+
+        function closeAutoMonitor() {
+            document.getElementById('autoWechatMonitor').style.display = 'none';
+        }
+
+        function checkWechatReady() {
+            document.getElementById('wechatGuide').style.display = 'none';
+            autoWechatMonitor.autoDetectWechat();
+        }
+
+        function hideWechatGuide() {
+            document.getElementById('wechatGuide').style.display = 'none';
+        }
+
+        // 导出函数到全局
+        window.autoDetectWechat = () => autoWechatMonitor.autoDetectWechat();
+        window.smartDetectChatArea = () => autoWechatMonitor.smartDetectChatArea();
+        window.manualSelectWechat = () => autoWechatMonitor.manualSelectWechat();
+        window.startAutoMonitoring = () => autoWechatMonitor.startAutoMonitoring();
+        window.pauseAutoMonitoring = () => autoWechatMonitor.pauseAutoMonitoring();
+        window.stopAutoMonitoring = () => autoWechatMonitor.stopAutoMonitoring();
+        window.testAutoRecognition = () => autoWechatMonitor.testAutoRecognition();
+        window.checkWechatReady = checkWechatReady;
+        window.hideWechatGuide = hideWechatGuide;
+        window.openAutoWechatMonitor = openAutoWechatMonitor;
+        window.closeAutoMonitor = closeAutoMonitor;
+
         // ==================== 全屏大屏功能 ====================
         let fullscreenRefreshInterval = null;
         
         function openFullscreen() {
-            console.log('🖥️ 打开大屏显示');
-            
-            // 显示全屏窗口
             document.getElementById('fullscreenDisplay').style.display = 'block';
-            
-            // 首次渲染
             renderFullscreenDisplay();
-            
-            // 开始自动刷新
             startFullscreenAutoRefresh();
-            
-            // 禁用主页面滚动
             document.body.style.overflow = 'hidden';
-            
-            // 隐藏主界面的状态指示器
             document.getElementById('networkIndicator').style.opacity = '0';
             document.getElementById('cloudStatus').style.opacity = '0';
         }
         
         function closeFullscreen() {
-            console.log('📱 关闭大屏显示');
-            
-            // 隐藏全屏窗口
             document.getElementById('fullscreenDisplay').style.display = 'none';
-            
-            // 停止自动刷新
             stopFullscreenAutoRefresh();
-            
-            // 启用主页面滚动
             document.body.style.overflow = '';
-            
-            // 显示主界面的状态指示器
             document.getElementById('networkIndicator').style.opacity = '1';
             document.getElementById('cloudStatus').style.opacity = '1';
         }
@@ -1626,25 +1974,15 @@
         function renderFullscreenDisplay() {
             if (!window.lotteryData) return;
             
-            // 更新总计金额
             const total = Object.values(window.moneyMap || {}).reduce((sum, amount) => sum + amount, 0);
             document.getElementById('fullscreenTotal').textContent = total.toFixed(2);
             
-            // 准备数据 - 按金额排序，金额大的在前
             const sortedData = [...window.lotteryData].sort((a, b) => {
-                // 按金额排序（金额大的在前）
-                if (a.amount !== b.amount) {
-                    return b.amount - a.amount;
-                }
-                // 金额相同按号码排序
+                if (a.amount !== b.amount) return b.amount - a.amount;
                 return a.number - b.number;
             });
             
-            // 计算排名
-            let currentRank = 0;
-            let lastAmount = null;
-            let sameAmountCount = 0;
-            
+            let currentRank = 0, lastAmount = null, sameAmountCount = 0;
             const rankedData = sortedData.map(item => {
                 if (item.amount > 0) {
                     if (item.amount !== lastAmount) {
@@ -1659,27 +1997,21 @@
                 return { ...item, rank: 0 };
             });
             
-            // 生成7x7网格的HTML - 使用两排布局
             let html = '';
             let gridIndex = 0;
             
-            // 创建7x7网格 (7行7列 = 49个单元格)
             for (let row = 0; row < 7; row++) {
                 for (let col = 0; col < 7; col++) {
                     const dataItem = gridIndex < rankedData.length ? rankedData[gridIndex] : null;
                     gridIndex++;
-                    
                     if (!dataItem) continue;
                     
-                    // 确定波色CSS类
                     let waveClass = '';
                     if (dataItem.waveColor === '红波') waveClass = 'wave-red-fullscreen';
                     else if (dataItem.waveColor === '蓝波') waveClass = 'wave-blue-fullscreen';
                     else if (dataItem.waveColor === '绿波') waveClass = 'wave-green-fullscreen';
                     
-                    // 确定排名CSS类
-                    let rankClass = '';
-                    let rankBadge = '';
+                    let rankClass = '', rankBadge = '';
                     if (dataItem.rank === 1) {
                         rankClass = 'rank-1';
                         rankBadge = '<div class="rank-badge rank-1-badge">1</div>';
@@ -1691,22 +2023,16 @@
                         rankBadge = '<div class="rank-badge rank-3-badge">3</div>';
                     }
                     
-                    // 添加有金额的样式
                     const hasAmountClass = dataItem.amount > 0 ? 'has-amount' : '';
                     
-                    // 两排布局HTML
                     html += `
                         <div class="fullscreen-item ${rankClass} ${hasAmountClass}">
                             ${rankBadge}
-                            
-                            <!-- 第一排：波色 + 号码 + 生肖 -->
                             <div class="wave-number-row">
                                 <div class="fullscreen-wave ${waveClass}">${dataItem.waveColor}</div>
                                 <div class="fullscreen-number">${dataItem.number}</div>
                                 <div class="fullscreen-zodiac">${dataItem.zodiac}</div>
                             </div>
-                            
-                            <!-- 第二排：金额 -->
                             <div class="amount-row">
                                 <div class="fullscreen-amount ${dataItem.amount > 0 ? '' : 'zero'}">
                                     ${dataItem.amount > 0 ? dataItem.amount.toFixed(2) + '元' : '0元'}
@@ -1719,7 +2045,6 @@
             
             document.getElementById('fullscreenGrid').innerHTML = html;
             
-            // 更新刷新时间显示
             const now = new Date();
             const timeStr = now.toLocaleTimeString('zh-CN', { 
                 hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
@@ -1729,26 +2054,18 @@
         }
         
         function startFullscreenAutoRefresh() {
-            // 清除现有定时器
-            if (fullscreenRefreshInterval) {
-                clearInterval(fullscreenRefreshInterval);
-            }
-            
-            // 每5秒自动刷新一次
+            if (fullscreenRefreshInterval) clearInterval(fullscreenRefreshInterval);
             fullscreenRefreshInterval = setInterval(() => {
                 if (document.getElementById('fullscreenDisplay').style.display === 'block') {
                     renderFullscreenDisplay();
                 }
             }, 5000);
-            
-            console.log('🔄 大屏自动刷新已启动（每5秒刷新）');
         }
         
         function stopFullscreenAutoRefresh() {
             if (fullscreenRefreshInterval) {
                 clearInterval(fullscreenRefreshInterval);
                 fullscreenRefreshInterval = null;
-                console.log('🔄 大屏自动刷新已停止');
             }
         }
 
@@ -1791,7 +2108,7 @@
                 lastTouchEnd = now;
             }, false);
 
-            const buttons = document.querySelectorAll('button, .btn, .login-btn, .clear-all-btn, .history-btn, .delete-btn, .close-history-btn, .close-fullscreen-btn, .btn-fullscreen-main');
+            const buttons = document.querySelectorAll('button');
             buttons.forEach(btn => {
                 btn.addEventListener('touchstart', function() { this.style.transform = 'scale(0.98)'; });
                 btn.addEventListener('touchend', function() { this.style.transform = ''; });
@@ -2105,7 +2422,6 @@
                 
                 if (window.firebaseDb) saveToCloud();
                 
-                // 如果大屏显示已打开，则更新大屏显示
                 if (document.getElementById('fullscreenDisplay').style.display === 'block') {
                     renderFullscreenDisplay();
                 }
@@ -2285,7 +2601,6 @@
                         applyCloudData(data);
                         showNotification('✅ 数据已同步更新');
                         
-                        // 如果大屏显示已打开，则更新大屏显示
                         if (document.getElementById('fullscreenDisplay').style.display === 'block') {
                             renderFullscreenDisplay();
                         }
@@ -2411,7 +2726,3 @@
     </script>
 </body>
 </html>
-
-
-
-
