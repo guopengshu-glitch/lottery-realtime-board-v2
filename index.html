@@ -1429,273 +1429,442 @@
             },
             
             manualSelectWechat() {
-                console.log('👆 开始手动选择微信窗口...');
-                showNotification('请拖动鼠标选择微信聊天区域', 'warning');
-                setTimeout(() => {
-                    this.captureArea = { x: 800, y: 100, width: 400, height: 600 };
-                    this.updateDetectResult('✅ 手动选择完成');
-                    this.enableStartButton();
-                    showNotification('区域选择完成，可开始监控');
-                }, 1500);
-            },
-            
-            enableStartButton() {
-                document.getElementById('startAutoBtn').disabled = false;
-                document.querySelector('.status-dot').className = 'status-dot active';
-                document.querySelector('.status-text').textContent = '就绪';
-                document.getElementById('wechatAutoStatus').style.display = 'flex';
-                document.querySelector('.wechat-status-dot').className = 'wechat-status-dot active';
-                document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 就绪';
-            },
-            
-            updateDetectResult(message) {
-                document.getElementById('detectResult').innerHTML = `<div class="result-icon">✅</div><div class="result-text">${message}<br><small>区域: ${this.captureArea ? `${this.captureArea.width}×${this.captureArea.height}` : '未设置'}</small></div>`;
-            },
-            
-            showDetectOverlay() {
-                document.getElementById('autoDetectOverlay').style.display = 'flex';
-                document.getElementById('detectProgress').style.width = '0%';
-                document.getElementById('detectDetail').textContent = '正在初始化...';
-            },
-            updateDetectProgress(message, progress) {
-                document.getElementById('detectProgress').style.width = `${progress}%`;
-                document.getElementById('detectDetail').textContent = message;
-            },
-            hideDetectOverlay() { document.getElementById('autoDetectOverlay').style.display = 'none'; },
-            showWechatGuide() { document.getElementById('wechatGuide').style.display = 'block'; },
-            hideWechatGuide() { document.getElementById('wechatGuide').style.display = 'none'; },
-            
-            async startAutoMonitoring() {
-                if (this.isRunning) return;
-                console.log('🚀 开始全自动微信监控');
-                this.isRunning = true; this.isPaused = false;
-                document.getElementById('startAutoBtn').disabled = true;
-                document.getElementById('pauseAutoBtn').disabled = false;
-                document.getElementById('stopAutoBtn').disabled = false;
-                document.querySelector('.status-dot').className = 'status-dot scanning';
-                document.querySelector('.status-text').textContent = '监控中';
-                document.querySelector('.wechat-status-dot').className = 'wechat-status-dot active';
-                document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 运行中';
-                this.saveSettings();
-                this.startMonitoringLoop();
-                showNotification('🤖 全自动微信监控已启动！');
-            },
-            
-            startMonitoringLoop() {
-                const interval = parseInt(document.getElementById('monitorInterval').value);
-                if (this.scanInterval) clearInterval(this.scanInterval);
-                this.scanInterval = setInterval(async () => {
-                    if (this.isPaused || !this.isRunning) return;
-                    await this.performScan();
-                }, interval);
-            },
-            
-            async performScan() {
-                this.scanCount++; this.lastScanTime = new Date(); this.updateStats();
-                if (!this.captureArea) return;
-                try {
-                    if (!this.screenStream) {
-                        this.screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "never", displaySurface: "monitor" }, audio: false });
-                        this.videoElement = document.createElement('video');
-                        this.videoElement.srcObject = this.screenStream;
-                        await this.videoElement.play();
-                        this.canvas = document.createElement('canvas');
-                        this.ctx = this.canvas.getContext('2d');
-                    }
-                    this.canvas.width = this.videoElement.videoWidth;
-                    this.canvas.height = this.videoElement.videoHeight;
-                    this.ctx.drawImage(this.videoElement, 0, 0);
-                    const area = this.captureArea;
-                    const imageData = this.ctx.getImageData(area.x, area.y, area.width, area.height);
-                    const hasChange = this.detectAreaChange(imageData);
-                    if (hasChange) {
-                        console.log('🔄 检测到微信聊天区域变化');
-                        if (this.tesseractWorker) {
-                            try {
-                                const { data: { text } } = await this.tesseractWorker.recognize(imageData);
-                                if (text && text.trim().length > 3) {
-                                    console.log('📝 识别到文字:', text.trim());
-                                    this.processRecognizedMessage(text.trim());
-                                }
-                            } catch (ocrError) { console.log('❌ OCR识别失败:', ocrError); }
-                        }
-                        this.lastFrameData = imageData;
-                    }
-                } catch (error) {
-                    console.log('❌ 屏幕捕获失败:', error);
-                    if (this.screenStream) {
-                        this.screenStream.getTracks().forEach(track => track.stop());
-                        this.screenStream = null; this.videoElement = null; this.canvas = null; this.ctx = null;
-                    }
-                }
-                this.updateRealtimePreview();
-            },
-            
-            detectAreaChange(newImageData) {
-                if (!this.lastFrameData) return true;
-                const sensitivity = parseInt(document.getElementById('sensitivity').value) || 7;
-                const threshold = 3000 * (sensitivity / 5);
-                let diff = 0;
-                const data1 = this.lastFrameData.data;
-                const data2 = newImageData.data;
-                const startY = Math.floor(newImageData.height * 0.6);
-                for (let y = startY; y < newImageData.height; y++) {
-                    for (let x = 0; x < newImageData.width; x += 5) {
-                        const i = (y * newImageData.width + x) * 4;
-                        const rDiff = Math.abs(data1[i] - data2[i]);
-                        const gDiff = Math.abs(data1[i+1] - data2[i+1]);
-                        const bDiff = Math.abs(data1[i+2] - data2[i+2]);
-                        if (rDiff > 40 || gDiff > 40 || bDiff > 40) diff++;
-                        if (diff > threshold) return true;
-                    }
-                }
-                return diff > threshold;
-            },
-            
-            processRecognizedMessage(text) {
-                if (!text || text.length < 3) return;
-                const lastMsg = this.lastMessages[0];
-                if (lastMsg && this.similarity(lastMsg.text, text) > 0.8) { console.log('⏭️ 跳过重复消息'); return; }
-                console.log('📱 检测到新消息:', text);
-                const isLottery = this.isLotteryMessage(text);
-                this.lastMessages.unshift({ text, time: new Date().toLocaleTimeString('zh-CN'), isLottery, source: 'wechat_auto' });
-                if (this.lastMessages.length > 10) this.lastMessages.pop();
-                this.detectCount++;
-                if (isLottery) {
-                    this.lotteryCount++;
-                    console.log('🎯 检测到彩票消息，自动录入中...', text);
-                    if (document.getElementById('autoProcess').checked) {
-                        this.autoProcessMessage(text);
-                        this.autoProcessCount++;
-                        showNotification(`🎯 自动录入: ${text.substring(0,30)}...`, 'success');
-                    }
-                    if (document.getElementById('playSound').checked) this.playNotificationSound();
-                }
-                this.updateStats();
-                this.updateRealtimePreview();
-            },
-            
-            similarity(str1, str2) {
-                if (str1 === str2) return 1;
-                const len = Math.min(str1.length, str2.length);
-                let same = 0;
-                for (let i = 0; i < len; i++) if (str1[i] === str2[i]) same++;
-                return same / Math.max(str1.length, str2.length);
-            },
-            
-            isLotteryMessage(text) {
-                const patterns = [/[0-9]+\s*[元块米斤￥]/, /各\s*[0-9]+\s*元/, /每\s*[0-9]+\s*元/, /红波|蓝波|绿波/, /鼠|牛|虎|兔|龙|蛇|马|羊|猴|鸡|狗|猪/];
-                for (const pattern of patterns) if (pattern.test(text)) return true;
-                return false;
-            },
-            
-            async autoProcessMessage(message) {
-                console.log('🤖 自动处理消息:', message);
-                if (window.lotteryParser) {
-                    const bets = window.lotteryParser.parseInput(message);
-                    if (bets.length > 0) {
-                        this.autoProcessCount++;
-                        bets.forEach(bet => { if (bet.number >= 1 && bet.number <= 49) window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount; });
-                        if (window.lotteryData) window.lotteryData.forEach(item => { item.amount = window.moneyMap[item.number] || 0; });
-                        if (typeof addHistoryRecord === 'function') {
-                            const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
-                            addHistoryRecord(message, bets.length, totalAmount);
-                        }
-                        if (lotterySystem) { lotterySystem.updateTotalAmount(); lotterySystem.renderDataTable(); lotterySystem.renderHistory(); }
-                        if (typeof saveData === 'function') saveData();
-                        if (window.firebaseDb && typeof saveToCloud === 'function') saveToCloud();
-                        console.log(`✅ 自动录入 ${bets.length} 个下注`);
-                    }
-                }
-            },
-            
-            playNotificationSound() {
-                try {
-                    const context = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = context.createOscillator();
-                    const gainNode = context.createGain();
-                    oscillator.connect(gainNode);
-                    gainNode.connect(context.destination);
-                    oscillator.frequency.value = 800;
-                    oscillator.type = 'sine';
-                    gainNode.gain.setValueAtTime(0.3, context.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.2);
-                    oscillator.start(context.currentTime);
-                    oscillator.stop(context.currentTime + 0.2);
-                } catch(e) {}
-            },
-            
-            pauseAutoMonitoring() {
-                this.isPaused = !this.isPaused;
-                if (this.isPaused) {
-                    document.getElementById('pauseAutoBtn').innerHTML = '<span class="btn-icon">▶️</span><span class="btn-text">继续监控</span>';
-                    document.querySelector('.status-text').textContent = '已暂停';
-                    document.querySelector('.wechat-status-dot').className = 'wechat-status-dot';
-                    document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 已暂停';
-                    showNotification('⏸️ 监控已暂停');
-                } else {
-                    document.getElementById('pauseAutoBtn').innerHTML = '<span class="btn-icon">⏸️</span><span class="btn-text">暂停监控</span>';
-                    document.querySelector('.status-text').textContent = '监控中';
-                    document.querySelector('.wechat-status-dot').className = 'wechat-status-dot active';
-                    document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 运行中';
-                    showNotification('▶️ 监控已继续');
-                }
-            },
-            
-            stopAutoMonitoring() {
-                this.isRunning = false; this.isPaused = false;
-                if (this.screenStream) {
-                    this.screenStream.getTracks().forEach(track => track.stop());
-                    this.screenStream = null; this.videoElement = null; this.canvas = null; this.ctx = null; this.lastFrameData = null;
-                }
-                if (this.scanInterval) { clearInterval(this.scanInterval); this.scanInterval = null; }
-                document.getElementById('startAutoBtn').disabled = !this.captureArea;
-                document.getElementById('pauseAutoBtn').disabled = true;
-                document.getElementById('stopAutoBtn').disabled = true;
-                document.getElementById('pauseAutoBtn').innerHTML = '<span class="btn-icon">⏸️</span><span class="btn-text">暂停监控</span>';
-                document.querySelector('.status-dot').className = 'status-dot';
-                document.querySelector('.status-text').textContent = '已停止';
-                document.querySelector('.wechat-status-dot').className = 'wechat-status-dot';
-                document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 已停止';
-                showNotification('⏹️ 全自动监控已停止');
-            },
-            
-            updateStats() {
-                document.getElementById('scanCount').textContent = this.scanCount;
-                document.getElementById('detectCount').textContent = this.detectCount;
-                document.getElementById('lotteryCount').textContent = this.lotteryCount;
-                document.getElementById('autoProcessCount').textContent = this.autoProcessCount;
-                if (this.lastScanTime) document.getElementById('lastScanTime').textContent = this.lastScanTime.toLocaleTimeString('zh-CN', { hour12: false });
-            },
-            
-            updateRealtimePreview() {
-                const container = document.getElementById('realtimePreview');
-                if (this.lastMessages.length === 0) { container.innerHTML = '<div class="preview-placeholder">🎯 等待检测消息...</div>'; return; }
-                let html = '';
-                this.lastMessages.forEach(msg => {
-                    const icon = msg.isLottery ? '🎯' : '💬';
-                    const color = msg.isLottery ? '#2ecc71' : '#3498db';
-                    html += `<div style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; border-left: 3px solid ${color};"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;"><span style="font-size: 12px; color: #aaa;">${msg.time}</span><span style="font-size: 16px;">${icon}</span></div><div style="font-size: 14px; color: #ddd;">${msg.text}</div></div>`;
-                });
-                container.innerHTML = html;
-            },
-            
-            updateUI() {
-                document.getElementById('sensitivity').addEventListener('input', (e) => { document.getElementById('sensitivityValue').textContent = e.target.value; });
-                ['monitorInterval','sensitivity','autoStart','autoProcess','playSound'].forEach(id => {
-                    document.getElementById(id).addEventListener('change', () => { this.saveSettings(); });
-                });
-            },
-            
-            testAutoRecognition() {
-                console.log('🧪 测试自动识别功能');
-                const testMessages = ["红波各号10元","1号5元 2号10元","鼠各号20元"];
-                testMessages.forEach((msg, index) => { setTimeout(() => { this.processRecognizedMessage(msg); }, index * 1000); });
-                showNotification('🧪 测试消息已发送，请查看实时预览');
-            }
+    console.log('👆 开始手动选择微信窗口...');
+    
+    // 创建遮罩层
+    const overlay = document.createElement('div');
+    overlay.id = 'areaSelectorOverlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.7);
+        z-index: 999999;
+        cursor: crosshair;
+    `;
+    
+    // 提示文字
+    const hint = document.createElement('div');
+    hint.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        padding: 16px 32px;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        color: #333;
+        font-weight: bold;
+        font-size: 16px;
+        z-index: 1000000;
+        border-left: 6px solid #00adb5;
+        pointer-events: none;
+    `;
+    hint.innerHTML = '🎯 请拖动鼠标框选微信聊天区域 → 松开鼠标完成选择 &nbsp;&nbsp;&nbsp; [ESC] 取消';
+    overlay.appendChild(hint);
+    
+    // 选择框
+    const selectionBox = document.createElement('div');
+    selectionBox.style.cssText = `
+        position: absolute;
+        border: 3px solid #00adb5;
+        background: rgba(0,173,181,0.1);
+        display: none;
+        pointer-events: none;
+        z-index: 1000000;
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.5);
+    `;
+    overlay.appendChild(selectionBox);
+    document.body.appendChild(overlay);
+    
+    let startX, startY, isSelecting = false;
+    
+    // 鼠标按下
+    const onMouseDown = (e) => {
+        isSelecting = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        
+        selectionBox.style.left = startX + 'px';
+        selectionBox.style.top = startY + 'px';
+        selectionBox.style.width = '0px';
+        selectionBox.style.height = '0px';
+        selectionBox.style.display = 'block';
+    };
+    
+    // 鼠标移动
+    const onMouseMove = (e) => {
+        if (!isSelecting) return;
+        
+        const currentX = e.clientX;
+        const currentY = e.clientY;
+        
+        const width = Math.abs(currentX - startX);
+        const height = Math.abs(currentY - startY);
+        const left = Math.min(currentX, startX);
+        const top = Math.min(currentY, startY);
+        
+        selectionBox.style.left = left + 'px';
+        selectionBox.style.top = top + 'px';
+        selectionBox.style.width = width + 'px';
+        selectionBox.style.height = height + 'px';
+        
+        // 实时显示区域大小
+        hint.innerHTML = `🎯 正在选择: ${width} x ${height} &nbsp;&nbsp;&nbsp; [ESC] 取消`;
+    };
+    
+    // 鼠标松开
+    const onMouseUp = async (e) => {
+        if (!isSelecting) return;
+        isSelecting = false;
+        
+        const endX = e.clientX;
+        const endY = e.clientY;
+        
+        const width = Math.abs(endX - startX);
+        const height = Math.abs(endY - startY);
+        const left = Math.min(endX, startX);
+        const top = Math.min(endY, startY);
+        
+        // 移除事件监听
+        overlay.removeEventListener('mousedown', onMouseDown);
+        overlay.removeEventListener('mousemove', onMouseMove);
+        overlay.removeEventListener('mouseup', onMouseUp);
+        document.removeEventListener('keydown', onKeyDown);
+        
+        if (width < 50 || height < 50) {
+            alert('❌ 选择区域太小，请至少选择100x100像素的区域');
+            document.body.removeChild(overlay);
+            return;
+        }
+        
+        // 保存选择的区域
+        this.captureArea = {
+            x: left,
+            y: top,
+            width: width,
+            height: height
         };
+        
+        console.log('✅ 已选择监控区域:', this.captureArea);
+        
+        // 移除遮罩
+        document.body.removeChild(overlay);
+        
+        // 更新界面
+        this.updateDetectResult('✅ 已选择微信聊天区域');
+        this.enableStartButton();
+        showNotification('🎯 微信聊天区域选择成功！');
+        
+        // 初始化OCR
+        await this.initTesseract();
+        
+        // 请求屏幕共享
+        try {
+            showNotification('📷 请选择要共享的屏幕', 'info');
+            
+            this.screenStream = await navigator.mediaDevices.getDisplayMedia({
+                video: {
+                    cursor: "never",
+                    displaySurface: "monitor"
+                },
+                audio: false
+            });
+            
+            this.videoElement = document.createElement('video');
+            this.videoElement.srcObject = this.screenStream;
+            await this.videoElement.play();
+            
+            this.canvas = document.createElement('canvas');
+            this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+            
+            console.log('📷 屏幕捕获准备就绪');
+            showNotification('✅ 屏幕捕获准备就绪，点击开始监控');
+            
+        } catch(error) {
+            console.error('❌ 屏幕共享失败:', error);
+            showNotification('❌ 屏幕共享失败，请重试', 'warning');
+        }
+    };
+    
+    // ESC键取消
+    const onKeyDown = (e) => {
+        if (e.key === 'Escape') {
+            if (document.body.contains(overlay)) {
+                document.body.removeChild(overlay);
+            }
+            document.removeEventListener('keydown', onKeyDown);
+            showNotification('已取消区域选择', 'info');
+        }
+    };
+    
+    // 绑定事件
+    overlay.addEventListener('mousedown', onMouseDown);
+    overlay.addEventListener('mousemove', onMouseMove);
+    overlay.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('keydown', onKeyDown);
+},
 
-        window.autoWechatMonitor = autoWechatMonitor;
+enableStartButton() {
+    document.getElementById('startAutoBtn').disabled = false;
+    document.querySelector('.status-dot').className = 'status-dot active';
+    document.querySelector('.status-text').textContent = '就绪';
+    document.getElementById('wechatAutoStatus').style.display = 'flex';
+    document.querySelector('.wechat-status-dot').className = 'wechat-status-dot active';
+    document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 就绪';
+},
+
+updateDetectResult(message) {
+    document.getElementById('detectResult').innerHTML = `<div class="result-icon">✅</div><div class="result-text">${message}<br><small>区域: ${this.captureArea ? `${this.captureArea.width}×${this.captureArea.height}` : '未设置'}</small></div>`;
+},
+
+showDetectOverlay() {
+    document.getElementById('autoDetectOverlay').style.display = 'flex';
+    document.getElementById('detectProgress').style.width = '0%';
+    document.getElementById('detectDetail').textContent = '正在初始化...';
+},
+updateDetectProgress(message, progress) {
+    document.getElementById('detectProgress').style.width = `${progress}%`;
+    document.getElementById('detectDetail').textContent = message;
+},
+hideDetectOverlay() { document.getElementById('autoDetectOverlay').style.display = 'none'; },
+showWechatGuide() { document.getElementById('wechatGuide').style.display = 'block'; },
+hideWechatGuide() { document.getElementById('wechatGuide').style.display = 'none'; },
+
+async startAutoMonitoring() {
+    if (this.isRunning) return;
+    console.log('🚀 开始全自动微信监控');
+    this.isRunning = true; this.isPaused = false;
+    document.getElementById('startAutoBtn').disabled = true;
+    document.getElementById('pauseAutoBtn').disabled = false;
+    document.getElementById('stopAutoBtn').disabled = false;
+    document.querySelector('.status-dot').className = 'status-dot scanning';
+    document.querySelector('.status-text').textContent = '监控中';
+    document.querySelector('.wechat-status-dot').className = 'wechat-status-dot active';
+    document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 运行中';
+    this.saveSettings();
+    this.startMonitoringLoop();
+    showNotification('🤖 全自动微信监控已启动！');
+},
+
+startMonitoringLoop() {
+    const interval = parseInt(document.getElementById('monitorInterval').value);
+    if (this.scanInterval) clearInterval(this.scanInterval);
+    this.scanInterval = setInterval(async () => {
+        if (this.isPaused || !this.isRunning) return;
+        await this.performScan();
+    }, interval);
+},
+
+async performScan() {
+    this.scanCount++; this.lastScanTime = new Date(); this.updateStats();
+    if (!this.captureArea) return;
+    try {
+        if (!this.screenStream) {
+            this.screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "never", displaySurface: "monitor" }, audio: false });
+            this.videoElement = document.createElement('video');
+            this.videoElement.srcObject = this.screenStream;
+            await this.videoElement.play();
+            this.canvas = document.createElement('canvas');
+            this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+        }
+        this.canvas.width = this.videoElement.videoWidth;
+        this.canvas.height = this.videoElement.videoHeight;
+        this.ctx.drawImage(this.videoElement, 0, 0);
+        const area = this.captureArea;
+        const imageData = this.ctx.getImageData(area.x, area.y, area.width, area.height);
+        const hasChange = this.detectAreaChange(imageData);
+        if (hasChange) {
+            console.log('🔄 检测到微信聊天区域变化');
+            if (this.tesseractWorker) {
+                try {
+                    const { data: { text } } = await this.tesseractWorker.recognize(imageData);
+                    if (text && text.trim().length > 3) {
+                        console.log('📝 识别到文字:', text.trim());
+                        this.processRecognizedMessage(text.trim());
+                    }
+                } catch (ocrError) { console.log('❌ OCR识别失败:', ocrError); }
+            }
+            this.lastFrameData = imageData;
+        }
+    } catch (error) {
+        console.log('❌ 屏幕捕获失败:', error);
+        if (this.screenStream) {
+            this.screenStream.getTracks().forEach(track => track.stop());
+            this.screenStream = null; this.videoElement = null; this.canvas = null; this.ctx = null;
+        }
+    }
+    this.updateRealtimePreview();
+},
+
+detectAreaChange(newImageData) {
+    if (!this.lastFrameData) return true;
+    const sensitivity = parseInt(document.getElementById('sensitivity').value) || 7;
+    const threshold = 3000 * (sensitivity / 5);
+    let diff = 0;
+    const data1 = this.lastFrameData.data;
+    const data2 = newImageData.data;
+    const startY = Math.floor(newImageData.height * 0.6);
+    for (let y = startY; y < newImageData.height; y++) {
+        for (let x = 0; x < newImageData.width; x += 5) {
+            const i = (y * newImageData.width + x) * 4;
+            const rDiff = Math.abs(data1[i] - data2[i]);
+            const gDiff = Math.abs(data1[i+1] - data2[i+1]);
+            const bDiff = Math.abs(data1[i+2] - data2[i+2]);
+            if (rDiff > 40 || gDiff > 40 || bDiff > 40) diff++;
+            if (diff > threshold) return true;
+        }
+    }
+    return diff > threshold;
+},
+
+processRecognizedMessage(text) {
+    if (!text || text.length < 3) return;
+    const lastMsg = this.lastMessages[0];
+    if (lastMsg && this.similarity(lastMsg.text, text) > 0.8) { console.log('⏭️ 跳过重复消息'); return; }
+    console.log('📱 检测到新消息:', text);
+    const isLottery = this.isLotteryMessage(text);
+    this.lastMessages.unshift({ text, time: new Date().toLocaleTimeString('zh-CN'), isLottery, source: 'wechat_auto' });
+    if (this.lastMessages.length > 10) this.lastMessages.pop();
+    this.detectCount++;
+    if (isLottery) {
+        this.lotteryCount++;
+        console.log('🎯 检测到彩票消息，自动录入中...', text);
+        if (document.getElementById('autoProcess').checked) {
+            this.autoProcessMessage(text);
+            this.autoProcessCount++;
+            showNotification(`🎯 自动录入: ${text.substring(0,30)}...`, 'success');
+        }
+        if (document.getElementById('playSound').checked) this.playNotificationSound();
+    }
+    this.updateStats();
+    this.updateRealtimePreview();
+},
+
+similarity(str1, str2) {
+    if (str1 === str2) return 1;
+    const len = Math.min(str1.length, str2.length);
+    let same = 0;
+    for (let i = 0; i < len; i++) if (str1[i] === str2[i]) same++;
+    return same / Math.max(str1.length, str2.length);
+},
+
+isLotteryMessage(text) {
+    const patterns = [/[0-9]+\s*[元块米斤￥]/, /各\s*[0-9]+\s*元/, /每\s*[0-9]+\s*元/, /红波|蓝波|绿波/, /鼠|牛|虎|兔|龙|蛇|马|羊|猴|鸡|狗|猪/];
+    for (const pattern of patterns) if (pattern.test(text)) return true;
+    return false;
+},
+
+async autoProcessMessage(message) {
+    console.log('🤖 自动处理消息:', message);
+    if (window.lotteryParser) {
+        const bets = window.lotteryParser.parseInput(message);
+        if (bets.length > 0) {
+            this.autoProcessCount++;
+            bets.forEach(bet => { if (bet.number >= 1 && bet.number <= 49) window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount; });
+            if (window.lotteryData) window.lotteryData.forEach(item => { item.amount = window.moneyMap[item.number] || 0; });
+            if (typeof addHistoryRecord === 'function') {
+                const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
+                addHistoryRecord(message, bets.length, totalAmount);
+            }
+            if (lotterySystem) { lotterySystem.updateTotalAmount(); lotterySystem.renderDataTable(); lotterySystem.renderHistory(); }
+            if (typeof saveData === 'function') saveData();
+            if (window.firebaseDb && typeof saveToCloud === 'function') saveToCloud();
+            console.log(`✅ 自动录入 ${bets.length} 个下注`);
+        }
+    }
+},
+
+playNotificationSound() {
+    try {
+        const context = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(context.destination);
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.3, context.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.2);
+        oscillator.start(context.currentTime);
+        oscillator.stop(context.currentTime + 0.2);
+    } catch(e) {}
+},
+
+pauseAutoMonitoring() {
+    this.isPaused = !this.isPaused;
+    if (this.isPaused) {
+        document.getElementById('pauseAutoBtn').innerHTML = '<span class="btn-icon">▶️</span><span class="btn-text">继续监控</span>';
+        document.querySelector('.status-text').textContent = '已暂停';
+        document.querySelector('.wechat-status-dot').className = 'wechat-status-dot';
+        document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 已暂停';
+        showNotification('⏸️ 监控已暂停');
+    } else {
+        document.getElementById('pauseAutoBtn').innerHTML = '<span class="btn-icon">⏸️</span><span class="btn-text">暂停监控</span>';
+        document.querySelector('.status-text').textContent = '监控中';
+        document.querySelector('.wechat-status-dot').className = 'wechat-status-dot active';
+        document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 运行中';
+        showNotification('▶️ 监控已继续');
+    }
+},
+
+stopAutoMonitoring() {
+    this.isRunning = false; this.isPaused = false;
+    if (this.screenStream) {
+        this.screenStream.getTracks().forEach(track => track.stop());
+        this.screenStream = null; this.videoElement = null; this.canvas = null; this.ctx = null; this.lastFrameData = null;
+    }
+    if (this.scanInterval) { clearInterval(this.scanInterval); this.scanInterval = null; }
+    document.getElementById('startAutoBtn').disabled = !this.captureArea;
+    document.getElementById('pauseAutoBtn').disabled = true;
+    document.getElementById('stopAutoBtn').disabled = true;
+    document.getElementById('pauseAutoBtn').innerHTML = '<span class="btn-icon">⏸️</span><span class="btn-text">暂停监控</span>';
+    document.querySelector('.status-dot').className = 'status-dot';
+    document.querySelector('.status-text').textContent = '已停止';
+    document.querySelector('.wechat-status-dot').className = 'wechat-status-dot';
+    document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 已停止';
+    showNotification('⏹️ 全自动监控已停止');
+},
+
+updateStats() {
+    document.getElementById('scanCount').textContent = this.scanCount;
+    document.getElementById('detectCount').textContent = this.detectCount;
+    document.getElementById('lotteryCount').textContent = this.lotteryCount;
+    document.getElementById('autoProcessCount').textContent = this.autoProcessCount;
+    if (this.lastScanTime) document.getElementById('lastScanTime').textContent = this.lastScanTime.toLocaleTimeString('zh-CN', { hour12: false });
+},
+
+updateRealtimePreview() {
+    const container = document.getElementById('realtimePreview');
+    if (this.lastMessages.length === 0) { container.innerHTML = '<div class="preview-placeholder">🎯 等待检测消息...</div>'; return; }
+    let html = '';
+    this.lastMessages.forEach(msg => {
+        const icon = msg.isLottery ? '🎯' : '💬';
+        const color = msg.isLottery ? '#2ecc71' : '#3498db';
+        html += `<div style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; border-left: 3px solid ${color};"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;"><span style="font-size: 12px; color: #aaa;">${msg.time}</span><span style="font-size: 16px;">${icon}</span></div><div style="font-size: 14px; color: #ddd;">${msg.text}</div></div>`;
+    });
+    container.innerHTML = html;
+},
+
+updateUI() {
+    document.getElementById('sensitivity').addEventListener('input', (e) => { document.getElementById('sensitivityValue').textContent = e.target.value; });
+    ['monitorInterval','sensitivity','autoStart','autoProcess','playSound'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => { this.saveSettings(); });
+    });
+},
+
+testAutoRecognition() {
+    console.log('🧪 测试自动识别功能');
+    const testMessages = ["红波各号10元","1号5元 2号10元","鼠各号20元"];
+    testMessages.forEach((msg, index) => { setTimeout(() => { this.processRecognizedMessage(msg); }, index * 1000); });
+    showNotification('🧪 测试消息已发送，请查看实时预览');
+}
+};
+
+window.autoWechatMonitor = autoWechatMonitor;
 
         // ==================== 全局监控函数 ====================
         function openAutoWechatMonitor() {
@@ -1800,3 +1969,4 @@
     </script>
 </body>
 </html>
+
