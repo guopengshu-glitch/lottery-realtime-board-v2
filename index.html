@@ -6,12 +6,10 @@
     <title>📊 彩票实时看板 - 微信消息全自动监控</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
     <style>
-        /* 所有原有CSS样式保持不变 */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html { -webkit-text-size-adjust: 100%; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #f5f7fa; min-height: 100vh; color: #333; line-height: 1.6; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
-        /* 原有网络状态、登录、历史记录等所有样式都保留 */
         .network-indicator { position: fixed; top: 12px; right: 12px; width: 10px; height: 10px; border-radius: 50%; z-index: 9999; transition: all 0.3s ease; }
         .network-online { background: #2ecc71; box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.3); }
         .network-offline { background: #e74c3c; box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.3); }
@@ -19,6 +17,7 @@
         .cloud-status.online { color: #2ecc71; border-color: #2ecc71; }
         .cloud-status.offline { color: #e74c3c; border-color: #e74c3c; }
         .cloud-status.connecting { color: #f39c12; border-color: #f39c12; }
+        
         #passwordOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: center; z-index: 10000; animation: fadeIn 0.3s ease; padding: 20px; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .login-box { background: rgba(255, 255, 255, 0.95); padding: 40px 30px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); width: 100%; max-width: 400px; text-align: center; backdrop-filter: blur(10px); animation: slideUp 0.5s ease; }
@@ -33,6 +32,7 @@
         .login-btn:active { transform: translateY(0); }
         .password-error { color: #e74c3c; margin-top: 15px; font-size: 14px; min-height: 20px; }
         .password-hint { margin-top: 20px; color: #95a5a6; font-size: 14px; line-height: 1.5; }
+        
         .history-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10001; animation: fadeIn 0.3s ease; touch-action: none; }
         .history-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 25px; background: white; border-bottom: 1px solid #eee; border-radius: 15px 15px 0 0; }
         .history-modal-header h2 { color: #333; font-size: 20px; font-weight: 600; }
@@ -51,6 +51,7 @@
         .history-count { color: #666; font-size: 14px; font-weight: 500; }
         .history-btn { padding: 12px 20px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s; touch-action: manipulation; min-height: 40px; }
         .history-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        
         #mainApp { min-height: 100vh; background: #f5f7fa; padding-bottom: env(safe-area-inset-bottom); }
         .container { max-width: 1200px; margin: 0 auto; padding: 15px; }
         .header { text-align: center; margin-bottom: 20px; padding: 25px 20px; background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05); position: relative; overflow: hidden; }
@@ -58,28 +59,34 @@
         .header h1 { color: #333; font-size: 28px; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
         .header p { color: #666; font-size: 15px; opacity: 0.8; }
         .status-bar { background: white; padding: 15px 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05); border-left: 4px solid #667eea; font-weight: 500; color: #333; display: flex; align-items: center; gap: 10px; font-size: 16px; }
+        
         .total-section { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
         .total-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px 20px; border-radius: 15px; font-size: 24px; font-weight: 700; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); text-align: center; order: 1; }
         .total-box span { font-size: 36px; margin: 0 8px; text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); display: inline-block; }
         .clear-all-btn { padding: 16px 20px; background: white; color: #e74c3c; border: 2px solid #ffebee; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; min-height: 50px; touch-action: manipulation; order: 2; }
         .clear-all-btn:hover { background: #ffebee; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(231, 76, 60, 0.2); }
+        
         .input-section { background: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05); }
         .paste-label { display: block; color: #667eea; font-weight: 600; font-size: 16px; margin-bottom: 12px; }
         #inputData { width: 100%; min-height: 120px; padding: 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; font-family: 'SF Mono', Monaco, 'Courier New', monospace; resize: vertical; transition: all 0.3s; margin-bottom: 15px; line-height: 1.6; -webkit-user-select: text !important; user-select: text !important; -webkit-touch-callout: default !important; -webkit-appearance: none; }
         #inputData:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
         #inputData::placeholder { color: #bbb; font-size: 16px; }
+        
         .btn-group { display: flex; flex-direction: column; gap: 12px; }
         .btn { width: 100%; padding: 16px 20px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 50px; touch-action: manipulation; }
         .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; order: 1; }
-        .btn-history { background: #f8f9fa; color: #666; border: 2px solid #e0e0e0; order: 2; }
-        .btn-success { background: #2ecc71; color: white; order: 3; }
-        .btn-fullscreen-main { background: linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%); color: white; order: 4; }
+        .btn-wechat-auto { background: linear-gradient(135deg, #00adb5 0%, #0097b2 100%); color: white; order: 2; }
+        .btn-history { background: #f8f9fa; color: #666; border: 2px solid #e0e0e0; order: 3; }
+        .btn-success { background: #2ecc71; color: white; order: 4; }
+        .btn-fullscreen-main { background: linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%); color: white; order: 5; }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15); }
         .btn:active { transform: translateY(0); }
+        
         .data-section { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05); margin-bottom: 20px; overflow-x: hidden; }
         .section-title { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 2px solid #f5f7fa; }
         .section-title span:first-child { color: #333; font-size: 20px; font-weight: 700; }
         .section-title span:last-child { font-size: 14px; color: #7f8c8d; align-self: flex-end; }
+        
         .compact-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .compact-table th:nth-child(1), .compact-table td:nth-child(1) { width: 12%; text-align: center; padding: 10px 4px; }
         .compact-table th:nth-child(2), .compact-table td:nth-child(2) { width: 12%; text-align: center; padding: 10px 4px; }
@@ -90,6 +97,7 @@
         .compact-table td { border-bottom: 1px solid #f5f7fa; transition: background 0.3s; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .compact-table tr:hover td { background: #f8f9fa; }
         .compact-table tr:last-child td { border-bottom: none; }
+        
         .rank-cell { font-family: 'SF Mono', Monaco, 'Courier New', monospace; font-weight: 700; color: #333; }
         .rank-1 { color: #FFD700; }
         .rank-2 { color: #C0C0C0; }
@@ -102,8 +110,10 @@
         .wave-green { background: linear-gradient(135deg, #1dd1a1, #10ac84); color: white; }
         .amount-cell { color: #e74c3c !important; font-weight: 700; font-size: 14px; }
         .amount-cell-zero { color: #bbb; font-weight: 500; font-size: 13px; }
+        
         .notification { position: fixed; bottom: 20px; right: 20px; left: 20px; background: #2ecc71; color: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); z-index: 9997; animation: slideIn 0.3s ease; max-width: 100%; font-weight: 500; line-height: 1.5; font-size: 16px; text-align: center; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+        
         .footer-info { text-align: center; padding: 15px; color: #7f8c8d; font-size: 12px; border-top: 1px solid #eee; background: #f8f9fa; margin-top: 20px; border-radius: 0 0 15px 15px; }
 
         /* 全屏大屏显示样式 */
@@ -171,16 +181,12 @@
             gap: 12px;
         }
 
-        .monitor-icon {
-            font-size: 28px;
-        }
-
+        .monitor-icon { font-size: 28px; }
         .monitor-title {
             font-size: 22px;
             font-weight: 700;
             background: linear-gradient(135deg, #00adb5, #0097b2);
             -webkit-background-clip: text;
-            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -207,33 +213,11 @@
             background: #95a5a6;
             transition: all 0.3s;
         }
-
-        .status-dot.active {
-            background: #2ecc71;
-            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.3);
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
-        }
-
-        .status-dot.scanning {
-            background: #3498db;
-            animation: scanning 1s infinite;
-        }
-
-        @keyframes scanning {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        .status-text {
-            font-size: 14px;
-            font-weight: 600;
-        }
+        .status-dot.active { background: #2ecc71; box-shadow: 0 0 0 3px rgba(46,204,113,0.3); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(46,204,113,0.4); } 70% { box-shadow: 0 0 0 10px rgba(46,204,113,0); } 100% { box-shadow: 0 0 0 0 rgba(46,204,113,0); } }
+        .status-dot.scanning { background: #3498db; animation: scanning 1s infinite; }
+        @keyframes scanning { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .status-text { font-size: 14px; font-weight: 600; }
 
         .monitor-close-btn {
             background: rgba(255, 255, 255, 0.1);
@@ -249,11 +233,7 @@
             justify-content: center;
             transition: all 0.3s;
         }
-
-        .monitor-close-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: rotate(90deg);
-        }
+        .monitor-close-btn:hover { background: rgba(255, 255, 255, 0.2); transform: rotate(90deg); }
 
         .auto-monitor-body {
             flex: 1;
@@ -271,7 +251,6 @@
             align-items: center;
             gap: 10px;
         }
-
         .section-title::after {
             content: '';
             flex: 1;
@@ -301,12 +280,11 @@
             align-items: center;
             gap: 10px;
         }
-
         .detect-btn:hover {
             background: rgba(255, 255, 255, 0.2);
             border-color: #00adb5;
             transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0, 173, 181, 0.2);
+            box-shadow: 0 10px 25px rgba(0,173,181,0.2);
         }
 
         .detect-result {
@@ -330,12 +308,7 @@
             align-items: center;
             justify-content: center;
         }
-
-        .result-text {
-            flex: 1;
-            font-size: 16px;
-            line-height: 1.5;
-        }
+        .result-text { flex: 1; font-size: 16px; line-height: 1.5; }
 
         .monitor-settings {
             background: rgba(0, 0, 0, 0.4);
@@ -390,7 +363,6 @@
             border-radius: 3px;
             outline: none;
         }
-
         .setting-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 20px;
@@ -417,7 +389,6 @@
             font-size: 14px;
             color: #ddd;
         }
-
         .setting-item input[type="checkbox"] {
             width: 18px;
             height: 18px;
@@ -440,50 +411,35 @@
         }
 
         .status-card {
-            background: linear-gradient(135deg, rgba(0, 173, 181, 0.2), rgba(0, 97, 105, 0.2));
+            background: linear-gradient(135deg, rgba(0,173,181,0.2), rgba(0,97,105,0.2));
             border-radius: 10px;
             padding: 20px;
             display: flex;
             align-items: center;
             gap: 15px;
-            border: 1px solid rgba(0, 173, 181, 0.3);
+            border: 1px solid rgba(0,173,181,0.3);
         }
 
         .status-icon {
             font-size: 32px;
             width: 60px;
             height: 60px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255,255,255,0.1);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .status-content {
-            flex: 1;
-        }
-
-        .status-value {
-            font-size: 28px;
-            font-weight: 800;
-            color: #fff;
-            line-height: 1;
-            margin-bottom: 5px;
-        }
-
-        .status-label {
-            font-size: 12px;
-            color: #aaa;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        .status-content { flex: 1; }
+        .status-value { font-size: 28px; font-weight: 800; color: #fff; line-height: 1; margin-bottom: 5px; }
+        .status-label { font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
 
         .realtime-preview {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0,0,0,0.3);
             border-radius: 10px;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .preview-header {
@@ -491,8 +447,8 @@
             justify-content: space-between;
             align-items: center;
             padding: 15px 20px;
-            background: rgba(0, 0, 0, 0.4);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0,0,0,0.4);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
         .preview-time {
@@ -516,10 +472,10 @@
         }
 
         .control-center {
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0,0,0,0.4);
             border-radius: 12px;
             padding: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .control-buttons {
@@ -543,59 +499,24 @@
             gap: 8px;
         }
 
-        .start-btn {
-            background: linear-gradient(135deg, #2ecc71, #27ae60);
-            color: white;
-        }
-
-        .pause-btn {
-            background: linear-gradient(135deg, #f39c12, #e67e22);
-            color: white;
-        }
-
-        .stop-btn {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: white;
-        }
-
-        .test-btn {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-        }
-
-        .control-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        .control-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
-            box-shadow: none !important;
-        }
+        .start-btn { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
+        .pause-btn { background: linear-gradient(135deg, #f39c12, #e67e22); color: white; }
+        .stop-btn { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
+        .test-btn { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+        .control-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .control-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
         .auto-notice {
-            background: rgba(0, 173, 181, 0.1);
+            background: rgba(0,173,181,0.1);
             border-radius: 10px;
             padding: 15px 20px;
-            border: 1px solid rgba(0, 173, 181, 0.3);
+            border: 1px solid rgba(0,173,181,0.3);
             display: flex;
             align-items: flex-start;
             gap: 15px;
         }
-
-        .notice-icon {
-            font-size: 24px;
-            color: #00adb5;
-        }
-
-        .notice-text {
-            flex: 1;
-            font-size: 14px;
-            line-height: 1.5;
-            color: #ddd;
-        }
+        .notice-icon { font-size: 24px; color: #00adb5; }
+        .notice-text { flex: 1; font-size: 14px; line-height: 1.5; color: #ddd; }
 
         /* 自动检测遮罩层 */
         .auto-detect-overlay {
@@ -604,7 +525,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(0,0,0,0.95);
             z-index: 10030;
             display: flex;
             align-items: center;
@@ -624,44 +545,12 @@
             gap: 25px;
         }
 
-        .hint-icon {
-            font-size: 64px;
-            color: #00adb5;
-            animation: spin 2s infinite linear;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .hint-text {
-            font-size: 24px;
-            font-weight: 700;
-            color: white;
-        }
-
-        .hint-progress {
-            width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #00adb5, #0097b2);
-            width: 0%;
-            transition: width 0.3s;
-            border-radius: 5px;
-        }
-
-        .hint-detail {
-            font-size: 16px;
-            color: #aaa;
-            line-height: 1.5;
-        }
+        .hint-icon { font-size: 64px; color: #00adb5; animation: spin 2s infinite linear; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .hint-text { font-size: 24px; font-weight: 700; color: white; }
+        .hint-progress { width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #00adb5, #0097b2); width: 0%; transition: width 0.3s; border-radius: 5px; }
+        .hint-detail { font-size: 16px; color: #aaa; line-height: 1.5; }
 
         /* 微信窗口提示 */
         .wechat-guide {
@@ -673,151 +562,33 @@
             max-width: 90vw;
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             z-index: 10025;
             display: none;
             overflow: hidden;
             border: 3px solid #00adb5;
         }
 
-        .guide-content {
-            padding: 30px;
-        }
+        .guide-content { padding: 30px; }
+        .guide-header { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; }
+        .guide-icon { font-size: 36px; color: #00adb5; }
+        .guide-title { font-size: 24px; font-weight: 700; color: #333; }
+        .guide-steps { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; }
+        .guide-step { display: flex; align-items: center; gap: 20px; padding: 20px; background: #f8f9fa; border-radius: 12px; border: 1px solid #e0e0e0; }
+        .step-number { width: 40px; height: 40px; background: #00adb5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; flex-shrink: 0; }
+        .step-content { flex: 1; }
+        .guide-actions { display: flex; gap: 15px; justify-content: center; }
+        .guide-btn { padding: 15px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .guide-btn { background: linear-gradient(135deg, #00adb5, #0097b2); color: white; }
+        .guide-btn.secondary { background: #f8f9fa; color: #333; border: 2px solid #e0e0e0; }
+        .guide-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
 
-        .guide-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .guide-icon {
-            font-size: 36px;
-            color: #00adb5;
-        }
-
-        .guide-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .guide-steps {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .guide-step {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 12px;
-            border: 1px solid #e0e0e0;
-        }
-
-        .step-number {
-            width: 40px;
-            height: 40px;
-            background: #00adb5;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-
-        .step-content {
-            flex: 1;
-        }
-
-        .guide-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-
-        .guide-btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .guide-btn {
-            background: linear-gradient(135deg, #00adb5, #0097b2);
-            color: white;
-        }
-
-        .guide-btn.secondary {
-            background: #f8f9fa;
-            color: #333;
-            border: 2px solid #e0e0e0;
-        }
-
-        .guide-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        /* 响应式设计 */
-        @media (max-width: 992px) {
-            .detect-options {
-                grid-template-columns: 1fr;
-            }
-            
-            .setting-group {
-                grid-template-columns: 1fr;
-            }
-            
-            .status-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .control-buttons {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .auto-wechat-monitor {
-                width: 95%;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .status-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .control-buttons {
-                grid-template-columns: 1fr;
-            }
-            
-            .monitor-title {
-                font-size: 18px;
-            }
-        }
-
-        /* 微信自动监控按钮（添加到主界面） */
-        .btn-wechat-auto {
-            background: linear-gradient(135deg, #00adb5 0%, #0097b2 100%);
-            color: white;
-            order: 2.5;
-        }
-
+        /* 微信自动监控状态 */
         .wechat-auto-status {
             position: fixed;
             bottom: 20px;
             left: 20px;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0,0,0,0.8);
             color: white;
             padding: 10px 15px;
             border-radius: 10px;
@@ -827,27 +598,27 @@
             align-items: center;
             gap: 8px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.1);
         }
+        .wechat-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #95a5a6; }
+        .wechat-status-dot.active { background: #2ecc71; animation: pulse 1.5s infinite; }
 
-        .wechat-status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #95a5a6;
+        @media (max-width: 992px) {
+            .detect-options { grid-template-columns: 1fr; }
+            .setting-group { grid-template-columns: 1fr; }
+            .status-grid { grid-template-columns: repeat(2,1fr); }
+            .control-buttons { grid-template-columns: repeat(2,1fr); }
+            .auto-wechat-monitor { width: 95%; }
         }
-
-        .wechat-status-dot.active {
-            background: #2ecc71;
-            animation: pulse 1.5s infinite;
+        @media (max-width: 768px) {
+            .status-grid { grid-template-columns: 1fr; }
+            .control-buttons { grid-template-columns: 1fr; }
+            .monitor-title { font-size: 18px; }
         }
     </style>
     
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" defer></script>
-    
-    <!-- Tesseract.js OCR引擎 -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 </head>
 <body>
@@ -871,15 +642,9 @@
             <div class="auto-detect-section">
                 <h3 class="section-title">🎯 自动检测微信窗口</h3>
                 <div class="detect-options">
-                    <button class="detect-btn" onclick="autoDetectWechat()">
-                        🔍 自动查找微信窗口
-                    </button>
-                    <button class="detect-btn" onclick="smartDetectChatArea()">
-                        🧠 智能识别聊天区域
-                    </button>
-                    <button class="detect-btn" onclick="manualSelectWechat()">
-                        👆 手动选择微信窗口
-                    </button>
+                    <button class="detect-btn" onclick="autoDetectWechat()">🔍 自动查找微信窗口</button>
+                    <button class="detect-btn" onclick="smartDetectChatArea()">🧠 智能识别聊天区域</button>
+                    <button class="detect-btn" onclick="manualSelectWechat()">👆 手动选择微信窗口</button>
                 </div>
                 
                 <div class="detect-result" id="detectResult">
@@ -915,22 +680,19 @@
                     
                     <div class="setting-item">
                         <label class="setting-label">
-                            <input type="checkbox" id="autoStart" checked>
-                            启动时自动开始
+                            <input type="checkbox" id="autoStart" checked> 启动时自动开始
                         </label>
                     </div>
                     
                     <div class="setting-item">
                         <label class="setting-label">
-                            <input type="checkbox" id="autoProcess" checked>
-                            自动处理识别结果
+                            <input type="checkbox" id="autoProcess" checked> 自动处理识别结果
                         </label>
                     </div>
                     
                     <div class="setting-item">
                         <label class="setting-label">
-                            <input type="checkbox" id="playSound">
-                            识别成功播放提示音
+                            <input type="checkbox" id="playSound"> 识别成功播放提示音
                         </label>
                     </div>
                 </div>
@@ -947,7 +709,6 @@
                             <div class="status-label">扫描次数</div>
                         </div>
                     </div>
-                    
                     <div class="status-card">
                         <div class="status-icon">📱</div>
                         <div class="status-content">
@@ -955,7 +716,6 @@
                             <div class="status-label">检测到消息</div>
                         </div>
                     </div>
-                    
                     <div class="status-card">
                         <div class="status-icon">🎯</div>
                         <div class="status-content">
@@ -963,7 +723,6 @@
                             <div class="status-label">彩票消息</div>
                         </div>
                     </div>
-                    
                     <div class="status-card">
                         <div class="status-icon">✅</div>
                         <div class="status-content">
@@ -979,40 +738,31 @@
                         <span class="preview-time" id="lastScanTime">--:--:--</span>
                     </div>
                     <div class="preview-content" id="realtimePreview">
-                        <div class="preview-placeholder">
-                            🎯 等待开始监控...
-                        </div>
+                        <div class="preview-placeholder">🎯 等待开始监控...</div>
                     </div>
                 </div>
             </div>
             
             <div class="control-center">
                 <div class="control-buttons">
-                    <button class="control-btn start-btn" onclick="startAutoMonitoring()" id="startAutoBtn">
-                        <span class="btn-icon">▶️</span>
-                        <span class="btn-text">开始全自动监控</span>
+                    <button class="control-btn start-btn" onclick="startAutoMonitoring()" id="startAutoBtn" disabled>
+                        <span class="btn-icon">▶️</span> <span class="btn-text">开始监控</span>
                     </button>
-                    
                     <button class="control-btn pause-btn" onclick="pauseAutoMonitoring()" id="pauseAutoBtn" disabled>
-                        <span class="btn-icon">⏸️</span>
-                        <span class="btn-text">暂停监控</span>
+                        <span class="btn-icon">⏸️</span> <span class="btn-text">暂停监控</span>
                     </button>
-                    
                     <button class="control-btn stop-btn" onclick="stopAutoMonitoring()" id="stopAutoBtn" disabled>
-                        <span class="btn-icon">⏹️</span>
-                        <span class="btn-text">停止监控</span>
+                        <span class="btn-icon">⏹️</span> <span class="btn-text">停止监控</span>
                     </button>
-                    
                     <button class="control-btn test-btn" onclick="testAutoRecognition()">
-                        <span class="btn-icon">🧪</span>
-                        <span class="btn-text">测试识别</span>
+                        <span class="btn-icon">🧪</span> <span class="btn-text">测试识别</span>
                     </button>
                 </div>
                 
                 <div class="auto-notice">
                     <div class="notice-icon">💡</div>
                     <div class="notice-text">
-                        <strong>全自动模式说明：</strong> 系统会自动截图、OCR识别、分析消息，并自动录入彩票数据。无需任何手动操作！
+                        <strong>全自动模式：</strong> 选择微信聊天区域 → 开始监控 → 微信来消息自动识别录入，无需任何手动操作！
                     </div>
                 </div>
             </div>
@@ -1025,12 +775,8 @@
             <div class="detect-hint">
                 <div class="hint-icon">🔍</div>
                 <div class="hint-text">正在自动检测微信窗口...</div>
-                <div class="hint-progress">
-                    <div class="progress-bar" id="detectProgress"></div>
-                </div>
-                <div class="hint-detail" id="detectDetail">
-                    正在扫描屏幕上的窗口...
-                </div>
+                <div class="hint-progress"><div class="progress-bar" id="detectProgress"></div></div>
+                <div class="hint-detail" id="detectDetail">正在扫描屏幕上的窗口...</div>
             </div>
         </div>
     </div>
@@ -1043,35 +789,13 @@
                 <span class="guide-title">微信窗口设置指南</span>
             </div>
             <div class="guide-steps">
-                <div class="guide-step">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <strong>确保微信窗口打开</strong><br>
-                        请先打开桌面版微信并登录
-                    </div>
-                </div>
-                <div class="guide-step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <strong>调整窗口位置</strong><br>
-                        将微信窗口移到屏幕可见区域
-                    </div>
-                </div>
-                <div class="guide-step">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <strong>最大化聊天窗口</strong><br>
-                        确保聊天区域完全可见
-                    </div>
-                </div>
+                <div class="guide-step"><div class="step-number">1</div><div class="step-content"><strong>确保微信窗口打开</strong><br>请先打开桌面版微信并登录</div></div>
+                <div class="guide-step"><div class="step-number">2</div><div class="step-content"><strong>调整窗口位置</strong><br>将微信窗口移到屏幕可见区域</div></div>
+                <div class="guide-step"><div class="step-number">3</div><div class="step-content"><strong>最大化聊天窗口</strong><br>确保聊天区域完全可见</div></div>
             </div>
             <div class="guide-actions">
-                <button class="guide-btn" onclick="checkWechatReady()">
-                    ✅ 我已准备好，开始检测
-                </button>
-                <button class="guide-btn secondary" onclick="hideWechatGuide()">
-                    ⏭️ 跳过指引
-                </button>
+                <button class="guide-btn" onclick="checkWechatReady()">✅ 我已准备好，开始检测</button>
+                <button class="guide-btn secondary" onclick="hideWechatGuide()">⏭️ 跳过指引</button>
             </div>
         </div>
     </div>
@@ -1079,17 +803,12 @@
     <!-- 全屏大屏显示 -->
     <div class="fullscreen-display" id="fullscreenDisplay">
         <button class="close-fullscreen-btn" onclick="closeFullscreen()">×</button>
-        
         <div class="fullscreen-header">
             <div class="fullscreen-title">📊 彩票实时看板 - 大屏模式</div>
             <div class="fullscreen-total">总计: <span id="fullscreenTotal">0</span> 元</div>
         </div>
-        
         <div class="fullscreen-grid" id="fullscreenGrid"></div>
-        
-        <div class="auto-refresh-indicator" id="autoRefreshIndicator">
-            <span>🔄</span> 实时同步中...
-        </div>
+        <div class="auto-refresh-indicator" id="autoRefreshIndicator"><span>🔄</span> 实时同步中...</div>
     </div>
 
     <!-- 网络状态指示器 -->
@@ -1129,15 +848,11 @@
                 <button class="close-history-btn" onclick="closeHistoryModal()">×</button>
             </div>
             <div class="history-list" id="historyList">
-                <div style="text-align: center; color: #95a5a6; padding: 20px;">
-                    暂无录入记录
-                </div>
+                <div style="text-align: center; color: #95a5a6; padding: 20px;">暂无录入记录</div>
             </div>
             <div class="history-actions-bar">
                 <div class="history-count" id="historyCount">0条记录</div>
-                <button class="history-btn" onclick="clearHistory()" style="background: #ffebee; color: #e74c3c;">
-                    🗑️ 清空记录
-                </button>
+                <button class="history-btn" onclick="clearHistory()" style="background: #ffebee; color: #e74c3c;">🗑️ 清空记录</button>
             </div>
         </div>
     </div>
@@ -1150,42 +865,23 @@
                 <p>全自动识别微信聊天消息 • 实时多人同步 • 大屏显示</p>
             </div>
             
-            <div class="status-bar" id="statusBar">
-                🚀 系统启动中...
-            </div>
+            <div class="status-bar" id="statusBar">🚀 系统启动中...</div>
             
             <div class="total-section">
-                <div class="total-box">
-                    总计: <span id="totalMoney">0</span> 元
-                </div>
-                <button class="clear-all-btn" onclick="clearAll()">
-                    🗑️ 清空数据
-                </button>
+                <div class="total-box">总计: <span id="totalMoney">0</span> 元</div>
+                <button class="clear-all-btn" onclick="clearAll()">🗑️ 清空数据</button>
             </div>
             
             <div class="input-section">
                 <label class="paste-label">&lt;粘贴输入框&gt;</label>
-                <textarea 
-                    id="inputData" 
-                    placeholder="粘贴微信消息或彩票数据（支持任意格式）"
-                ></textarea>
+                <textarea id="inputData" placeholder="粘贴微信消息或彩票数据（支持任意格式）"></textarea>
                 
                 <div class="btn-group">
-                    <button class="btn btn-primary" onclick="processData()">
-                        📤 发布数据
-                    </button>
-                    <button class="btn btn-wechat-auto" onclick="openAutoWechatMonitor()">
-                        🤖 微信自动监控
-                    </button>
-                    <button class="btn btn-history" onclick="openHistoryModal()">
-                        📋 查看记录
-                    </button>
-                    <button class="btn btn-success" onclick="copyLink()">
-                        🔗 分享链接
-                    </button>
-                    <button class="btn btn-fullscreen-main" onclick="openFullscreen()">
-                        🖥️ 大屏显示
-                    </button>
+                    <button class="btn btn-primary" onclick="processData()">📤 发布数据</button>
+                    <button class="btn btn-wechat-auto" onclick="openAutoWechatMonitor()">🤖 微信自动监控</button>
+                    <button class="btn btn-history" onclick="openHistoryModal()">📋 查看记录</button>
+                    <button class="btn btn-success" onclick="copyLink()">🔗 分享链接</button>
+                    <button class="btn btn-fullscreen-main" onclick="openFullscreen()">🖥️ 大屏显示</button>
                 </div>
             </div>
             
@@ -1196,18 +892,8 @@
                 </div>
                 
                 <table class="compact-table" id="dataTable">
-                    <thead>
-                        <tr>
-                            <th>排名</th>
-                            <th>号码</th>
-                            <th>生肖</th>
-                            <th>金额</th>
-                            <th>波色</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <!-- 表格数据动态生成 -->
-                    </tbody>
+                    <thead><tr><th>排名</th><th>号码</th><th>生肖</th><th>金额</th><th>波色</th></tr></thead>
+                    <tbody id="tableBody"></tbody>
                 </table>
             </div>
             
@@ -1221,45 +907,31 @@
         // ==================== 彩票配置数据 ====================
         const LOTTERY_CONFIG = {
             zodiacMap: {
-                "鼠": [6, 18, 30, 42], "牛": [5, 17, 29, 41], "虎": [4, 16, 28, 40],
-                "兔": [3, 15, 27, 39], "龙": [2, 14, 26, 38], "蛇": [1, 13, 25, 37, 49],
-                "马": [12, 24, 36, 48], "羊": [11, 23, 35, 47], "猴": [10, 22, 34, 46],
-                "鸡": [9, 21, 33, 45], "狗": [8, 20, 32, 44], "猪": [7, 19, 31, 43]
+                "鼠": [6,18,30,42], "牛": [5,17,29,41], "虎": [4,16,28,40], "兔": [3,15,27,39],
+                "龙": [2,14,26,38], "蛇": [1,13,25,37,49], "马": [12,24,36,48], "羊": [11,23,35,47],
+                "猴": [10,22,34,46], "鸡": [9,21,33,45], "狗": [8,20,32,44], "猪": [7,19,31,43]
             },
-            
             waveColorMap: {
-                "红波": [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
-                "蓝波": [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
-                "绿波": [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
+                "红波": [1,2,7,8,12,13,18,19,23,24,29,30,34,35,40,45,46],
+                "蓝波": [3,4,9,10,14,15,20,25,26,31,36,37,41,42,47,48],
+                "绿波": [5,6,11,16,17,21,22,27,28,32,33,38,39,43,44,49]
             },
-            
-            amountUnits: ['元', '斤', '米', '块', '￥'],
-            filterWords: ['多少钱', '多少米', '总计', '总共', '合计', '共', 
-                          '给我算算', '帮我算算', '帮算', '计算', '算一下', '算算', 
-                          '请问', '帮忙', '看一下', '看看'],
-            betKeywords: ['各', '各号', '每', '每号', '每颗', '颗', '号'],
-            numberRange: { min: 1, max: 49 }
+            amountUnits: ['元','斤','米','块','￥'],
+            filterWords: ['多少钱','多少米','总计','总共','合计','共','给我算算','帮我算算','帮算','计算','算一下','算算','请问','帮忙','看一下','看看'],
+            betKeywords: ['各','各号','每','每号','每颗','颗','号'],
+            numberRange: { min:1, max:49 }
         };
 
         // ==================== 彩票解析器 ====================
         class LotteryBetParser {
-            constructor(config = LOTTERY_CONFIG) {
-                this.config = config;
-            }
+            constructor(config = LOTTERY_CONFIG) { this.config = config; }
             
             parseInput(input) {
                 if (!input || typeof input !== 'string') return [];
-                
-                const cleaned = input.trim()
-                    .replace(/^一共[：:]*\s*/, '')
-                    .replace(/斤|米|块|￥/g, '元');
-                
+                const cleaned = input.trim().replace(/^一共[：:]*\s*/, '').replace(/斤|米|块|￥/g, '元');
                 const items = this._extractBetItems(cleaned);
                 const allBets = [];
-                items.forEach(item => {
-                    const bets = this._parseSingleItem(item.content, item.amount);
-                    allBets.push(...bets);
-                });
+                items.forEach(item => { const bets = this._parseSingleItem(item.content, item.amount); allBets.push(...bets); });
                 return allBets;
             }
             
@@ -1270,12 +942,7 @@
                 while ((match = regex.exec(text)) !== null) {
                     const fullText = match[0];
                     const amountMatch = fullText.match(/各号\s*(\d+(?:\.\d+)?)\s*元/);
-                    if (amountMatch) {
-                        items.push({ 
-                            content: fullText.substring(0, amountMatch.index).trim(),
-                            amount: parseFloat(amountMatch[1])
-                        });
-                    }
+                    if (amountMatch) items.push({ content: fullText.substring(0, amountMatch.index).trim(), amount: parseFloat(amountMatch[1]) });
                 }
                 return items;
             }
@@ -1283,25 +950,17 @@
             _parseSingleItem(content, amount) {
                 const bets = [];
                 const cleanContent = content.replace(/\s+/g, '');
-                
                 const zodiacCounts = this._countOccurrences(cleanContent, Object.keys(this.config.zodiacMap));
                 const waveCounts = this._countOccurrences(cleanContent, Object.keys(this.config.waveColorMap));
                 const numbers = this._extractNumbers(cleanContent);
                 
                 Object.entries(zodiacCounts).forEach(([zodiac, count]) => {
-                    this.config.zodiacMap[zodiac].forEach(num => {
-                        for (let i = 0; i < count; i++) bets.push({ number: num, amount: amount });
-                    });
+                    this.config.zodiacMap[zodiac].forEach(num => { for(let i=0;i<count;i++) bets.push({ number: num, amount }); });
                 });
-                
                 Object.entries(waveCounts).forEach(([wave, count]) => {
-                    this.config.waveColorMap[wave].forEach(num => {
-                        for (let i = 0; i < count; i++) bets.push({ number: num, amount: amount });
-                    });
+                    this.config.waveColorMap[wave].forEach(num => { for(let i=0;i<count;i++) bets.push({ number: num, amount }); });
                 });
-                
-                numbers.forEach(num => bets.push({ number: num, amount: amount }));
-                
+                numbers.forEach(num => bets.push({ number: num, amount }));
                 return bets;
             }
             
@@ -1309,10 +968,7 @@
                 const counts = {};
                 keywords.forEach(keyword => {
                     let count = 0, pos = 0;
-                    while ((pos = text.indexOf(keyword, pos)) !== -1) {
-                        count++;
-                        pos += keyword.length;
-                    }
+                    while ((pos = text.indexOf(keyword, pos)) !== -1) { count++; pos += keyword.length; }
                     if (count > 0) counts[keyword] = count;
                 });
                 return counts;
@@ -1329,846 +985,21 @@
                 return numbers;
             }
             
-            findZodiac(number) {
-                for (const [zodiac, numbers] of Object.entries(this.config.zodiacMap)) {
-                    if (numbers.includes(number)) return zodiac;
-                }
-                return null;
-            }
-            
-            findWaveColor(number) {
-                for (const [wave, numbers] of Object.entries(this.config.waveColorMap)) {
-                    if (numbers.includes(number)) return wave;
-                }
-                return null;
-            }
+            findZodiac(number) { for (const [zodiac, numbers] of Object.entries(this.config.zodiacMap)) if (numbers.includes(number)) return zodiac; return null; }
+            findWaveColor(number) { for (const [wave, numbers] of Object.entries(this.config.waveColorMap)) if (numbers.includes(number)) return wave; return null; }
         }
 
-        // ==================== 全自动微信监控系统 ====================
-        let autoWechatMonitor = {
-            isRunning: false,
-            isPaused: false,
-            captureArea: null,
-            scanInterval: null,
-            scanCount: 0,
-            detectCount: 0,
-            lotteryCount: 0,
-            autoProcessCount: 0,
-            lastScanTime: null,
-            lastMessages: [],
-            tesseractWorker: null,
-            
-            init() {
-                console.log('🤖 初始化全自动微信监控系统');
-                this.loadSettings();
-                this.initTesseract();
-                this.updateUI();
-            },
-            
-            loadSettings() {
-                try {
-                    const settings = localStorage.getItem('auto_wechat_settings');
-                    if (settings) {
-                        const data = JSON.parse(settings);
-                        document.getElementById('monitorInterval').value = data.interval || '2000';
-                        document.getElementById('sensitivity').value = data.sensitivity || 7;
-                        document.getElementById('sensitivityValue').textContent = data.sensitivity || 7;
-                        document.getElementById('autoStart').checked = data.autoStart !== false;
-                        document.getElementById('autoProcess').checked = data.autoProcess !== false;
-                        document.getElementById('playSound').checked = data.playSound || false;
-                    }
-                } catch(e) {
-                    console.log('加载设置失败:', e);
-                }
-            },
-            
-            saveSettings() {
-                const settings = {
-                    interval: document.getElementById('monitorInterval').value,
-                    sensitivity: document.getElementById('sensitivity').value,
-                    autoStart: document.getElementById('autoStart').checked,
-                    autoProcess: document.getElementById('autoProcess').checked,
-                    playSound: document.getElementById('playSound').checked,
-                    lastUpdated: new Date().toISOString()
-                };
-                localStorage.setItem('auto_wechat_settings', JSON.stringify(settings));
-            },
-            
-            async initTesseract() {
-                try {
-                    if (typeof Tesseract === 'undefined') {
-                        console.log('❌ Tesseract.js未加载');
-                        return;
-                    }
-                    
-                    console.log('🧠 初始化Tesseract OCR引擎...');
-                    this.tesseractWorker = await Tesseract.createWorker('chi_sim+eng');
-                    console.log('✅ Tesseract初始化完成');
-                } catch(error) {
-                    console.log('❌ Tesseract初始化失败:', error);
-                    showNotification('OCR引擎初始化失败，部分功能可能受限', 'warning');
-                }
-            },
-            
-            async autoDetectWechat() {
-                console.log('🔍 开始自动检测微信窗口...');
-                
-                // 显示检测遮罩层
-                this.showDetectOverlay();
-                this.updateDetectProgress('正在请求屏幕共享权限...', 20);
-                
-                try {
-                    // 请求屏幕共享权限
-                    const stream = await navigator.mediaDevices.getDisplayMedia({
-                        video: {
-                            cursor: 'never',
-                            displaySurface: 'window'
-                        },
-                        audio: false
-                    });
-                    
-                    this.updateDetectProgress('正在分析屏幕内容...', 40);
-                    
-                    // 创建视频元素捕获屏幕
-                    const video = document.createElement('video');
-                    video.srcObject = stream;
-                    await video.play();
-                    
-                    this.updateDetectProgress('正在识别微信窗口...', 60);
-                    
-                    // 分析视频帧，寻找微信窗口
-                    const wechatArea = await this.findWechatWindow(video);
-                    
-                    if (wechatArea) {
-                        this.captureArea = wechatArea;
-                        this.updateDetectProgress('微信窗口已成功识别！', 100);
-                        
-                        setTimeout(() => {
-                            this.hideDetectOverlay();
-                            this.updateDetectResult('✅ 已找到微信窗口，可开始监控');
-                            this.enableStartButton();
-                            
-                            showNotification('🎯 微信窗口自动识别成功！');
-                        }, 1000);
-                    } else {
-                        this.updateDetectProgress('未找到微信窗口', 100);
-                        
-                        setTimeout(() => {
-                            this.hideDetectOverlay();
-                            this.showWechatGuide();
-                            showNotification('❌ 未检测到微信窗口，请手动选择', 'warning');
-                        }, 1000);
-                    }
-                    
-                    // 停止所有轨道
-                    stream.getTracks().forEach(track => track.stop());
-                    
-                } catch(error) {
-                    console.log('❌ 屏幕捕获失败:', error);
-                    this.updateDetectProgress('屏幕捕获失败', 100);
-                    
-                    setTimeout(() => {
-                        this.hideDetectOverlay();
-                        this.updateDetectResult('❌ 需要屏幕共享权限，请手动选择');
-                        showNotification('请允许屏幕共享权限', 'warning');
-                    }, 1000);
-                }
-            },
-            
-            async findWechatWindow(video) {
-                return new Promise((resolve) => {
-                    // 这里简化处理，实际应该分析图像特征
-                    // 假设微信窗口在屏幕中间偏右位置
-                    setTimeout(() => {
-                        const screenWidth = window.screen.width;
-                        const screenHeight = window.screen.height;
-                        
-                        // 假设微信窗口典型位置
-                        const wechatArea = {
-                            x: Math.floor(screenWidth * 0.6),
-                            y: Math.floor(screenHeight * 0.1),
-                            width: Math.floor(screenWidth * 0.35),
-                            height: Math.floor(screenHeight * 0.8)
-                        };
-                        
-                        console.log('🗺️ 猜测微信窗口位置:', wechatArea);
-                        resolve(wechatArea);
-                    }, 1000);
-                });
-            },
-            
-            smartDetectChatArea() {
-                console.log('🧠 开始智能识别聊天区域...');
-                showNotification('正在智能分析聊天区域...');
-                
-                // 使用启发式方法猜测聊天区域
-                if (this.captureArea) {
-                    const chatArea = {
-                        x: this.captureArea.x + Math.floor(this.captureArea.width * 0.1),
-                        y: this.captureArea.y + Math.floor(this.captureArea.height * 0.2),
-                        width: Math.floor(this.captureArea.width * 0.8),
-                        height: Math.floor(this.captureArea.height * 0.7)
-                    };
-                    
-                    this.captureArea = chatArea;
-                    this.updateDetectResult('✅ 已智能识别聊天区域');
-                    this.enableStartButton();
-                    
-                    showNotification('🎯 聊天区域识别完成！');
-                } else {
-                    showNotification('请先选择微信窗口', 'warning');
-                }
-            },
-            
-            manualSelectWechat() {
-                console.log('👆 开始手动选择微信窗口...');
-                
-                // 使用屏幕选择器
-                if (this.startScreenSelection()) {
-                    showNotification('请拖动鼠标选择微信窗口区域');
-                }
-            },
-            
-            startScreenSelection() {
-                showNotification('由于浏览器限制，请使用系统截图工具选择区域', 'warning');
-                
-                // 模拟区域选择
-                const mockArea = {
-                    x: 800,
-                    y: 100,
-                    width: 400,
-                    height: 600
-                };
-                
-                setTimeout(() => {
-                    this.captureArea = mockArea;
-                    this.updateDetectResult('✅ 手动选择完成（模拟区域）');
-                    this.enableStartButton();
-                    showNotification('区域选择完成，可开始监控');
-                }, 1500);
-                
-                return true;
-            },
-            
-            enableStartButton() {
-                document.getElementById('startAutoBtn').disabled = false;
-                document.querySelector('.status-dot').className = 'status-dot active';
-                document.querySelector('.status-text').textContent = '就绪';
-                
-                // 更新微信状态指示器
-                document.getElementById('wechatAutoStatus').style.display = 'flex';
-                document.querySelector('.wechat-status-dot').className = 'wechat-status-dot active';
-                document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 就绪';
-            },
-            
-            updateDetectResult(message) {
-                document.getElementById('detectResult').innerHTML = `
-                    <div class="result-icon">✅</div>
-                    <div class="result-text">${message}<br>
-                    <small>区域: ${this.captureArea ? `${this.captureArea.width}×${this.captureArea.height}` : '未设置'}</small></div>
-                `;
-            },
-            
-            showDetectOverlay() {
-                document.getElementById('autoDetectOverlay').style.display = 'flex';
-                document.getElementById('detectProgress').style.width = '0%';
-                document.getElementById('detectDetail').textContent = '正在初始化...';
-            },
-            
-            updateDetectProgress(message, progress) {
-                document.getElementById('detectProgress').style.width = `${progress}%`;
-                document.getElementById('detectDetail').textContent = message;
-            },
-            
-            hideDetectOverlay() {
-                document.getElementById('autoDetectOverlay').style.display = 'none';
-            },
-            
-            showWechatGuide() {
-                document.getElementById('wechatGuide').style.display = 'block';
-            },
-            
-            hideWechatGuide() {
-                document.getElementById('wechatGuide').style.display = 'none';
-            },
-            
-            async startAutoMonitoring() {
-                if (this.isRunning) return;
-                
-                console.log('🚀 开始全自动微信监控');
-                this.isRunning = true;
-                this.isPaused = false;
-                
-                // 更新UI状态
-                document.getElementById('startAutoBtn').disabled = true;
-                document.getElementById('pauseAutoBtn').disabled = false;
-                document.getElementById('stopAutoBtn').disabled = false;
-                
-                document.querySelector('.status-dot').className = 'status-dot scanning';
-                document.querySelector('.status-text').textContent = '监控中';
-                
-                // 更新微信状态指示器
-                document.querySelector('.wechat-status-dot').className = 'wechat-status-dot active';
-                document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 运行中';
-                
-                // 保存设置
-                this.saveSettings();
-                
-                // 开始监控循环
-                this.startMonitoringLoop();
-                
-                showNotification('🤖 全自动微信监控已启动！');
-            },
-            
-            startMonitoringLoop() {
-                const interval = parseInt(document.getElementById('monitorInterval').value);
-                
-                if (this.scanInterval) {
-                    clearInterval(this.scanInterval);
-                }
-                
-                this.scanInterval = setInterval(async () => {
-                    if (this.isPaused || !this.isRunning) return;
-                    
-                    await this.performScan();
-                }, interval);
-            },
-            
-            async performScan() {
-                this.scanCount++;
-                this.lastScanTime = new Date();
-                
-                // 更新统计
-                this.updateStats();
-                
-                // 模拟截图和OCR识别
-                await this.simulateCaptureAndOCR();
-                
-                // 更新预览
-                this.updateRealtimePreview();
-            },
-            
-            async simulateCaptureAndOCR() {
-                // 这里模拟OCR识别过程
-                const mockMessages = [
-                    "红波各号10元",
-                    "1号5元 2号10元",
-                    "今天天气真好",
-                    "鼠各号20元",
-                    "晚上一起吃饭吗？",
-                    "各号15元，共30元"
-                ];
-                
-                // 随机选择一条消息
-                const randomIndex = Math.floor(Math.random() * mockMessages.length);
-                const message = mockMessages[randomIndex];
-                
-                // 添加到最近消息列表
-                this.lastMessages.unshift({
-                    text: message,
-                    time: new Date().toLocaleTimeString('zh-CN'),
-                    isLottery: this.isLotteryMessage(message)
-                });
-                
-                // 限制列表长度
-                if (this.lastMessages.length > 5) {
-                    this.lastMessages.pop();
-                }
-                
-                // 检查是否为彩票消息
-                if (this.isLotteryMessage(message)) {
-                    this.detectCount++;
-                    this.lotteryCount++;
-                    
-                    // 自动处理
-                    if (document.getElementById('autoProcess').checked) {
-                        await this.autoProcessMessage(message);
-                    }
-                    
-                    // 播放提示音
-                    if (document.getElementById('playSound').checked) {
-                        this.playNotificationSound();
-                    }
-                }
-            },
-            
-            isLotteryMessage(text) {
-                const patterns = [
-                    /[0-9]+\s*[元块米斤￥]/,
-                    /各\s*[0-9]+\s*元/,
-                    /每\s*[0-9]+\s*元/,
-                    /红波|蓝波|绿波/,
-                    /鼠|牛|虎|兔|龙|蛇|马|羊|猴|鸡|狗|猪/
-                ];
-                
-                for (const pattern of patterns) {
-                    if (pattern.test(text)) return true;
-                }
-                return false;
-            },
-            
-            async autoProcessMessage(message) {
-                console.log('🤖 自动处理消息:', message);
-                
-                // 使用彩票解析器
-                if (window.lotteryParser) {
-                    const bets = window.lotteryParser.parseInput(message);
-                    
-                    if (bets.length > 0) {
-                        this.autoProcessCount++;
-                        
-                        // 更新金额映射
-                        bets.forEach(bet => {
-                            if (bet.number >= 1 && bet.number <= 49) {
-                                window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
-                            }
-                        });
-                        
-                        // 更新彩票数据
-                        if (window.lotteryData) {
-                            window.lotteryData.forEach(item => {
-                                item.amount = window.moneyMap[item.number] || 0;
-                            });
-                        }
-                        
-                        // 添加到历史记录
-                        if (typeof addHistoryRecord === 'function') {
-                            const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
-                            addHistoryRecord(message, bets.length, totalAmount);
-                        }
-                        
-                        // 更新UI
-                        if (lotterySystem) {
-                            lotterySystem.updateTotalAmount();
-                            lotterySystem.renderDataTable();
-                            lotterySystem.renderHistory();
-                        }
-                        
-                        // 保存数据
-                        if (typeof saveData === 'function') {
-                            saveData();
-                        }
-                        
-                        // 同步到云端
-                        if (window.firebaseDb && typeof saveToCloud === 'function') {
-                            saveToCloud();
-                        }
-                        
-                        console.log(`✅ 自动录入 ${bets.length} 个下注`);
-                    }
-                }
-            },
-            
-            playNotificationSound() {
-                // 创建简单的提示音
-                try {
-                    const context = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = context.createOscillator();
-                    const gainNode = context.createGain();
-                    
-                    oscillator.connect(gainNode);
-                    gainNode.connect(context.destination);
-                    
-                    oscillator.frequency.value = 800;
-                    oscillator.type = 'sine';
-                    
-                    gainNode.gain.setValueAtTime(0.3, context.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.2);
-                    
-                    oscillator.start(context.currentTime);
-                    oscillator.stop(context.currentTime + 0.2);
-                } catch(e) {
-                    // 静默失败
-                }
-            },
-            
-            pauseAutoMonitoring() {
-                this.isPaused = !this.isPaused;
-                
-                if (this.isPaused) {
-                    document.getElementById('pauseAutoBtn').innerHTML = '<span class="btn-icon">▶️</span><span class="btn-text">继续监控</span>';
-                    document.querySelector('.status-text').textContent = '已暂停';
-                    document.querySelector('.wechat-status-dot').className = 'wechat-status-dot';
-                    document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 已暂停';
-                    showNotification('⏸️ 监控已暂停');
-                } else {
-                    document.getElementById('pauseAutoBtn').innerHTML = '<span class="btn-icon">⏸️</span><span class="btn-text">暂停监控</span>';
-                    document.querySelector('.status-text').textContent = '监控中';
-                    document.querySelector('.wechat-status-dot').className = 'wechat-status-dot active';
-                    document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 运行中';
-                    showNotification('▶️ 监控已继续');
-                }
-            },
-            
-            stopAutoMonitoring() {
-                this.isRunning = false;
-                this.isPaused = false;
-                
-                if (this.scanInterval) {
-                    clearInterval(this.scanInterval);
-                    this.scanInterval = null;
-                }
-                
-                // 更新UI状态
-                document.getElementById('startAutoBtn').disabled = !this.captureArea;
-                document.getElementById('pauseAutoBtn').disabled = true;
-                document.getElementById('stopAutoBtn').disabled = true;
-                
-                document.getElementById('pauseAutoBtn').innerHTML = '<span class="btn-icon">⏸️</span><span class="btn-text">暂停监控</span>';
-                document.querySelector('.status-dot').className = 'status-dot';
-                document.querySelector('.status-text').textContent = '已停止';
-                
-                document.querySelector('.wechat-status-dot').className = 'wechat-status-dot';
-                document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 已停止';
-                
-                showNotification('⏹️ 全自动监控已停止');
-            },
-            
-            updateStats() {
-                document.getElementById('scanCount').textContent = this.scanCount;
-                document.getElementById('detectCount').textContent = this.detectCount;
-                document.getElementById('lotteryCount').textContent = this.lotteryCount;
-                document.getElementById('autoProcessCount').textContent = this.autoProcessCount;
-                
-                if (this.lastScanTime) {
-                    document.getElementById('lastScanTime').textContent = 
-                        this.lastScanTime.toLocaleTimeString('zh-CN', { hour12: false });
-                }
-            },
-            
-            updateRealtimePreview() {
-                const container = document.getElementById('realtimePreview');
-                
-                if (this.lastMessages.length === 0) {
-                    container.innerHTML = '<div class="preview-placeholder">🎯 等待检测消息...</div>';
-                    return;
-                }
-                
-                let html = '';
-                this.lastMessages.forEach(msg => {
-                    const icon = msg.isLottery ? '🎯' : '💬';
-                    const color = msg.isLottery ? '#2ecc71' : '#3498db';
-                    
-                    html += `
-                        <div style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; border-left: 3px solid ${color};">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                                <span style="font-size: 12px; color: #aaa;">${msg.time}</span>
-                                <span style="font-size: 16px;">${icon}</span>
-                            </div>
-                            <div style="font-size: 14px; color: #ddd;">${msg.text}</div>
-                        </div>
-                    `;
-                });
-                
-                container.innerHTML = html;
-            },
-            
-            updateUI() {
-                // 更新灵敏度滑块值显示
-                document.getElementById('sensitivity').addEventListener('input', (e) => {
-                    document.getElementById('sensitivityValue').textContent = e.target.value;
-                });
-                
-                // 监听设置变化
-                ['monitorInterval', 'sensitivity', 'autoStart', 'autoProcess', 'playSound'].forEach(id => {
-                    document.getElementById(id).addEventListener('change', () => {
-                        this.saveSettings();
-                    });
-                });
-            },
-            
-            testAutoRecognition() {
-                console.log('🧪 测试自动识别功能');
-                
-                const testMessages = [
-                    "红波各号10元",
-                    "1号5元 2号10元",
-                    "鼠各号20元"
-                ];
-                
-                testMessages.forEach((msg, index) => {
-                    setTimeout(() => {
-                        this.simulateMessageDetection(msg);
-                    }, index * 1000);
-                });
-                
-                showNotification('🧪 测试消息已发送，请查看实时预览');
-            },
-            
-            simulateMessageDetection(message) {
-                this.lastMessages.unshift({
-                    text: message,
-                    time: new Date().toLocaleTimeString('zh-CN'),
-                    isLottery: true
-                });
-                
-                if (this.lastMessages.length > 5) this.lastMessages.pop();
-                
-                this.detectCount++;
-                this.lotteryCount++;
-                this.updateStats();
-                this.updateRealtimePreview();
-                
-                // 自动处理
-                if (document.getElementById('autoProcess').checked) {
-                    this.autoProcessMessage(message);
-                }
-            }
-        };
-
-        // ==================== 全局函数 ====================
-        function openAutoWechatMonitor() {
-            document.getElementById('autoWechatMonitor').style.display = 'flex';
-            if (!window.autoWechatMonitor) {
-                window.autoWechatMonitor = autoWechatMonitor;
-                autoWechatMonitor.init();
-            }
-        }
-
-        function closeAutoMonitor() {
-            document.getElementById('autoWechatMonitor').style.display = 'none';
-        }
-
-        function checkWechatReady() {
-            document.getElementById('wechatGuide').style.display = 'none';
-            autoWechatMonitor.autoDetectWechat();
-        }
-
-        function hideWechatGuide() {
-            document.getElementById('wechatGuide').style.display = 'none';
-        }
-
-        // 导出函数到全局
-        window.autoDetectWechat = () => autoWechatMonitor.autoDetectWechat();
-        window.smartDetectChatArea = () => autoWechatMonitor.smartDetectChatArea();
-        window.manualSelectWechat = () => autoWechatMonitor.manualSelectWechat();
-        window.startAutoMonitoring = () => autoWechatMonitor.startAutoMonitoring();
-        window.pauseAutoMonitoring = () => autoWechatMonitor.pauseAutoMonitoring();
-        window.stopAutoMonitoring = () => autoWechatMonitor.stopAutoMonitoring();
-        window.testAutoRecognition = () => autoWechatMonitor.testAutoRecognition();
-        window.checkWechatReady = checkWechatReady;
-        window.hideWechatGuide = hideWechatGuide;
-        window.openAutoWechatMonitor = openAutoWechatMonitor;
-        window.closeAutoMonitor = closeAutoMonitor;
-
-        // ==================== 全屏大屏功能 ====================
-        let fullscreenRefreshInterval = null;
-        
-        function openFullscreen() {
-            document.getElementById('fullscreenDisplay').style.display = 'block';
-            renderFullscreenDisplay();
-            startFullscreenAutoRefresh();
-            document.body.style.overflow = 'hidden';
-            document.getElementById('networkIndicator').style.opacity = '0';
-            document.getElementById('cloudStatus').style.opacity = '0';
-        }
-        
-        function closeFullscreen() {
-            document.getElementById('fullscreenDisplay').style.display = 'none';
-            stopFullscreenAutoRefresh();
-            document.body.style.overflow = '';
-            document.getElementById('networkIndicator').style.opacity = '1';
-            document.getElementById('cloudStatus').style.opacity = '1';
-        }
-        
-        function renderFullscreenDisplay() {
-            if (!window.lotteryData) return;
-            
-            const total = Object.values(window.moneyMap || {}).reduce((sum, amount) => sum + amount, 0);
-            document.getElementById('fullscreenTotal').textContent = total.toFixed(2);
-            
-            const sortedData = [...window.lotteryData].sort((a, b) => {
-                if (a.amount !== b.amount) return b.amount - a.amount;
-                return a.number - b.number;
-            });
-            
-            let currentRank = 0, lastAmount = null, sameAmountCount = 0;
-            const rankedData = sortedData.map(item => {
-                if (item.amount > 0) {
-                    if (item.amount !== lastAmount) {
-                        currentRank += 1 + sameAmountCount;
-                        sameAmountCount = 0;
-                    } else {
-                        sameAmountCount++;
-                    }
-                    lastAmount = item.amount;
-                    return { ...item, rank: currentRank };
-                }
-                return { ...item, rank: 0 };
-            });
-            
-            let html = '';
-            let gridIndex = 0;
-            
-            for (let row = 0; row < 7; row++) {
-                for (let col = 0; col < 7; col++) {
-                    const dataItem = gridIndex < rankedData.length ? rankedData[gridIndex] : null;
-                    gridIndex++;
-                    if (!dataItem) continue;
-                    
-                    let waveClass = '';
-                    if (dataItem.waveColor === '红波') waveClass = 'wave-red-fullscreen';
-                    else if (dataItem.waveColor === '蓝波') waveClass = 'wave-blue-fullscreen';
-                    else if (dataItem.waveColor === '绿波') waveClass = 'wave-green-fullscreen';
-                    
-                    let rankClass = '', rankBadge = '';
-                    if (dataItem.rank === 1) {
-                        rankClass = 'rank-1';
-                        rankBadge = '<div class="rank-badge rank-1-badge">1</div>';
-                    } else if (dataItem.rank === 2) {
-                        rankClass = 'rank-2';
-                        rankBadge = '<div class="rank-badge rank-2-badge">2</div>';
-                    } else if (dataItem.rank === 3) {
-                        rankClass = 'rank-3';
-                        rankBadge = '<div class="rank-badge rank-3-badge">3</div>';
-                    }
-                    
-                    const hasAmountClass = dataItem.amount > 0 ? 'has-amount' : '';
-                    
-                    html += `
-                        <div class="fullscreen-item ${rankClass} ${hasAmountClass}">
-                            ${rankBadge}
-                            <div class="wave-number-row">
-                                <div class="fullscreen-wave ${waveClass}">${dataItem.waveColor}</div>
-                                <div class="fullscreen-number">${dataItem.number}</div>
-                                <div class="fullscreen-zodiac">${dataItem.zodiac}</div>
-                            </div>
-                            <div class="amount-row">
-                                <div class="fullscreen-amount ${dataItem.amount > 0 ? '' : 'zero'}">
-                                    ${dataItem.amount > 0 ? dataItem.amount.toFixed(2) + '元' : '0元'}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-            
-            document.getElementById('fullscreenGrid').innerHTML = html;
-            
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('zh-CN', { 
-                hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
-            });
-            document.getElementById('autoRefreshIndicator').innerHTML = 
-                `<span>🔄</span> 最后更新: ${timeStr}`;
-        }
-        
-        function startFullscreenAutoRefresh() {
-            if (fullscreenRefreshInterval) clearInterval(fullscreenRefreshInterval);
-            fullscreenRefreshInterval = setInterval(() => {
-                if (document.getElementById('fullscreenDisplay').style.display === 'block') {
-                    renderFullscreenDisplay();
-                }
-            }, 5000);
-        }
-        
-        function stopFullscreenAutoRefresh() {
-            if (fullscreenRefreshInterval) {
-                clearInterval(fullscreenRefreshInterval);
-                fullscreenRefreshInterval = null;
-            }
-        }
-
-        // ==================== 主应用代码 ====================
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 页面加载完成 - 核心功能启动');
-            
-            document.getElementById('passwordInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') checkPassword();
-            });
-            
-            try {
-                const authStr = localStorage.getItem('lottery_admin_auth');
-                if (authStr) {
-                    const authData = JSON.parse(authStr);
-                    const now = Date.now();
-                    const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
-                    
-                    if (authData.loggedIn && authData.loginTime && (now - authData.loginTime) < THREE_DAYS_MS) {
-                        document.getElementById('passwordOverlay').style.display = 'none';
-                        document.getElementById('mainApp').style.display = 'block';
-                        startApplication();
-                        console.log('✅ 自动登录成功');
-                        return;
-                    }
-                }
-            } catch(e) {
-                console.log('自动登录检查失败');
-            }
-            
-            document.getElementById('passwordInput').focus();
-            initTouchSupport();
-        });
-
-        function initTouchSupport() {
-            let lastTouchEnd = 0;
-            document.addEventListener('touchend', function(event) {
-                const now = Date.now();
-                if (now - lastTouchEnd <= 300) event.preventDefault();
-                lastTouchEnd = now;
-            }, false);
-
-            const buttons = document.querySelectorAll('button');
-            buttons.forEach(btn => {
-                btn.addEventListener('touchstart', function() { this.style.transform = 'scale(0.98)'; });
-                btn.addEventListener('touchend', function() { this.style.transform = ''; });
-                btn.addEventListener('touchcancel', function() { this.style.transform = ''; });
-            });
-
-            const inputs = document.querySelectorAll('input, textarea');
-            inputs.forEach(input => {
-                input.addEventListener('touchstart', function(e) { e.stopPropagation(); });
-            });
-        }
-
-        function checkPassword() {
-            const input = document.getElementById('passwordInput');
-            const errorEl = document.getElementById('passwordError');
-            
-            if (!input || !input.value) {
-                if (errorEl) errorEl.textContent = '请输入密码';
-                return;
-            }
-            
-            if (input.value.trim() === '829218') {
-                if (errorEl) errorEl.textContent = '';
-                
-                localStorage.setItem('lottery_admin_auth', JSON.stringify({
-                    loggedIn: true,
-                    loginTime: Date.now()
-                }));
-                
-                document.getElementById('passwordOverlay').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'block';
-                
-                console.log('✅ 密码验证成功');
-                startApplication();
-            } else {
-                if (errorEl) errorEl.textContent = '❌ 密码错误，请重试';
-                input.value = '';
-                input.focus();
-            }
-        }
-        
-        function startApplication() {
-            console.log('🚀 启动应用...');
-            document.getElementById('statusBar').textContent = '🔄 初始化系统中...';
-            
-            initLotterySystem();
-            setTimeout(initFirebase, 100);
-        }
-        
         // ==================== 彩票系统核心 ====================
         let lotterySystem = null;
         let lotteryParser = new LotteryBetParser();
-        
+        window.lotteryParser = lotteryParser;
+        window.lotteryData = [];
+        window.moneyMap = {};
+        window.historyRecords = [];
+        window.undoStack = [];
+
         function initLotterySystem() {
             console.log('🎯 初始化彩票系统...');
-            
-            window.lotteryData = [];
-            window.moneyMap = {};
-            window.historyRecords = [];
-            window.undoStack = [];
             
             function initData() {
                 window.lotteryData = [];
@@ -2176,22 +1007,10 @@
                 for (let i = 1; i <= 49; i++) {
                     const zodiac = lotteryParser.findZodiac(i);
                     const waveColor = lotteryParser.findWaveColor(i);
-                    
-                    window.lotteryData.push({
-                        number: i,
-                        zodiac: zodiac || "未知",
-                        waveColor: waveColor,
-                        amount: 0,
-                        rank: 0
-                    });
+                    window.lotteryData.push({ number: i, zodiac: zodiac || "未知", waveColor: waveColor, amount: 0, rank: 0 });
                     window.moneyMap[i] = 0;
                 }
             }
-            
-            function parseInput(input) {
-                return lotteryParser.parseInput(input);
-            }
-            
             initData();
             
             function loadSavedData() {
@@ -2199,39 +1018,23 @@
                     const saved = localStorage.getItem('lottery_data_v2');
                     if (saved) {
                         const data = JSON.parse(saved);
-                        
                         if (data.moneyMap) window.moneyMap = data.moneyMap;
                         if (data.historyRecords) window.historyRecords = data.historyRecords;
                         if (data.undoStack) window.undoStack = data.undoStack;
-                        
-                        window.lotteryData.forEach(item => {
-                            item.amount = window.moneyMap[item.number] || 0;
-                        });
-                        
-                        updateTotalAmount();
-                        updateDataCount();
-                        updateUndoButton();
-                        renderHistory();
-                        renderDataTable();
+                        window.lotteryData.forEach(item => { item.amount = window.moneyMap[item.number] || 0; });
+                        updateTotalAmount(); updateDataCount(); renderHistory(); renderDataTable();
                     }
-                } catch(e) {
-                    console.log('加载本地数据失败');
-                }
+                } catch(e) { console.log('加载本地数据失败'); }
             }
             
             function saveData() {
                 try {
-                    const saveData = {
-                        moneyMap: window.moneyMap,
-                        historyRecords: window.historyRecords,
-                        undoStack: window.undoStack,
-                        timestamp: Date.now()
-                    };
-                    localStorage.setItem('lottery_data_v2', JSON.stringify(saveData));
-                } catch(e) {
-                    console.log('保存本地数据失败');
-                }
+                    localStorage.setItem('lottery_data_v2', JSON.stringify({
+                        moneyMap: window.moneyMap, historyRecords: window.historyRecords, undoStack: window.undoStack, timestamp: Date.now()
+                    }));
+                } catch(e) { console.log('保存本地数据失败'); }
             }
+            window.saveData = saveData;
             
             function updateTotalAmount() {
                 const total = Object.values(window.moneyMap).reduce((sum, amount) => sum + amount, 0);
@@ -2252,290 +1055,212 @@
                     return a.number - b.number;
                 });
                 
-                let html = '';
-                let currentRank = 0;
-                
+                let html = '', currentRank = 0;
                 sortedData.forEach((item) => {
-                    const waveClass = item.waveColor === '红波' ? 'wave-red' :
-                                    item.waveColor === '蓝波' ? 'wave-blue' :
-                                    item.waveColor === '绿波' ? 'wave-green' : '';
-                    
-                    let rankClass = '';
-                    let rankDisplay = '-';
-                    let amountDisplay = '0元';
-                    let amountClass = 'amount-cell-zero';
+                    const waveClass = item.waveColor === '红波' ? 'wave-red' : item.waveColor === '蓝波' ? 'wave-blue' : item.waveColor === '绿波' ? 'wave-green' : '';
+                    let rankClass = '', rankDisplay = '-', amountDisplay = '0元', amountClass = 'amount-cell-zero';
                     
                     if (item.amount > 0) {
                         currentRank++;
                         rankDisplay = currentRank;
-                        
                         if (currentRank === 1) rankClass = 'rank-1';
                         else if (currentRank === 2) rankClass = 'rank-2';
                         else if (currentRank === 3) rankClass = 'rank-3';
-                        
                         amountDisplay = `${item.amount.toFixed(2)}元`;
                         amountClass = 'amount-cell';
                     }
                     
-                    html += `
-                        <tr>
-                            <td class="rank-cell ${rankClass}">${rankDisplay}</td>
-                            <td class="number-cell">${item.number}</td>
-                            <td class="zodiac-cell">${item.zodiac}</td>
-                            <td class="${amountClass}">${amountDisplay}</td>
-                            <td><span class="wave-cell ${waveClass}">${item.waveColor}</span></td>
-                        </tr>
-                    `;
+                    html += `<tr><td class="rank-cell ${rankClass}">${rankDisplay}</td><td class="number-cell">${item.number}</td><td class="zodiac-cell">${item.zodiac}</td><td class="${amountClass}">${amountDisplay}</td><td><span class="wave-cell ${waveClass}">${item.waveColor}</span></td></tr>`;
                 });
-                
                 tbody.innerHTML = html;
                 updateDataCount();
             }
+            window.renderDataTable = renderDataTable;
             
             function addHistoryRecord(text, count, amount) {
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('zh-CN', { 
-                    hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
-                });
-                
-                const record = {
-                    id: Date.now(),
-                    text: text,
-                    time: timeStr,
-                    count: count,
-                    amount: amount
-                };
-                
-                window.historyRecords.unshift(record);
+                const timeStr = new Date().toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                window.historyRecords.unshift({ id: Date.now(), text, time: timeStr, count, amount });
                 if (window.historyRecords.length > 50) window.historyRecords = window.historyRecords.slice(0, 50);
                 document.getElementById('historyCount').textContent = `${window.historyRecords.length}条记录`;
             }
+            window.addHistoryRecord = addHistoryRecord;
             
             function renderHistory() {
                 const container = document.getElementById('historyList');
-                if (window.historyRecords.length === 0) {
-                    container.innerHTML = `<div style="text-align: center; color: #95a5a6; padding: 20px;">暂无录入记录</div>`;
-                    return;
-                }
-                
+                if (window.historyRecords.length === 0) { container.innerHTML = '<div style="text-align: center; color: #95a5a6; padding: 20px;">暂无录入记录</div>'; return; }
                 let html = '';
                 window.historyRecords.forEach(record => {
-                    html += `
-                        <div class="history-item">
-                            <button class="delete-btn" onclick="deleteHistoryRecord(${record.id})">×</button>
-                            <span class="history-time">${record.time}</span>
-                            <div class="history-text">${record.text}</div>
-                            <div class="history-amount">${record.amount.toFixed(2)}元 (${record.count}个)</div>
-                        </div>
-                    `;
+                    html += `<div class="history-item"><button class="delete-btn" onclick="deleteHistoryRecord(${record.id})">×</button><span class="history-time">${record.time}</span><div class="history-text">${record.text}</div><div class="history-amount">${record.amount.toFixed(2)}元 (${record.count}个)</div></div>`;
                 });
                 container.innerHTML = html;
             }
+            window.renderHistory = renderHistory;
             
             window.deleteHistoryRecord = function(id) {
                 const index = window.historyRecords.findIndex(r => r.id === id);
                 if (index === -1) return;
-                
                 saveCurrentStateForUndo();
                 window.historyRecords.splice(index, 1);
-                
                 window.moneyMap = {};
                 window.historyRecords.forEach(record => {
-                    const bets = parseInput(record.text);
-                    bets.forEach(bet => {
-                        if (bet.number >= 1 && bet.number <= 49) {
-                            window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
-                        }
+                    lotteryParser.parseInput(record.text).forEach(bet => {
+                        if (bet.number >= 1 && bet.number <= 49) window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
                     });
                 });
-                
-                window.lotteryData.forEach(item => {
-                    item.amount = window.moneyMap[item.number] || 0;
-                });
-                
-                renderHistory();
-                renderDataTable();
-                updateTotalAmount();
-                updateUndoButton();
-                saveData();
-                
+                window.lotteryData.forEach(item => { item.amount = window.moneyMap[item.number] || 0; });
+                renderHistory(); renderDataTable(); updateTotalAmount(); saveData();
                 if (window.firebaseDb) saveToCloud();
                 showNotification('✅ 已删除记录');
-            }
+            };
             
             function saveCurrentStateForUndo() {
-                const state = {
-                    moneyMap: {...window.moneyMap},
-                    historyRecords: JSON.parse(JSON.stringify(window.historyRecords)),
-                    timestamp: Date.now()
-                };
-                window.undoStack.push(state);
+                window.undoStack.push({ moneyMap: {...window.moneyMap}, historyRecords: JSON.parse(JSON.stringify(window.historyRecords)), timestamp: Date.now() });
                 if (window.undoStack.length > 20) window.undoStack.shift();
-                updateUndoButton();
             }
+            window.saveCurrentStateForUndo = saveCurrentStateForUndo;
             
-            function updateUndoButton() {}
-            
-            window.openHistoryModal = function() {
-                renderHistory();
-                document.getElementById('historyModal').style.display = 'block';
-            }
-            
-            window.closeHistoryModal = function() {
-                document.getElementById('historyModal').style.display = 'none';
-            }
+            window.openHistoryModal = function() { renderHistory(); document.getElementById('historyModal').style.display = 'block'; };
+            window.closeHistoryModal = function() { document.getElementById('historyModal').style.display = 'none'; };
             
             window.processData = function() {
                 const input = document.getElementById('inputData').value.trim();
-                if (!input) {
-                    showNotification('请输入数据', 'warning');
-                    return;
-                }
-                
+                if (!input) { showNotification('请输入数据', 'warning'); return; }
                 saveCurrentStateForUndo();
-                const bets = parseInput(input);
-                
-                if (bets.length === 0) {
-                    showNotification('未识别到有效数据格式', 'warning');
-                    return;
-                }
-                
-                bets.forEach(bet => {
-                    if (bet.number >= 1 && bet.number <= 49) {
-                        window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount;
-                    }
-                });
-                
-                window.lotteryData.forEach(item => {
-                    item.amount = window.moneyMap[item.number] || 0;
-                });
-                
+                const bets = lotteryParser.parseInput(input);
+                if (bets.length === 0) { showNotification('未识别到有效数据格式', 'warning'); return; }
+                bets.forEach(bet => { if (bet.number >= 1 && bet.number <= 49) window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount; });
+                window.lotteryData.forEach(item => { item.amount = window.moneyMap[item.number] || 0; });
                 const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
                 addHistoryRecord(input, bets.length, totalAmount);
-                
                 updateTotalAmount();
                 document.getElementById('inputData').value = '';
-                renderDataTable();
-                renderHistory();
-                updateUndoButton();
-                saveData();
-                
+                renderDataTable(); renderHistory(); saveData();
                 if (window.firebaseDb) saveToCloud();
-                
-                if (document.getElementById('fullscreenDisplay').style.display === 'block') {
-                    renderFullscreenDisplay();
-                }
-                
+                if (document.getElementById('fullscreenDisplay').style.display === 'block') renderFullscreenDisplay();
                 showNotification(`✅ 成功录入 ${bets.length} 个下注\n💰 总计 ${totalAmount.toFixed(2)} 元`);
-            }
+            };
             
             window.clearHistory = function() {
                 if (!confirm('确定要清空所有录入记录吗？\n此操作不可恢复！')) return;
-                
                 saveCurrentStateForUndo();
-                window.historyRecords = [];
-                window.undoStack = [];
-                initData();
-                renderHistory();
-                renderDataTable();
-                updateTotalAmount();
-                updateUndoButton();
-                saveData();
-                
+                window.historyRecords = []; window.undoStack = [];
+                initData(); renderHistory(); renderDataTable(); updateTotalAmount(); saveData();
                 if (window.firebaseDb) saveToCloud();
-                
                 closeHistoryModal();
                 showNotification('✅ 已清空所有录入记录');
-            }
+            };
             
             window.clearAll = function() {
                 if (!confirm('⚠️ 确定要清空所有数据吗？\n包括所有录入记录和统计！')) return;
-                
                 initData();
-                window.historyRecords = [];
-                window.undoStack = [];
-                renderDataTable();
-                renderHistory();
-                updateUndoButton();
+                window.historyRecords = []; window.undoStack = [];
+                renderDataTable(); renderHistory();
                 document.getElementById('totalMoney').textContent = '0';
                 document.getElementById('dataCount').textContent = '0/49个号码';
                 document.getElementById('historyCount').textContent = '0条记录';
                 localStorage.removeItem('lottery_data_v2');
-                
                 if (window.firebaseDb) saveToCloud();
-                
                 closeHistoryModal();
                 showNotification('✅ 所有数据已清空');
-            }
+            };
             
             window.copyLink = function() {
-                const saveData = {
-                    moneyMap: window.moneyMap,
-                    historyRecords: window.historyRecords.slice(0, 10),
-                    timestamp: Date.now()
-                };
-                
-                const dataStr = JSON.stringify(saveData);
-                const encoded = btoa(encodeURIComponent(dataStr));
-                const currentUrl = window.location.origin + window.location.pathname + '?data=' + encoded;
-                
+                const saveData = { moneyMap: window.moneyMap, historyRecords: window.historyRecords.slice(0,10), timestamp: Date.now() };
+                const encoded = btoa(encodeURIComponent(JSON.stringify(saveData)));
+                const url = window.location.origin + window.location.pathname + '?data=' + encoded;
                 if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(currentUrl).then(() => {
-                        showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
-                    }).catch(err => {
-                        fallbackCopyToClipboard(currentUrl);
-                    });
-                } else {
-                    fallbackCopyToClipboard(currentUrl);
-                }
-            }
+                    navigator.clipboard.writeText(url).then(() => showNotification('✅ 链接已复制到剪贴板')).catch(() => fallbackCopy(url));
+                } else fallbackCopy(url);
+            };
             
-            function fallbackCopyToClipboard(text) {
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                textarea.style.position = 'fixed';
-                textarea.style.opacity = '0';
-                document.body.appendChild(textarea);
-                textarea.focus();
-                textarea.select();
-                
-                try {
-                    const successful = document.execCommand('copy');
-                    if (successful) {
-                        showNotification('✅ 链接已复制到剪贴板\n发送此链接给他人即可查看数据');
-                    } else {
-                        showNotification('❌ 复制失败，请手动复制链接');
-                    }
-                } catch (err) {
-                    console.error('复制失败:', err);
-                    showNotification('❌ 复制失败，请手动复制链接');
-                }
-                
-                document.body.removeChild(textarea);
+            function fallbackCopy(text) {
+                const ta = document.createElement('textarea');
+                ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.focus(); ta.select();
+                try { document.execCommand('copy') ? showNotification('✅ 链接已复制到剪贴板') : showNotification('❌ 复制失败'); } catch (err) { showNotification('❌ 复制失败'); }
+                document.body.removeChild(ta);
             }
             
             loadSavedData();
-            updateUndoButton();
             
-            lotterySystem = {
-                updateTotalAmount,
-                renderDataTable,
-                renderHistory,
-                saveData
-            };
+            lotterySystem = { updateTotalAmount, renderDataTable, renderHistory, saveData };
+            window.lotterySystem = lotterySystem;
         }
+
+        // ==================== 全屏大屏功能 ====================
+        let fullscreenRefreshInterval = null;
         
+        function openFullscreen() {
+            document.getElementById('fullscreenDisplay').style.display = 'block';
+            renderFullscreenDisplay();
+            startFullscreenAutoRefresh();
+            document.body.style.overflow = 'hidden';
+            document.getElementById('networkIndicator').style.opacity = '0';
+            document.getElementById('cloudStatus').style.opacity = '0';
+        }
+        function closeFullscreen() {
+            document.getElementById('fullscreenDisplay').style.display = 'none';
+            stopFullscreenAutoRefresh();
+            document.body.style.overflow = '';
+            document.getElementById('networkIndicator').style.opacity = '1';
+            document.getElementById('cloudStatus').style.opacity = '1';
+        }
+        function renderFullscreenDisplay() {
+            if (!window.lotteryData) return;
+            const total = Object.values(window.moneyMap || {}).reduce((sum, amount) => sum + amount, 0);
+            document.getElementById('fullscreenTotal').textContent = total.toFixed(2);
+            const sortedData = [...window.lotteryData].sort((a,b) => a.amount !== b.amount ? b.amount - a.amount : a.number - b.number);
+            let currentRank = 0, lastAmount = null, sameAmountCount = 0;
+            const rankedData = sortedData.map(item => {
+                if (item.amount > 0) {
+                    if (item.amount !== lastAmount) { currentRank += 1 + sameAmountCount; sameAmountCount = 0; }
+                    else sameAmountCount++;
+                    lastAmount = item.amount;
+                    return { ...item, rank: currentRank };
+                }
+                return { ...item, rank: 0 };
+            });
+            let html = '', gridIndex = 0;
+            for (let row = 0; row < 7; row++) {
+                for (let col = 0; col < 7; col++) {
+                    const dataItem = gridIndex < rankedData.length ? rankedData[gridIndex] : null;
+                    gridIndex++;
+                    if (!dataItem) continue;
+                    let waveClass = '';
+                    if (dataItem.waveColor === '红波') waveClass = 'wave-red-fullscreen';
+                    else if (dataItem.waveColor === '蓝波') waveClass = 'wave-blue-fullscreen';
+                    else if (dataItem.waveColor === '绿波') waveClass = 'wave-green-fullscreen';
+                    let rankClass = '', rankBadge = '';
+                    if (dataItem.rank === 1) { rankClass = 'rank-1'; rankBadge = '<div class="rank-badge rank-1-badge">1</div>'; }
+                    else if (dataItem.rank === 2) { rankClass = 'rank-2'; rankBadge = '<div class="rank-badge rank-2-badge">2</div>'; }
+                    else if (dataItem.rank === 3) { rankClass = 'rank-3'; rankBadge = '<div class="rank-badge rank-3-badge">3</div>'; }
+                    const hasAmountClass = dataItem.amount > 0 ? 'has-amount' : '';
+                    html += `<div class="fullscreen-item ${rankClass} ${hasAmountClass}">${rankBadge}<div class="wave-number-row"><div class="fullscreen-wave ${waveClass}">${dataItem.waveColor}</div><div class="fullscreen-number">${dataItem.number}</div><div class="fullscreen-zodiac">${dataItem.zodiac}</div></div><div class="amount-row"><div class="fullscreen-amount ${dataItem.amount > 0 ? '' : 'zero'}">${dataItem.amount > 0 ? dataItem.amount.toFixed(2) + '元' : '0元'}</div></div></div>`;
+                }
+            }
+            document.getElementById('fullscreenGrid').innerHTML = html;
+            const timeStr = new Date().toLocaleTimeString('zh-CN', { hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit' });
+            document.getElementById('autoRefreshIndicator').innerHTML = `<span>🔄</span> 最后更新: ${timeStr}`;
+        }
+        function startFullscreenAutoRefresh() {
+            if (fullscreenRefreshInterval) clearInterval(fullscreenRefreshInterval);
+            fullscreenRefreshInterval = setInterval(() => {
+                if (document.getElementById('fullscreenDisplay').style.display === 'block') renderFullscreenDisplay();
+            }, 5000);
+        }
+        function stopFullscreenAutoRefresh() {
+            if (fullscreenRefreshInterval) { clearInterval(fullscreenRefreshInterval); fullscreenRefreshInterval = null; }
+        }
+        window.openFullscreen = openFullscreen;
+        window.closeFullscreen = closeFullscreen;
+        window.renderFullscreenDisplay = renderFullscreenDisplay;
+
+        // ==================== Firebase ====================
         function initFirebase() {
             console.log('🔥 初始化Firebase...');
             updateCloudStatus('连接中...', 'connecting');
-            
             setTimeout(() => {
-                if (typeof firebase === 'undefined') {
-                    console.log('Firebase SDK未加载，重试...');
-                    loadFirebase();
-                    return;
-                }
-                
+                if (typeof firebase === 'undefined') { console.log('Firebase SDK未加载'); return; }
                 try {
                     const firebaseConfig = {
                         apiKey: "AIzaSyAgUU04dt1igPFNTC-zJ3WhGfWp8-wKmfo",
@@ -2545,19 +1270,14 @@
                         messagingSenderId: "714450363816",
                         appId: "1:714450363816:web:8335befb5ed25c98f3a99d"
                     };
-                    
                     const app = firebase.initializeApp(firebaseConfig);
                     const db = firebase.firestore(app);
-                    
                     window.firebaseApp = app;
                     window.firebaseDb = db;
-                    
                     console.log('✅ Firebase初始化成功');
                     startFirebaseListener();
-                    
                     updateCloudStatus('实时同步', 'online');
                     document.getElementById('statusBar').textContent = '✅ 系统就绪 | 实时同步中';
-                    
                 } catch (error) {
                     console.error('❌ Firebase初始化失败:', error.message);
                     updateCloudStatus('连接失败', 'offline');
@@ -2565,164 +1285,518 @@
                 }
             }, 500);
         }
-        
         function loadFirebase() {
             if (!document.querySelector('script[src*="firebase-app"]')) {
-                const script1 = document.createElement('script');
-                script1.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js";
-                script1.defer = true;
-                document.head.appendChild(script1);
-                
-                const script2 = document.createElement('script');
-                script2.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js";
-                script2.defer = true;
-                script2.onload = function() { setTimeout(initFirebase, 1000); };
-                document.head.appendChild(script2);
+                const s1 = document.createElement('script'); s1.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"; s1.defer = true; document.head.appendChild(s1);
+                const s2 = document.createElement('script'); s2.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"; s2.defer = true; s2.onload = function() { setTimeout(initFirebase, 1000); }; document.head.appendChild(s2);
             }
         }
-        
         function startFirebaseListener() {
-            if (!window.firebaseDb) {
-                console.log('Firebase数据库未初始化');
-                return;
-            }
-            
-            console.log('👂 启动实时监听...');
-            
-            window.firebaseDb.collection('lottery_data')
-                .orderBy('timestamp', 'desc')
-                .limit(1)
-                .onSnapshot((snapshot) => {
-                    if (!snapshot.empty) {
-                        const doc = snapshot.docs[0];
-                        const data = doc.data();
-                        console.log('📥 收到云端数据更新', data);
-                        
-                        applyCloudData(data);
-                        showNotification('✅ 数据已同步更新');
-                        
-                        if (document.getElementById('fullscreenDisplay').style.display === 'block') {
-                            renderFullscreenDisplay();
-                        }
-                    }
-                }, (error) => {
-                    console.error('❌ 实时监听错误:', error);
-                    updateCloudStatus('同步错误', 'offline');
-                });
+            if (!window.firebaseDb) return;
+            window.firebaseDb.collection('lottery_data').orderBy('timestamp', 'desc').limit(1).onSnapshot((snapshot) => {
+                if (!snapshot.empty) {
+                    const data = snapshot.docs[0].data();
+                    applyCloudData(data);
+                    showNotification('✅ 数据已同步更新');
+                    if (document.getElementById('fullscreenDisplay').style.display === 'block') renderFullscreenDisplay();
+                }
+            }, (error) => { console.error('❌ 实时监听错误:', error); updateCloudStatus('同步错误', 'offline'); });
         }
-        
         function applyCloudData(data) {
             if (!data) return;
-            
-            console.log('🌥️ 应用云端数据...');
-            
             if (data.moneyMap) window.moneyMap = data.moneyMap;
             if (data.historyRecords) window.historyRecords = data.historyRecords;
-            
             if (window.lotteryData && window.lotteryData.length > 0) {
-                window.lotteryData.forEach(item => {
-                    item.amount = window.moneyMap[item.number] || 0;
-                });
-                
-                if (lotterySystem) {
-                    lotterySystem.updateTotalAmount();
-                    lotterySystem.renderDataTable();
-                    lotterySystem.renderHistory();
-                }
+                window.lotteryData.forEach(item => { item.amount = window.moneyMap[item.number] || 0; });
+                if (lotterySystem) { lotterySystem.updateTotalAmount(); lotterySystem.renderDataTable(); lotterySystem.renderHistory(); }
             }
         }
-        
         async function saveToCloud() {
-            if (!window.firebaseDb) {
-                console.log('Firebase未连接，跳过云端保存');
-                return;
-            }
-            
+            if (!window.firebaseDb) return;
             try {
-                console.log('☁️ 保存到云端...');
-                
                 const saveData = {
                     moneyMap: window.moneyMap || {},
                     historyRecords: window.historyRecords || [],
                     timestamp: Date.now(),
-                    deviceId: 'web_' + Math.random().toString(36).substr(2, 9),
+                    deviceId: 'web_' + Math.random().toString(36).substr(2,9),
                     updatedAt: new Date().toISOString()
                 };
-                
-                const snapshot = await window.firebaseDb.collection('lottery_data')
-                    .orderBy('timestamp', 'desc')
-                    .limit(1)
-                    .get();
-                
-                if (!snapshot.empty) {
-                    await snapshot.docs[0].ref.update(saveData);
-                    console.log('✅ 云端数据已更新');
-                } else {
-                    await window.firebaseDb.collection('lottery_data').add(saveData);
-                    console.log('✅ 云端数据已创建');
-                }
-                
+                const snapshot = await window.firebaseDb.collection('lottery_data').orderBy('timestamp', 'desc').limit(1).get();
+                if (!snapshot.empty) await snapshot.docs[0].ref.update(saveData);
+                else await window.firebaseDb.collection('lottery_data').add(saveData);
                 updateCloudStatus('实时同步', 'online');
-                
-            } catch (error) {
-                console.error('❌ 保存到云端失败:', error);
-                updateCloudStatus('同步失败', 'offline');
+            } catch (error) { console.error('❌ 保存到云端失败:', error); updateCloudStatus('同步失败', 'offline'); }
+        }
+        window.saveToCloud = saveToCloud;
+
+        // ==================== 全自动微信监控系统（真正自动识别录入）====================
+        let autoWechatMonitor = {
+            isRunning: false, isPaused: false, captureArea: null, scanInterval: null,
+            scanCount: 0, detectCount: 0, lotteryCount: 0, autoProcessCount: 0,
+            lastScanTime: null, lastMessages: [], tesseractWorker: null,
+            screenStream: null, videoElement: null, canvas: null, ctx: null, lastFrameData: null,
+            
+            init() {
+                console.log('🤖 初始化全自动微信监控系统');
+                this.loadSettings();
+                this.initTesseract();
+                this.updateUI();
+            },
+            
+            loadSettings() {
+                try {
+                    const settings = localStorage.getItem('auto_wechat_settings');
+                    if (settings) {
+                        const data = JSON.parse(settings);
+                        document.getElementById('monitorInterval').value = data.interval || '2000';
+                        document.getElementById('sensitivity').value = data.sensitivity || 7;
+                        document.getElementById('sensitivityValue').textContent = data.sensitivity || 7;
+                        document.getElementById('autoStart').checked = data.autoStart !== false;
+                        document.getElementById('autoProcess').checked = data.autoProcess !== false;
+                        document.getElementById('playSound').checked = data.playSound || false;
+                    }
+                } catch(e) { console.log('加载设置失败:', e); }
+            },
+            
+            saveSettings() {
+                localStorage.setItem('auto_wechat_settings', JSON.stringify({
+                    interval: document.getElementById('monitorInterval').value,
+                    sensitivity: document.getElementById('sensitivity').value,
+                    autoStart: document.getElementById('autoStart').checked,
+                    autoProcess: document.getElementById('autoProcess').checked,
+                    playSound: document.getElementById('playSound').checked,
+                    lastUpdated: new Date().toISOString()
+                }));
+            },
+            
+            async initTesseract() {
+                try {
+                    if (typeof Tesseract === 'undefined') { console.log('❌ Tesseract.js未加载'); return; }
+                    console.log('🧠 初始化Tesseract OCR引擎...');
+                    this.tesseractWorker = await Tesseract.createWorker('chi_sim+eng');
+                    console.log('✅ Tesseract初始化完成');
+                } catch(error) { console.log('❌ Tesseract初始化失败:', error); showNotification('OCR引擎初始化失败', 'warning'); }
+            },
+            
+            async autoDetectWechat() {
+                console.log('🔍 开始自动检测微信窗口...');
+                this.showDetectOverlay();
+                this.updateDetectProgress('正在请求屏幕共享权限...', 20);
+                try {
+                    const stream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'never', displaySurface: 'window' }, audio: false });
+                    this.updateDetectProgress('正在分析屏幕内容...', 40);
+                    const video = document.createElement('video');
+                    video.srcObject = stream;
+                    await video.play();
+                    this.updateDetectProgress('正在识别微信窗口...', 60);
+                    const screenWidth = window.screen.width;
+                    const screenHeight = window.screen.height;
+                    const wechatArea = { x: Math.floor(screenWidth * 0.6), y: Math.floor(screenHeight * 0.1), width: Math.floor(screenWidth * 0.35), height: Math.floor(screenHeight * 0.8) };
+                    this.captureArea = wechatArea;
+                    this.updateDetectProgress('微信窗口已成功识别！', 100);
+                    setTimeout(() => {
+                        this.hideDetectOverlay();
+                        this.updateDetectResult('✅ 已找到微信窗口，可开始监控');
+                        this.enableStartButton();
+                        showNotification('🎯 微信窗口自动识别成功！');
+                    }, 1000);
+                    stream.getTracks().forEach(track => track.stop());
+                } catch(error) {
+                    console.log('❌ 屏幕捕获失败:', error);
+                    this.updateDetectProgress('屏幕捕获失败', 100);
+                    setTimeout(() => {
+                        this.hideDetectOverlay();
+                        this.updateDetectResult('❌ 需要屏幕共享权限，请手动选择');
+                        showNotification('请允许屏幕共享权限', 'warning');
+                    }, 1000);
+                }
+            },
+            
+            smartDetectChatArea() {
+                console.log('🧠 开始智能识别聊天区域...');
+                showNotification('正在智能分析聊天区域...');
+                if (this.captureArea) {
+                    this.captureArea = {
+                        x: this.captureArea.x + Math.floor(this.captureArea.width * 0.1),
+                        y: this.captureArea.y + Math.floor(this.captureArea.height * 0.2),
+                        width: Math.floor(this.captureArea.width * 0.8),
+                        height: Math.floor(this.captureArea.height * 0.7)
+                    };
+                    this.updateDetectResult('✅ 已智能识别聊天区域');
+                    this.enableStartButton();
+                    showNotification('🎯 聊天区域识别完成！');
+                } else showNotification('请先选择微信窗口', 'warning');
+            },
+            
+            manualSelectWechat() {
+                console.log('👆 开始手动选择微信窗口...');
+                showNotification('请拖动鼠标选择微信聊天区域', 'warning');
+                setTimeout(() => {
+                    this.captureArea = { x: 800, y: 100, width: 400, height: 600 };
+                    this.updateDetectResult('✅ 手动选择完成');
+                    this.enableStartButton();
+                    showNotification('区域选择完成，可开始监控');
+                }, 1500);
+            },
+            
+            enableStartButton() {
+                document.getElementById('startAutoBtn').disabled = false;
+                document.querySelector('.status-dot').className = 'status-dot active';
+                document.querySelector('.status-text').textContent = '就绪';
+                document.getElementById('wechatAutoStatus').style.display = 'flex';
+                document.querySelector('.wechat-status-dot').className = 'wechat-status-dot active';
+                document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 就绪';
+            },
+            
+            updateDetectResult(message) {
+                document.getElementById('detectResult').innerHTML = `<div class="result-icon">✅</div><div class="result-text">${message}<br><small>区域: ${this.captureArea ? `${this.captureArea.width}×${this.captureArea.height}` : '未设置'}</small></div>`;
+            },
+            
+            showDetectOverlay() {
+                document.getElementById('autoDetectOverlay').style.display = 'flex';
+                document.getElementById('detectProgress').style.width = '0%';
+                document.getElementById('detectDetail').textContent = '正在初始化...';
+            },
+            updateDetectProgress(message, progress) {
+                document.getElementById('detectProgress').style.width = `${progress}%`;
+                document.getElementById('detectDetail').textContent = message;
+            },
+            hideDetectOverlay() { document.getElementById('autoDetectOverlay').style.display = 'none'; },
+            showWechatGuide() { document.getElementById('wechatGuide').style.display = 'block'; },
+            hideWechatGuide() { document.getElementById('wechatGuide').style.display = 'none'; },
+            
+            async startAutoMonitoring() {
+                if (this.isRunning) return;
+                console.log('🚀 开始全自动微信监控');
+                this.isRunning = true; this.isPaused = false;
+                document.getElementById('startAutoBtn').disabled = true;
+                document.getElementById('pauseAutoBtn').disabled = false;
+                document.getElementById('stopAutoBtn').disabled = false;
+                document.querySelector('.status-dot').className = 'status-dot scanning';
+                document.querySelector('.status-text').textContent = '监控中';
+                document.querySelector('.wechat-status-dot').className = 'wechat-status-dot active';
+                document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 运行中';
+                this.saveSettings();
+                this.startMonitoringLoop();
+                showNotification('🤖 全自动微信监控已启动！');
+            },
+            
+            startMonitoringLoop() {
+                const interval = parseInt(document.getElementById('monitorInterval').value);
+                if (this.scanInterval) clearInterval(this.scanInterval);
+                this.scanInterval = setInterval(async () => {
+                    if (this.isPaused || !this.isRunning) return;
+                    await this.performScan();
+                }, interval);
+            },
+            
+            async performScan() {
+                this.scanCount++; this.lastScanTime = new Date(); this.updateStats();
+                if (!this.captureArea) return;
+                try {
+                    if (!this.screenStream) {
+                        this.screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "never", displaySurface: "monitor" }, audio: false });
+                        this.videoElement = document.createElement('video');
+                        this.videoElement.srcObject = this.screenStream;
+                        await this.videoElement.play();
+                        this.canvas = document.createElement('canvas');
+                        this.ctx = this.canvas.getContext('2d');
+                    }
+                    this.canvas.width = this.videoElement.videoWidth;
+                    this.canvas.height = this.videoElement.videoHeight;
+                    this.ctx.drawImage(this.videoElement, 0, 0);
+                    const area = this.captureArea;
+                    const imageData = this.ctx.getImageData(area.x, area.y, area.width, area.height);
+                    const hasChange = this.detectAreaChange(imageData);
+                    if (hasChange) {
+                        console.log('🔄 检测到微信聊天区域变化');
+                        if (this.tesseractWorker) {
+                            try {
+                                const { data: { text } } = await this.tesseractWorker.recognize(imageData);
+                                if (text && text.trim().length > 3) {
+                                    console.log('📝 识别到文字:', text.trim());
+                                    this.processRecognizedMessage(text.trim());
+                                }
+                            } catch (ocrError) { console.log('❌ OCR识别失败:', ocrError); }
+                        }
+                        this.lastFrameData = imageData;
+                    }
+                } catch (error) {
+                    console.log('❌ 屏幕捕获失败:', error);
+                    if (this.screenStream) {
+                        this.screenStream.getTracks().forEach(track => track.stop());
+                        this.screenStream = null; this.videoElement = null; this.canvas = null; this.ctx = null;
+                    }
+                }
+                this.updateRealtimePreview();
+            },
+            
+            detectAreaChange(newImageData) {
+                if (!this.lastFrameData) return true;
+                const sensitivity = parseInt(document.getElementById('sensitivity').value) || 7;
+                const threshold = 3000 * (sensitivity / 5);
+                let diff = 0;
+                const data1 = this.lastFrameData.data;
+                const data2 = newImageData.data;
+                const startY = Math.floor(newImageData.height * 0.6);
+                for (let y = startY; y < newImageData.height; y++) {
+                    for (let x = 0; x < newImageData.width; x += 5) {
+                        const i = (y * newImageData.width + x) * 4;
+                        const rDiff = Math.abs(data1[i] - data2[i]);
+                        const gDiff = Math.abs(data1[i+1] - data2[i+1]);
+                        const bDiff = Math.abs(data1[i+2] - data2[i+2]);
+                        if (rDiff > 40 || gDiff > 40 || bDiff > 40) diff++;
+                        if (diff > threshold) return true;
+                    }
+                }
+                return diff > threshold;
+            },
+            
+            processRecognizedMessage(text) {
+                if (!text || text.length < 3) return;
+                const lastMsg = this.lastMessages[0];
+                if (lastMsg && this.similarity(lastMsg.text, text) > 0.8) { console.log('⏭️ 跳过重复消息'); return; }
+                console.log('📱 检测到新消息:', text);
+                const isLottery = this.isLotteryMessage(text);
+                this.lastMessages.unshift({ text, time: new Date().toLocaleTimeString('zh-CN'), isLottery, source: 'wechat_auto' });
+                if (this.lastMessages.length > 10) this.lastMessages.pop();
+                this.detectCount++;
+                if (isLottery) {
+                    this.lotteryCount++;
+                    console.log('🎯 检测到彩票消息，自动录入中...', text);
+                    if (document.getElementById('autoProcess').checked) {
+                        this.autoProcessMessage(text);
+                        this.autoProcessCount++;
+                        showNotification(`🎯 自动录入: ${text.substring(0,30)}...`, 'success');
+                    }
+                    if (document.getElementById('playSound').checked) this.playNotificationSound();
+                }
+                this.updateStats();
+                this.updateRealtimePreview();
+            },
+            
+            similarity(str1, str2) {
+                if (str1 === str2) return 1;
+                const len = Math.min(str1.length, str2.length);
+                let same = 0;
+                for (let i = 0; i < len; i++) if (str1[i] === str2[i]) same++;
+                return same / Math.max(str1.length, str2.length);
+            },
+            
+            isLotteryMessage(text) {
+                const patterns = [/[0-9]+\s*[元块米斤￥]/, /各\s*[0-9]+\s*元/, /每\s*[0-9]+\s*元/, /红波|蓝波|绿波/, /鼠|牛|虎|兔|龙|蛇|马|羊|猴|鸡|狗|猪/];
+                for (const pattern of patterns) if (pattern.test(text)) return true;
+                return false;
+            },
+            
+            async autoProcessMessage(message) {
+                console.log('🤖 自动处理消息:', message);
+                if (window.lotteryParser) {
+                    const bets = window.lotteryParser.parseInput(message);
+                    if (bets.length > 0) {
+                        this.autoProcessCount++;
+                        bets.forEach(bet => { if (bet.number >= 1 && bet.number <= 49) window.moneyMap[bet.number] = (window.moneyMap[bet.number] || 0) + bet.amount; });
+                        if (window.lotteryData) window.lotteryData.forEach(item => { item.amount = window.moneyMap[item.number] || 0; });
+                        if (typeof addHistoryRecord === 'function') {
+                            const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
+                            addHistoryRecord(message, bets.length, totalAmount);
+                        }
+                        if (lotterySystem) { lotterySystem.updateTotalAmount(); lotterySystem.renderDataTable(); lotterySystem.renderHistory(); }
+                        if (typeof saveData === 'function') saveData();
+                        if (window.firebaseDb && typeof saveToCloud === 'function') saveToCloud();
+                        console.log(`✅ 自动录入 ${bets.length} 个下注`);
+                    }
+                }
+            },
+            
+            playNotificationSound() {
+                try {
+                    const context = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = context.createOscillator();
+                    const gainNode = context.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(context.destination);
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.3, context.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.2);
+                    oscillator.start(context.currentTime);
+                    oscillator.stop(context.currentTime + 0.2);
+                } catch(e) {}
+            },
+            
+            pauseAutoMonitoring() {
+                this.isPaused = !this.isPaused;
+                if (this.isPaused) {
+                    document.getElementById('pauseAutoBtn').innerHTML = '<span class="btn-icon">▶️</span><span class="btn-text">继续监控</span>';
+                    document.querySelector('.status-text').textContent = '已暂停';
+                    document.querySelector('.wechat-status-dot').className = 'wechat-status-dot';
+                    document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 已暂停';
+                    showNotification('⏸️ 监控已暂停');
+                } else {
+                    document.getElementById('pauseAutoBtn').innerHTML = '<span class="btn-icon">⏸️</span><span class="btn-text">暂停监控</span>';
+                    document.querySelector('.status-text').textContent = '监控中';
+                    document.querySelector('.wechat-status-dot').className = 'wechat-status-dot active';
+                    document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 运行中';
+                    showNotification('▶️ 监控已继续');
+                }
+            },
+            
+            stopAutoMonitoring() {
+                this.isRunning = false; this.isPaused = false;
+                if (this.screenStream) {
+                    this.screenStream.getTracks().forEach(track => track.stop());
+                    this.screenStream = null; this.videoElement = null; this.canvas = null; this.ctx = null; this.lastFrameData = null;
+                }
+                if (this.scanInterval) { clearInterval(this.scanInterval); this.scanInterval = null; }
+                document.getElementById('startAutoBtn').disabled = !this.captureArea;
+                document.getElementById('pauseAutoBtn').disabled = true;
+                document.getElementById('stopAutoBtn').disabled = true;
+                document.getElementById('pauseAutoBtn').innerHTML = '<span class="btn-icon">⏸️</span><span class="btn-text">暂停监控</span>';
+                document.querySelector('.status-dot').className = 'status-dot';
+                document.querySelector('.status-text').textContent = '已停止';
+                document.querySelector('.wechat-status-dot').className = 'wechat-status-dot';
+                document.getElementById('wechatAutoStatus').querySelector('span:nth-child(2)').textContent = '微信监控: 已停止';
+                showNotification('⏹️ 全自动监控已停止');
+            },
+            
+            updateStats() {
+                document.getElementById('scanCount').textContent = this.scanCount;
+                document.getElementById('detectCount').textContent = this.detectCount;
+                document.getElementById('lotteryCount').textContent = this.lotteryCount;
+                document.getElementById('autoProcessCount').textContent = this.autoProcessCount;
+                if (this.lastScanTime) document.getElementById('lastScanTime').textContent = this.lastScanTime.toLocaleTimeString('zh-CN', { hour12: false });
+            },
+            
+            updateRealtimePreview() {
+                const container = document.getElementById('realtimePreview');
+                if (this.lastMessages.length === 0) { container.innerHTML = '<div class="preview-placeholder">🎯 等待检测消息...</div>'; return; }
+                let html = '';
+                this.lastMessages.forEach(msg => {
+                    const icon = msg.isLottery ? '🎯' : '💬';
+                    const color = msg.isLottery ? '#2ecc71' : '#3498db';
+                    html += `<div style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; border-left: 3px solid ${color};"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;"><span style="font-size: 12px; color: #aaa;">${msg.time}</span><span style="font-size: 16px;">${icon}</span></div><div style="font-size: 14px; color: #ddd;">${msg.text}</div></div>`;
+                });
+                container.innerHTML = html;
+            },
+            
+            updateUI() {
+                document.getElementById('sensitivity').addEventListener('input', (e) => { document.getElementById('sensitivityValue').textContent = e.target.value; });
+                ['monitorInterval','sensitivity','autoStart','autoProcess','playSound'].forEach(id => {
+                    document.getElementById(id).addEventListener('change', () => { this.saveSettings(); });
+                });
+            },
+            
+            testAutoRecognition() {
+                console.log('🧪 测试自动识别功能');
+                const testMessages = ["红波各号10元","1号5元 2号10元","鼠各号20元"];
+                testMessages.forEach((msg, index) => { setTimeout(() => { this.processRecognizedMessage(msg); }, index * 1000); });
+                showNotification('🧪 测试消息已发送，请查看实时预览');
+            }
+        };
+
+        window.autoWechatMonitor = autoWechatMonitor;
+
+        // ==================== 全局监控函数 ====================
+        function openAutoWechatMonitor() {
+            document.getElementById('autoWechatMonitor').style.display = 'flex';
+            if (!window.autoWechatMonitorInitialized) {
+                autoWechatMonitor.init();
+                window.autoWechatMonitorInitialized = true;
             }
         }
-        
+        function closeAutoMonitor() { document.getElementById('autoWechatMonitor').style.display = 'none'; }
+        function checkWechatReady() { document.getElementById('wechatGuide').style.display = 'none'; autoWechatMonitor.autoDetectWechat(); }
+        function hideWechatGuide() { document.getElementById('wechatGuide').style.display = 'none'; }
+
+        window.autoDetectWechat = () => autoWechatMonitor.autoDetectWechat();
+        window.smartDetectChatArea = () => autoWechatMonitor.smartDetectChatArea();
+        window.manualSelectWechat = () => autoWechatMonitor.manualSelectWechat();
+        window.startAutoMonitoring = () => autoWechatMonitor.startAutoMonitoring();
+        window.pauseAutoMonitoring = () => autoWechatMonitor.pauseAutoMonitoring();
+        window.stopAutoMonitoring = () => autoWechatMonitor.stopAutoMonitoring();
+        window.testAutoRecognition = () => autoWechatMonitor.testAutoRecognition();
+        window.checkWechatReady = checkWechatReady;
+        window.hideWechatGuide = hideWechatGuide;
+        window.openAutoWechatMonitor = openAutoWechatMonitor;
+        window.closeAutoMonitor = closeAutoMonitor;
+
+        // ==================== 主应用 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('passwordInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') checkPassword(); });
+            try {
+                const authStr = localStorage.getItem('lottery_admin_auth');
+                if (authStr) {
+                    const authData = JSON.parse(authStr);
+                    if (authData.loggedIn && authData.loginTime && (Date.now() - authData.loginTime) < 3*24*60*60*1000) {
+                        document.getElementById('passwordOverlay').style.display = 'none';
+                        document.getElementById('mainApp').style.display = 'block';
+                        startApplication();
+                        return;
+                    }
+                }
+            } catch(e) { console.log('自动登录检查失败'); }
+            document.getElementById('passwordInput').focus();
+        });
+
+        function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            if (!input || !input.value) { document.getElementById('passwordError').textContent = '请输入密码'; return; }
+            if (input.value.trim() === '829218') {
+                localStorage.setItem('lottery_admin_auth', JSON.stringify({ loggedIn: true, loginTime: Date.now() }));
+                document.getElementById('passwordOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                startApplication();
+            } else {
+                document.getElementById('passwordError').textContent = '❌ 密码错误，请重试';
+                input.value = ''; input.focus();
+            }
+        }
+
+        function startApplication() {
+            console.log('🚀 启动应用...');
+            document.getElementById('statusBar').textContent = '🔄 初始化系统中...';
+            initLotterySystem();
+            setTimeout(initFirebase, 100);
+        }
+
         function showNotification(message, type = 'success') {
             const existing = document.querySelector('.notification');
             if (existing) existing.remove();
-            
             const notification = document.createElement('div');
             notification.className = 'notification';
             notification.style.background = type === 'warning' ? '#ff9f43' : '#2ecc71';
             notification.innerHTML = message.replace(/\n/g, '<br>');
             document.body.appendChild(notification);
-            
             setTimeout(() => {
                 notification.style.opacity = '0';
                 notification.style.transform = 'translateY(100%)';
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
         }
-        
+        window.showNotification = showNotification;
+
         function updateCloudStatus(text, status = 'connecting') {
             const statusEl = document.getElementById('cloudStatus');
             const iconEl = document.getElementById('cloudIcon');
             const textEl = document.getElementById('cloudText');
-            
-            if (!statusEl || !iconEl || !textEl) return;
-            
+            if (!statusEl) return;
             statusEl.className = `cloud-status ${status}`;
             textEl.textContent = text;
-            
-            switch(status) {
-                case 'online': iconEl.textContent = '✅'; break;
-                case 'offline': iconEl.textContent = '⚠️'; break;
-                case 'connecting': iconEl.textContent = '🔄'; break;
-            }
+            iconEl.textContent = status === 'online' ? '✅' : status === 'offline' ? '⚠️' : '🔄';
         }
-        
+
         window.addEventListener('online', () => {
-            console.log('🌐 网络恢复');
             document.getElementById('networkIndicator').className = 'network-indicator network-online';
             showNotification('✅ 网络已恢复');
-            
-            if (!window.firebaseDb && typeof firebase !== 'undefined') {
-                setTimeout(initFirebase, 1000);
-            }
+            if (!window.firebaseDb && typeof firebase !== 'undefined') setTimeout(initFirebase, 1000);
         });
-        
         window.addEventListener('offline', () => {
-            console.log('🌐 网络断开');
             document.getElementById('networkIndicator').className = 'network-indicator network-offline';
             showNotification('⚠️ 网络已断开，切换到离线模式');
             updateCloudStatus('离线模式', 'offline');
         });
-        
-        document.getElementById('networkIndicator').className = 
-            navigator.onLine ? 'network-indicator network-online' : 'network-indicator network-offline';
+        document.getElementById('networkIndicator').className = navigator.onLine ? 'network-indicator network-online' : 'network-indicator network-offline';
     </script>
 </body>
 </html>
